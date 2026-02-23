@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prism</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060912;
+    --surface: #0d1220;
+    --surface2: #141a2e;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eaf6;
+    --text-dim: #7986a8;
+    --accent: #7c4dff;
+    --accent2: #00e5ff;
+    --accent3: #ff4081;
+    --gold: #ffd740;
+    --common: #78909c;
+    --rare: #42a5f5;
+    --epic: #ab47bc;
+    --legendary: #ffd740;
+    --radius: 16px;
+    --card-w: 160px;
+    --card-h: 224px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background prismatic effect */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,77,255,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255,64,129,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== LANDING ===== */
+  #landing {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(4rem, 12vw, 8rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, #7c4dff 0%, #00e5ff 40%, #ff4081 70%, #ffd740 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(124,77,255,0.5));
+    animation: logoPulse 4s ease-in-out infinite;
+    line-height: 1;
+  }
+
+  @keyframes logoPulse {
+    0%, 100% { filter: drop-shadow(0 0 40px rgba(124,77,255,0.5)); }
+    50% { filter: drop-shadow(0 0 60px rgba(0,229,255,0.6)); }
+  }
+
+  .tagline {
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    margin: 0.5rem 0 2.5rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  .landing-cards {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.85rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #5e35b1);
+    color: white;
+    box-shadow: 0 4px 24px rgba(124,77,255,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,77,255,0.6); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+  .btn-accent {
+    background: linear-gradient(135deg, var(--accent2), #0097a7);
+    color: #000;
+    box-shadow: 0 4px 24px rgba(0,229,255,0.3);
+  }
+  .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,255,0.5); }
+
+  .btn-danger {
+    background: linear-gradient(135deg, var(--accent3), #c62828);
+    color: white;
+  }
+  .btn-danger:hover { transform: translateY(-2px); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #ffd740, #ff8f00);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 4px 24px rgba(255,215,64,0.4);
+  }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,215,64,0.6); }
+
+  .btn-sm { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
+  .btn-lg { padding: 1rem 2.5rem; font-size: 1.2rem; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  .landing-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.85) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input:focus { border-color: var(--accent); }
+  .input::placeholder { color: var(--text-dim); }
+
+  .modal-btns { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+  .modal-btns .btn { flex: 1; }
+
+  /* ===== CARDS ===== */
+  .card {
+    width: var(--card-w);
+    height: var(--card-h);
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+
+  .card:hover { transform: translateY(-8px) scale(1.03); }
+
+  .card-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-art {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    padding: 0.5rem 0.6rem;
+    background: rgba(0,0,0,0.4);
+  }
+
+  .card-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-rarity-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  /* Rarity styles */
+  .rarity-common .card-inner {
+    border: 2px solid #546e7a;
+    background: linear-gradient(160deg, #1a2a30 0%, #0d1720 100%);
+  }
+  .rarity-common .card-art { background: radial-gradient(ellipse at center, #1e3a45 0%, #0a1520 100%); }
+
+  .rarity-rare .card-inner {
+    border: 2px solid #1e88e5;
+    background: linear-gradient(160deg, #0d2550 0%, #061228 100%);
+  }
+  .rarity-rare .card-art { background: radial-gradient(ellipse at center, #0d3060 0%, #050e20 100%); }
+
+  .rarity-epic .card-inner {
+    border: 2px solid #9c27b0;
+    background: linear-gradient(160deg, #1a0d30 0%, #0d0620 100%);
+  }
+  .rarity-epic .card-art { background: radial-gradient(ellipse at center, #2a0d3a 0%, #0d0518 100%); }
+  .rarity-epic::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, transparent 30%, rgba(156,39,176,0.3) 50%, transparent 70%);
+    animation: epicShimmer 2s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes epicShimmer {
+    0% { transform: translateX(-100%) rotate(30deg); }
+    100% { transform: translateX(200%) rotate(30deg); }
+  }
+
+  .rarity-legendary .card-inner {
+    border: 2px solid #ffd740;
+    background: linear-gradient(160deg, #2a1a00 0%, #150d00 100%);
+  }
+  .rarity-legendary .card-art { background: radial-gradient(ellipse at center, #3a2200 0%, #130900 100%); }
+
+  /* Holographic effect for legendary */
+  .rarity-legendary .card-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255,215,64,0.15) 45%,
+      rgba(255,100,200,0.1) 50%,
+      rgba(100,200,255,0.1) 55%,
+      transparent 70%
+    );
+    animation: holoShimmer 3s linear infinite;
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 14px;
+  }
+
+  @keyframes holoShimmer {
+    0% { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(200%) skewX(-15deg); }
+  }
+
+  .rarity-legendary::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 17px;
+    background: linear-gradient(135deg, #ffd740, #ff4081, #7c4dff, #00e5ff, #ffd740);
+    background-size: 300% 300%;
+    animation: legendaryBorder 3s linear infinite;
+    z-index: -1;
+  }
+
+  @keyframes legendaryBorder {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  /* ===== LOBBY / HOST SCREEN ===== */
+  #host-screen, #join-screen, #game-screen, #collection-screen, #pack-screen {
+    padding: 1.5rem;
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .screen-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .join-code-display {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,64,0.5);
+    text-align: center;
+    padding: 1rem;
+    border: 2px dashed rgba(255,215,64,0.3);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+  }
+
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .player-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .player-avatar { font-size: 1.5rem; }
+
+  /* Question area */
+  .question-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .question-text {
+    font-size: 1.3rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+
+  .question-meta {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .answer-btn {
+    padding: 1rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    line-height: 1.3;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(124,77,255,0.15);
+    transform: translateY(-2px);
+  }
+
+  .answer-btn.correct { border-color: #66bb6a; background: rgba(102,187,106,0.2); }
+  .answer-btn.wrong { border-color: var(--accent3); background: rgba(255,64,129,0.2); }
+  .answer-btn:disabled { cursor: not-allowed; }
+
+  /* Shard event */
+  .shard-event {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    animation: eventPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes eventPop {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .event-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .event-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .event-desc { color: var(--text-dim); font-size: 0.95rem; }
+
+  /* Leaderboard */
+  .leaderboard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .lb-header {
+    padding: 0.75rem 1rem;
+    background: var(--surface2);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lb-row {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    gap: 0.75rem;
+    transition: background 0.2s;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row.me { background: rgba(124,77,255,0.1); }
+
+  .lb-rank {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    width: 24px;
+    color: var(--text-dim);
+  }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-rank.top2 { color: #90caf9; }
+  .lb-rank.top3 { color: #ffb74d; }
+
+  .lb-name { flex: 1; font-size: 0.95rem; }
+  .lb-shards {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--accent2);
+  }
+
+  /* Shard display */
+  .shard-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.3);
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent2);
+  }
+
+  /* Collection screen */
+  .collection-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  /* Pack store */
+  .packs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .pack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pack-card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 16px 40px rgba(124,77,255,0.3); }
+
+  .pack-emoji { font-size: 3rem; margin-bottom: 0.75rem; }
+  .pack-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .pack-desc { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem; }
+  .pack-cost {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: var(--accent2);
+    font-size: 1.1rem;
+  }
+
+  /* Pack opening animation */
+  #pack-opening {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  #pack-opening.active { display: flex; }
+
+  .pack-open-cards {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 900px;
+  }
+
+  .pack-card-reveal {
+    animation: cardReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+
+  @keyframes cardReveal {
+    from { transform: rotateY(90deg) scale(0.5); opacity: 0; }
+    to { transform: rotateY(0deg) scale(1); opacity: 1; }
+  }
+
+  /* Timer bar */
+  .timer-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 1s linear;
+  }
+
+  /* Equipped card mini */
+  .equipped-mini {
+    width: 48px;
+    height: 67px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+
+  /* Notification toast */
+  #toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 500;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Status badge */
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .badge-waiting { background: rgba(120,144,156,0.2); color: var(--common); border: 1px solid var(--common); }
+  .badge-playing { background: rgba(102,187,106,0.2); color: #66bb6a; border: 1px solid #66bb6a; }
+
+  /* Host question builder */
+  .question-builder {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .answers-builder {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .answer-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .answer-input-row input { flex: 1; margin-bottom: 0; }
+
+  .correct-radio {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .answers-grid { grid-template-columns: 1fr; } }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-dim);
+  }
+  .empty-state .big { font-size: 3rem; margin-bottom: 1rem; }
+
+  /* Floating particles (decorative) */
+  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    opacity: 0;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { opacity: 0; transform: translateY(100vh) scale(0); }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-10vh) scale(1.5); }
+  }
+
+  .host-controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .questions-list { margin-bottom: 1rem; }
+  .question-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .question-item-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 24px;
+  }
+  .question-item-text { flex: 1; font-size: 0.9rem; }
+  .question-item-del { cursor: pointer; color: var(--text-dim); font-size: 1.2rem; transition: color 0.2s; }
+  .question-item-del:hover { color: var(--accent3); }
+
+  /* End game */
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+
+  .podium-spot {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .podium-spot.first {
+    border-color: var(--gold);
+    box-shadow: 0 0 30px rgba(255,215,64,0.3);
+    min-height: 180px;
+  }
+  .podium-spot.second { min-height: 140px; }
+  .podium-spot.third { min-height: 110px; }
+
+  .podium-rank { font-size: 2rem; margin-bottom: 0.5rem; }
+  .podium-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; }
+  .podium-shards { color: var(--accent2); font-size: 0.9rem; }
+
+  select.input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237986a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+  }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div id="app">
+
+  <!-- ===== LANDING ===== -->
+  <div class="screen active" id="landing">
+    <div style="position:relative;z-index:1;">
+      <div class="logo">PRISM</div>
+      <div class="tagline">Collect · Play · Dominate</div>
+
+      <!-- Preview cards -->
+      <div class="landing-cards">
+        <div class="card rarity-legendary" style="transform:rotate(-8deg);">
+          <div class="card-inner">
+            <div class="card-art">🌟</div>
+            <div class="card-footer">
+              <div class="card-name">Nebula Lord</div>
+              <div class="card-rarity-badge" style="color:var(--legendary)">Legendary</div>
+            </div>
+          </div>
+        </div>
+        <div class="card rarity-epic" style="transform:rotate(2deg) translateY(-10px);">
+          <div class="card-inner">
+            <div class="card-art">🔮</div>
+            <div class="card-footer">
+              <div class="card-name">Void Sorcerer</div>
+              <div class="card-rarity-badge" style="color:var(--epic)">Epic</div>
+            </div>
+          </div>
+        </div>
+        <div class="card rarity-rare" style="transform:rotate(6deg);">
+          <div class="card-inner">
+            <div class="card-art">🌊</div>
+            <div class="card-footer">
+              <div class="card-name">Tide Walker</div>
+              <div class="card-rarity-badge" style="color:var(--rare)">Rare</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="landing-btns">
+        <button class="btn btn-primary btn-lg" onclick="showModal('host-modal')">🎮 Host Game</button>
+        <button class="btn btn-accent btn-lg" onclick="showModal('join-modal')">🚀 Join Game</button>
+        <button class="btn btn-secondary btn-lg" onclick="goToCollection()">🃏 My Collection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOST SETUP SCREEN ===== -->
+  <div class="screen" id="host-screen">
+    <div class="top-bar">
+      <div class="screen-title">Host Setup</div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <div class="shard-count">💎 <span id="host-shards">0</span></div>
+        <button class="btn btn-secondary btn-sm" onclick="goHome()">← Home</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-label">Game Code</div>
+        <div class="join-code-display" id="host-code-display">----</div>
+
+        <div class="section-label">Players Waiting</div>
+        <div class="players-grid" id="host-players-list">
+          <div class="empty-state" style="padding:1rem;">
+            <div>Waiting for players...</div>
+          </div>
+        </div>
+
+        <div class="host-controls">
+          <button class="btn btn-gold btn-lg" id="start-game-btn" onclick="startGame()" disabled>▶ Start Game</button>
+          <span class="badge badge-waiting" id="host-status-badge">LOBBY</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Questions</div>
+        <div class="question-builder">
+          <input class="input" id="q-text" placeholder="Question text..." />
+          <div class="answers-builder">
+            <div class="answer-input-row">
+              <input type="radio" name="correct-ans" class="correct-radio" value="0" />
+              <input class="input" id="ans-0" placeholder="Answer A" />
+            </div>
+            <div class="answer-input-row">
+              <input type="radio" name="correct-ans" class="correct-radio" value="1" />
+              <input class="input" id="ans-1" placeholder="Answer B" />
+            </div>
+            <div class="answer-input-row">
+              <input type="radio" name="correct-ans" class="correct-radio" value="2" />
+              <input class="input" id="ans-2" placeholder="Answer C" />
+            </div>
+            <div class="answer-input-row">
+              <input type="radio" name="correct-ans" class="correct-radio" value="3" />
+              <input class="input" id="ans-3" placeholder="Answer D" />
+            </div>
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-dim)">Select radio button for correct answer</div>
+          <div style="margin-top:0.75rem;">
+            <button class="btn btn-secondary btn-sm" onclick="addQuestion()">+ Add Question</button>
+          </div>
+        </div>
+
+        <div class="questions-list" id="questions-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STUDENT GAME SCREEN ===== -->
+  <div class="screen" id="game-screen">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <div id="my-equipped-mini" class="equipped-mini">🃏</div>
+        <div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.1rem;" id="my-name-display">Player</div>
+          <div class="shard-count" style="font-size:0.9rem;">💎 <span id="my-shards-display">0</span></div>
+        </div>
+      </div>
+      <div class="screen-title" style="font-size:1.3rem;">PRISM</div>
+    </div>
+
+    <div class="two-col">
+      <div id="game-main">
+        <!-- Dynamic content: question, shard event, waiting -->
+        <div class="empty-state" id="waiting-msg">
+          <div class="big">⏳</div>
+          <div>Waiting for host to start...</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Leaderboard</div>
+        <div class="leaderboard" id="leaderboard">
+          <div class="lb-header">Shards</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COLLECTION SCREEN ===== -->
+  <div class="screen" id="collection-screen">
+    <div class="top-bar">
+      <div class="screen-title">My Collection</div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <div class="shard-count">💎 <span id="coll-shards">0</span></div>
+        <button class="btn btn-gold btn-sm" onclick="goToPackStore()">🛍 Pack Store</button>
+        <button class="btn btn-secondary btn-sm" onclick="goHome()">← Home</button>
+      </div>
+    </div>
+
+    <div id="collection-equipped" style="margin-bottom:1.5rem;">
+      <div class="section-label">Equipped Card</div>
+      <div id="equipped-display"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label" style="margin-bottom:1rem;">All Cards (<span id="coll-count">0</span>)</div>
+    <div class="collection-grid" id="collection-grid"></div>
+  </div>
+
+  <!-- ===== PACK STORE SCREEN ===== -->
+  <div class="screen" id="pack-screen">
+    <div class="top-bar">
+      <div class="screen-title">Pack Store</div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <div class="shard-count">💎 <span id="store-shards">0</span></div>
+        <button class="btn btn-secondary btn-sm" onclick="goToCollection()">← Collection</button>
+      </div>
+    </div>
+
+    <div class="packs-grid" id="packs-grid"></div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="host-modal">
+  <div class="modal">
+    <h2>🎮 Host a Game</h2>
+    <input class="input" id="host-name" placeholder="Your name..." maxlength="20" />
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal('host-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createGame()">Create Game</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="join-modal">
+  <div class="modal">
+    <h2>🚀 Join a Game</h2>
+    <input class="input" id="join-name" placeholder="Your name..." maxlength="20" />
+    <input class="input" id="join-code" placeholder="Game code (e.g. 4829)" maxlength="6" style="letter-spacing:0.2em;font-size:1.2rem;font-family:'Rajdhani',sans-serif;" />
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal('join-modal')">Cancel</button>
+      <button class="btn btn-accent" onclick="joinGame()">Join!</button>
+    </div>
+  </div>
+</div>
+
+<!-- End game modal -->
+<div class="modal-overlay" id="end-modal">
+  <div class="modal" style="max-width:560px;">
+    <h2 style="text-align:center;">🏆 Game Over!</h2>
+    <div class="podium" id="end-podium"></div>
+    <div id="end-shard-reward" style="text-align:center;font-size:1.1rem;margin-bottom:1rem;color:var(--accent2);"></div>
+    <div class="modal-btns">
+      <button class="btn btn-gold" onclick="closeModal('end-modal');goToPackStore()">🛍 Open Packs</button>
+      <button class="btn btn-secondary" onclick="closeModal('end-modal');goHome()">Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pack opening overlay -->
+<div id="pack-opening">
+  <div style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;color:var(--gold);">✨ Pack Opened!</div>
+  <div class="pack-open-cards" id="pack-open-cards"></div>
+  <button class="btn btn-primary btn-lg" onclick="closePack()">Sweet! Close</button>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ===== FIREBASE ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, push, onValue, off, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkUUEvwdJ4paQwFYV5UYkSTLVXaPZZT9M",
+  authDomain: "history-write-app.firebaseapp.com",
+  projectId: "history-write-app",
+  storageBucket: "history-write-app.firebasestorage.app",
+  messagingSenderId: "435981000839",
+  appId: "1:435981000839:web:0842c89a7391743aacd822",
+  databaseURL: "https://history-write-app-default-rtdb.firebaseio.com"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+
+// ===== CARD DATA =====
+const CARDS = [
+  // Cosmic Pack
+  { id:'c1', name:'Nebula Lord', emoji:'🌟', pack:'Cosmic', rarity:'legendary' },
+  { id:'c2', name:'Black Hole', emoji:'🌑', pack:'Cosmic', rarity:'epic' },
+  { id:'c3', name:'Star Cluster', emoji:'✨', pack:'Cosmic', rarity:'rare' },
+  { id:'c4', name:'Asteroid', emoji:'🪨', pack:'Cosmic', rarity:'common' },
+  { id:'c5', name:'Space Probe', emoji:'🛸', pack:'Cosmic', rarity:'common' },
+  { id:'c6', name:'Comet Rider', emoji:'☄️', pack:'Cosmic', rarity:'rare' },
+  { id:'c7', name:'Supernova', emoji:'💥', pack:'Cosmic', rarity:'epic' },
+  { id:'c8', name:'Galaxy Brain', emoji:'🌌', pack:'Cosmic', rarity:'legendary' },
+  // Mythic Pack
+  { id:'m1', name:'Thunder God', emoji:'⚡', pack:'Mythic', rarity:'legendary' },
+  { id:'m2', name:'Sea Titan', emoji:'🔱', pack:'Mythic', rarity:'epic' },
+  { id:'m3', name:'Phoenix', emoji:'🦅', pack:'Mythic', rarity:'rare' },
+  { id:'m4', name:'Goblin Scout', emoji:'👺', pack:'Mythic', rarity:'common' },
+  { id:'m5', name:'Stone Troll', emoji:'🗿', pack:'Mythic', rarity:'common' },
+  { id:'m6', name:'Moon Witch', emoji:'🌙', pack:'Mythic', rarity:'rare' },
+  { id:'m7', name:'Cerberus', emoji:'🐺', pack:'Mythic', rarity:'epic' },
+  { id:'m8', name:'The Fates', emoji:'🌀', pack:'Mythic', rarity:'legendary' },
+  // Arcane Pack
+  { id:'a1', name:'Void Sorcerer', emoji:'🔮', pack:'Arcane', rarity:'legendary' },
+  { id:'a2', name:'Hex Witch', emoji:'🧙', pack:'Arcane', rarity:'epic' },
+  { id:'a3', name:'Rune Stone', emoji:'🪬', pack:'Arcane', rarity:'rare' },
+  { id:'a4', name:'Magic Wand', emoji:'🪄', pack:'Arcane', rarity:'common' },
+  { id:'a5', name:'Spell Book', emoji:'📖', pack:'Arcane', rarity:'common' },
+  { id:'a6', name:'Crystal Ball', emoji:'🔭', pack:'Arcane', rarity:'rare' },
+  { id:'a7', name:'Shadow Mage', emoji:'🌫️', pack:'Arcane', rarity:'epic' },
+  { id:'a8', name:'The Lich', emoji:'💀', pack:'Arcane', rarity:'legendary' },
+  // Deep Pack
+  { id:'d1', name:'Leviathan', emoji:'🐉', pack:'Deep', rarity:'legendary' },
+  { id:'d2', name:'Giant Squid', emoji:'🦑', pack:'Deep', rarity:'epic' },
+  { id:'d3', name:'Tide Walker', emoji:'🌊', pack:'Deep', rarity:'rare' },
+  { id:'d4', name:'Clownfish', emoji:'🐟', pack:'Deep', rarity:'common' },
+  { id:'d5', name:'Crab King', emoji:'🦀', pack:'Deep', rarity:'common' },
+  { id:'d6', name:'Anglerfish', emoji:'🐠', pack:'Deep', rarity:'rare' },
+  { id:'d7', name:'Shark Lord', emoji:'🦈', pack:'Deep', rarity:'epic' },
+  { id:'d8', name:'The Abyss', emoji:'🌊', pack:'Deep', rarity:'legendary' },
+];
+
+const PACKS = [
+  { id:'cosmic', name:'Cosmic Pack', emoji:'🌌', desc:'Stars, aliens, and cosmic horrors', cost:150 },
+  { id:'mythic', name:'Mythic Pack', emoji:'⚡', desc:'Gods, monsters, and legends', cost:150 },
+  { id:'arcane', name:'Arcane Pack', emoji:'🔮', desc:'Wizards, spells, and dark magic', cost:150 },
+  { id:'deep', name:'Deep Pack', emoji:'🌊', desc:'Sea monsters and ocean legends', cost:150 },
+  { id:'prism', name:'Prism Pack', emoji:'🌈', desc:'Any card from any pack — includes bonus odds', cost:300 },
+];
+
+const SHARD_EVENTS = [
+  { id:'surge', name:'Surge', emoji:'⚡', desc:'You gain +50 bonus shards!', fn: (me, players) => ({ [me]: 50 }) },
+  { id:'refract', name:'Refract', emoji:'🔷', desc:'Your shards are doubled!', fn: (me, players, shards) => ({ [me]: shards[me] || 0 }) },
+  { id:'shatter', name:'Shatter', emoji:'💥', desc:'You steal 30 shards from a random player!', fn: (me, players, shards) => {
+    const others = Object.keys(players).filter(p => p !== me);
+    if (!others.length) return {};
+    const target = others[Math.floor(Math.random() * others.length)];
+    return { [me]: 30, [target]: -30 };
+  }},
+  { id:'eclipse', name:'Eclipse', emoji:'🌑', desc:'Everyone loses 20 shards!', fn: (me, players, shards) => {
+    const delta = {};
+    Object.keys(players).forEach(p => delta[p] = -20);
+    return delta;
+  }},
+  { id:'prismlock', name:'Prism Lock', emoji:'🛡️', desc:'Your shards are protected. Gain +20!', fn: (me) => ({ [me]: 20 }) },
+  { id:'void', name:'Void', emoji:'🕳️', desc:'Nothing happens... this time.', fn: () => ({}) },
+  { id:'jackpot', name:'Jackpot', emoji:'💰', desc:'Massive shard haul! +100 shards!', fn: (me) => ({ [me]: 100 }) },
+  { id:'steal', name:'Blind Theft', emoji:'🦝', desc:'Steal from the leader!', fn: (me, players, shards) => {
+    const others = Object.keys(players).filter(p => p !== me);
+    if (!others.length) return {};
+    const leader = others.reduce((a,b) => (shards[a]||0) > (shards[b]||0) ? a : b, others[0]);
+    return { [me]: 40, [leader]: -40 };
+  }},
+];
+
+const RARITY_WEIGHTS = { common: 55, rare: 28, epic: 13, legendary: 4 };
+
+// ===== LOCAL STATE =====
+let myId = 'player_' + Math.random().toString(36).slice(2,8);
+let myName = '';
+let isHost = false;
+let gameCode = '';
+let gameRef = null;
+let myShards = parseInt(localStorage.getItem('prism_shards') || '0');
+let myCollection = JSON.parse(localStorage.getItem('prism_collection') || '[]');
+let myEquipped = localStorage.getItem('prism_equipped') || null;
+let questions = [];
+let currentQ = -1;
+let answered = false;
+let gameListeners = [];
+
+function saveLocal() {
+  localStorage.setItem('prism_shards', myShards);
+  localStorage.setItem('prism_collection', JSON.stringify(myCollection));
+  if (myEquipped) localStorage.setItem('prism_equipped', myEquipped);
+}
+
+// ===== UI HELPERS =====
+window.showModal = function(id) { document.getElementById(id).classList.add('open'); }
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+window.goHome = function() {
+  cleanupListeners();
+  showScreen('landing');
+}
+
+function cleanupListeners() {
+  gameListeners.forEach(([r,fn]) => off(r, 'value', fn));
+  gameListeners = [];
+  isHost = false;
+  gameCode = '';
+  gameRef = null;
+  currentQ = -1;
+  answered = false;
+  questions = [];
+}
+
+// ===== CARD RENDERING =====
+function renderCard(cardId, size='normal', showEquip=false) {
+  const card = CARDS.find(c => c.id === cardId);
+  if (!card) return '';
+  const isEquipped = myEquipped === cardId;
+  const scale = size === 'small' ? 'style="--card-w:100px;--card-h:140px;"' : '';
+  return `<div class="card rarity-${card.rarity}" ${scale} onclick="${showEquip ? `equipCard('${cardId}')` : ''}">
+    <div class="card-inner">
+      <div class="card-art">${card.emoji}${isEquipped ? '<span style="position:absolute;top:4px;right:4px;font-size:0.6rem;background:rgba(124,77,255,0.8);padding:2px 4px;border-radius:4px;letter-spacing:0.05em;">ON</span>' : ''}</div>
+      <div class="card-footer">
+        <div class="card-name">${card.name}</div>
+        <div class="card-rarity-badge" style="color:var(--${card.rarity})">${card.rarity}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.equipCard = function(cardId) {
+  myEquipped = cardId;
+  saveLocal();
+  renderCollection();
+  showToast('✅ Card equipped!');
+}
+
+// ===== COLLECTION =====
+window.goToCollection = function() {
+  document.getElementById('coll-shards').textContent = myShards;
+  renderCollection();
+  showScreen('collection-screen');
+}
+
+function renderCollection() {
+  document.getElementById('coll-shards').textContent = myShards;
+  document.getElementById('coll-count').textContent = myCollection.length;
+  const grid = document.getElementById('collection-grid');
+  const equipped = document.getElementById('equipped-display');
+
+  if (!myCollection.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="big">🃏</div><div>No cards yet! Play games to earn shards and open packs.</div></div>';
+  } else {
+    grid.innerHTML = myCollection.map(id => renderCard(id, 'normal', true)).join('');
+  }
+
+  if (myEquipped && CARDS.find(c=>c.id===myEquipped)) {
+    equipped.innerHTML = renderCard(myEquipped);
+  } else {
+    equipped.innerHTML = '<div style="color:var(--text-dim);font-size:0.9rem;">No card equipped. Click a card in your collection to equip it.</div>';
+  }
+}
+
+// ===== PACK STORE =====
+window.goToPackStore = function() {
+  document.getElementById('store-shards').textContent = myShards;
+  const grid = document.getElementById('packs-grid');
+  grid.innerHTML = PACKS.map(pack => `
+    <div class="pack-card" onclick="buyPack('${pack.id}')">
+      <div class="pack-emoji">${pack.emoji}</div>
+      <div class="pack-name">${pack.name}</div>
+      <div class="pack-desc">${pack.desc}</div>
+      <div class="pack-cost">💎 ${pack.cost} Shards</div>
+    </div>
+  `).join('');
+  showScreen('pack-screen');
+}
+
+window.buyPack = function(packId) {
+  const pack = PACKS.find(p => p.id === packId);
+  if (myShards < pack.cost) { showToast('❌ Not enough shards!'); return; }
+  myShards -= pack.cost;
+  saveLocal();
+  document.getElementById('store-shards').textContent = myShards;
+  openPackAnimation(packId);
+}
+
+function rollCard(packId) {
+  let pool = CARDS;
+  if (packId !== 'prism') pool = CARDS.filter(c => c.pack.toLowerCase() === packId);
+
+  // weighted random rarity
+  const total = Object.values(RARITY_WEIGHTS).reduce((a,b) => a+b, 0);
+  let roll = Math.random() * total;
+  let rarity = 'common';
+  for (const [r, w] of Object.entries(RARITY_WEIGHTS)) {
+    roll -= w;
+    if (roll <= 0) { rarity = r; break; }
+  }
+
+  // for prism pack boost legendary odds slightly
+  if (packId === 'prism' && Math.random() < 0.08) rarity = 'legendary';
+
+  const rarityPool = pool.filter(c => c.rarity === rarity);
+  if (!rarityPool.length) return pool[Math.floor(Math.random()*pool.length)];
+  return rarityPool[Math.floor(Math.random()*rarityPool.length)];
+}
+
+function openPackAnimation(packId) {
+  const numCards = packId === 'prism' ? 6 : 5;
+  const pulled = [];
+  for (let i=0; i<numCards; i++) pulled.push(rollCard(packId));
+
+  // Add to collection
+  pulled.forEach(card => {
+    if (!myCollection.includes(card.id)) myCollection.push(card.id);
+  });
+  saveLocal();
+
+  const container = document.getElementById('pack-open-cards');
+  container.innerHTML = '';
+  const overlay = document.getElementById('pack-opening');
+  overlay.classList.add('active');
+
+  pulled.forEach((card, i) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'pack-card-reveal';
+      div.style.animationDelay = `0s`;
+      div.innerHTML = renderCard(card.id);
+      container.appendChild(div);
+    }, i * 300);
+  });
+}
+
+window.closePack = function() {
+  document.getElementById('pack-opening').classList.remove('active');
+  renderCollection();
+}
+
+// ===== HOST GAME =====
+window.createGame = function() {
+  const name = document.getElementById('host-name').value.trim();
+  if (!name) { showToast('Enter your name!'); return; }
+  myName = name;
+  isHost = true;
+  gameCode = Math.floor(1000 + Math.random()*9000).toString();
+  closeModal('host-modal');
+
+  gameRef = ref(db, `prism_games/${gameCode}`);
+  set(gameRef, {
+    host: myId,
+    status: 'lobby',
+    currentQ: -1,
+    players: {
+      [myId]: { name: myName, shards: 0, equipped: myEquipped || null, isHost: true }
+    }
+  });
+
+  document.getElementById('host-code-display').textContent = gameCode;
+  document.getElementById('host-shards').textContent = myShards;
+  document.getElementById('start-game-btn').disabled = true;
+  showScreen('host-screen');
+  listenToGame_host();
+}
+
+function listenToGame_host() {
+  const playersRef = ref(db, `prism_games/${gameCode}/players`);
+  const fn = onValue(playersRef, snap => {
+    const players = snap.val() || {};
+    const list = document.getElementById('host-players-list');
+    const pArr = Object.values(players);
+    list.innerHTML = pArr.map(p => `
+      <div class="player-chip">
+        <div class="player-avatar">${p.isHost ? '👑' : (getEquippedEmoji(p.equipped) || '😀')}</div>
+        <div>${p.name}</div>
+      </div>
+    `).join('');
+    document.getElementById('start-game-btn').disabled = pArr.length < 1;
+  });
+  gameListeners.push([playersRef, fn]);
+
+  // Listen for game state to detect end
+  const stateRef = ref(db, `prism_games/${gameCode}/status`);
+  const sfn = onValue(stateRef, snap => {
+    if (snap.val() === 'ended') showEndGame();
+  });
+  gameListeners.push([stateRef, sfn]);
+}
+
+function getEquippedEmoji(cardId) {
+  if (!cardId) return null;
+  const card = CARDS.find(c => c.id === cardId);
+  return card ? card.emoji : null;
+}
+
+window.addQuestion = function() {
+  const text = document.getElementById('q-text').value.trim();
+  const answers = [0,1,2,3].map(i => document.getElementById(`ans-${i}`).value.trim());
+  const correctEl = document.querySelector('input[name="correct-ans"]:checked');
+  if (!text || answers.some(a=>!a) || !correctEl) {
+    showToast('Fill in all fields and select the correct answer!');
+    return;
+  }
+  const correct = parseInt(correctEl.value);
+  questions.push({ text, answers, correct });
+  document.getElementById('q-text').value = '';
+  [0,1,2,3].forEach(i => document.getElementById(`ans-${i}`).value = '');
+  correctEl.checked = false;
+  renderQuestionsList();
+  showToast('✅ Question added!');
+}
+
+function renderQuestionsList() {
+  const list = document.getElementById('questions-list');
+  if (!questions.length) { list.innerHTML = ''; return; }
+  list.innerHTML = questions.map((q,i) => `
+    <div class="question-item">
+      <div class="question-item-num">${i+1}</div>
+      <div class="question-item-text">${q.text}</div>
+      <div class="question-item-del" onclick="removeQuestion(${i})">✕</div>
+    </div>
+  `).join('');
+}
+
+window.removeQuestion = function(i) {
+  questions.splice(i,1);
+  renderQuestionsList();
+}
+
+window.startGame = function() {
+  if (!questions.length) { showToast('Add at least one question first!'); return; }
+  update(ref(db, `prism_games/${gameCode}`), { status:'playing', currentQ: -1, questions });
+  document.getElementById('host-status-badge').textContent = 'PLAYING';
+  document.getElementById('host-status-badge').className = 'badge badge-playing';
+  hostAdvanceQuestion();
+}
+
+async function hostAdvanceQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) {
+    // End game
+    await update(ref(db, `prism_games/${gameCode}`), { status:'ended', currentQ: questions.length });
+    showEndGame();
+    return;
+  }
+  await update(ref(db, `prism_games/${gameCode}`), {
+    currentQ,
+    questionState: 'question',
+    answeredPlayers: null,
+  });
+  // Auto advance after 20 seconds
+  setTimeout(() => {
+    update(ref(db, `prism_games/${gameCode}`), { questionState: 'events' });
+    // next question after another 6 seconds
+    setTimeout(hostAdvanceQuestion, 6000);
+  }, 20000);
+}
+
+// ===== JOIN GAME =====
+window.joinGame = async function() {
+  const name = document.getElementById('join-name').value.trim();
+  const code = document.getElementById('join-code').value.trim();
+  if (!name || !code) { showToast('Enter your name and code!'); return; }
+
+  const snap = await get(ref(db, `prism_games/${code}`));
+  if (!snap.exists()) { showToast('❌ Game not found!'); return; }
+  const game = snap.val();
+  if (game.status === 'ended') { showToast('❌ Game already ended!'); return; }
+
+  myName = name;
+  gameCode = code;
+  gameRef = ref(db, `prism_games/${gameCode}`);
+
+  await update(ref(db, `prism_games/${gameCode}/players/${myId}`), {
+    name: myName, shards: 0, equipped: myEquipped || null, isHost: false
+  });
+
+  closeModal('join-modal');
+  document.getElementById('my-name-display').textContent = myName;
+  document.getElementById('my-shards-display').textContent = 0;
+
+  // Set equipped mini
+  const eqEmoji = getEquippedEmoji(myEquipped);
+  document.getElementById('my-equipped-mini').textContent = eqEmoji || '🃏';
+
+  showScreen('game-screen');
+  listenToGame_student();
+}
+
+function listenToGame_student() {
+  // Listen to game state
+  const gameR = ref(db, `prism_games/${gameCode}`);
+  const fn = onValue(gameR, snap => {
+    const game = snap.val();
+    if (!game) return;
+    if (game.status === 'ended') { showEndGame(game.players); return; }
+    if (game.status !== 'playing') return;
+
+    updateLeaderboard(game.players);
+
+    if (game.questionState === 'question' && game.currentQ >= 0) {
+      showQuestion(game.questions[game.currentQ], game.currentQ, game.players);
+    } else if (game.questionState === 'events') {
+      showShardEvent(game.players);
+    }
+  });
+  gameListeners.push([gameR, fn]);
+}
+
+function showQuestion(q, qIdx, players) {
+  if (currentQ === qIdx && answered) return; // already answered this one
+  currentQ = qIdx;
+  answered = false;
+  const main = document.getElementById('game-main');
+  main.innerHTML = `
+    <div class="question-box">
+      <div class="question-meta">Question ${qIdx+1}</div>
+      <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+      <div class="question-text">${q.text}</div>
+    </div>
+    <div class="answers-grid">
+      ${q.answers.map((a,i) => `
+        <button class="answer-btn" id="ans-btn-${i}" onclick="submitAnswer(${i},${q.correct})">${a}</button>
+      `).join('')}
+    </div>
+  `;
+  // Timer animation
+  const fill = document.getElementById('timer-fill');
+  setTimeout(() => fill.style.width = '0%', 50);
+}
+
+window.submitAnswer = function(selected, correct) {
+  if (answered) return;
+  answered = true;
+  const isCorrect = selected === correct;
+  // Disable all buttons, highlight
+  [0,1,2,3].forEach(i => {
+    const btn = document.getElementById(`ans-btn-${i}`);
+    btn.disabled = true;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === selected && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    // Mark as answered correctly in firebase
+    update(ref(db, `prism_games/${gameCode}/answeredPlayers/${myId}`), { correct: true });
+    showToast('✅ Correct!');
+  } else {
+    showToast('❌ Wrong!');
+  }
+}
+
+function showShardEvent(players) {
+  if (!players || !players[myId]) return;
+  // Only trigger event if we answered correctly this round
+  // Check by seeing if answeredPlayers has us (handled by host timeout)
+  // We'll just show a random event and apply it locally + to firebase
+  const event = SHARD_EVENTS[Math.floor(Math.random() * SHARD_EVENTS.length)];
+  const shards = {};
+  Object.keys(players).forEach(pid => shards[pid] = players[pid].shards || 0);
+
+  // Check if this player answered correctly (from firebase answeredPlayers)
+  get(ref(db, `prism_games/${gameCode}/answeredPlayers/${myId}`)).then(snap => {
+    const didAnswer = snap.exists() && snap.val().correct;
+    const main = document.getElementById('game-main');
+
+    if (didAnswer) {
+      const delta = event.fn(myId, players, shards);
+      // Apply shard changes
+      const updates = {};
+      Object.entries(delta).forEach(([pid, change]) => {
+        const cur = players[pid] ? (players[pid].shards || 0) : 0;
+        updates[`prism_games/${gameCode}/players/${pid}/shards`] = Math.max(0, cur + change);
+      });
+      if (Object.keys(updates).length) update(ref(db), updates);
+
+      main.innerHTML = `
+        <div class="shard-event">
+          <div class="event-icon">${event.emoji}</div>
+          <div class="event-name" style="background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${event.name}</div>
+          <div class="event-desc">${event.desc}</div>
+        </div>
+      `;
+    } else {
+      // didn't answer, just show waiting
+      main.innerHTML = `<div class="empty-state"><div class="big">⏳</div><div>Next question coming...</div></div>`;
+    }
+  });
+}
+
+function updateLeaderboard(players) {
+  if (!players) return;
+  const sorted = Object.entries(players).sort((a,b) => (b[1].shards||0)-(a[1].shards||0));
+  const lb = document.getElementById('leaderboard');
+
+  // Update my shards
+  if (players[myId]) {
+    const mine = players[myId].shards || 0;
+    document.getElementById('my-shards-display').textContent = mine;
+  }
+
+  lb.innerHTML = `<div class="lb-header">Shards</div>` +
+    sorted.map(([pid, p], i) => {
+      let rankClass = '';
+      if (i===0) rankClass='top1'; else if(i===1) rankClass='top2'; else if(i===2) rankClass='top3';
+      return `<div class="lb-row ${pid===myId?'me':''}">
+        <div class="lb-rank ${rankClass}">${i+1}</div>
+        <div class="player-avatar">${p.isHost ? '👑' : (getEquippedEmoji(p.equipped)||'😀')}</div>
+        <div class="lb-name">${p.name}${p.isHost?' (host)':''}</div>
+        <div class="lb-shards">💎 ${p.shards||0}</div>
+      </div>`;
+    }).join('');
+}
+
+async function showEndGame(playersData) {
+  let players = playersData;
+  if (!players) {
+    const snap = await get(ref(db, `prism_games/${gameCode}/players`));
+    players = snap.val() || {};
+  }
+  const sorted = Object.entries(players).sort((a,b) => (b[1].shards||0)-(a[1].shards||0));
+
+  const podium = document.getElementById('end-podium');
+  const top3 = sorted.slice(0,3);
+  const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : (top3.length>=2 ? [null,top3[0],top3[1]] : [null,top3[0],null]);
+  const classes = ['second','first','third'];
+  const medals = ['🥈','🥇','🥉'];
+
+  podium.innerHTML = order.map((entry, i) => {
+    if (!entry) return `<div class="podium-spot ${classes[i]}" style="opacity:0.3"><div class="podium-rank">—</div></div>`;
+    const [pid, p] = entry;
+    return `<div class="podium-spot ${classes[i]}">
+      <div class="podium-rank">${medals[i]}</div>
+      <div class="podium-name">${p.name}</div>
+      <div class="podium-shards">💎 ${p.shards||0}</div>
+    </div>`;
+  }).join('');
+
+  // Award shards based on finish position
+  const myRank = sorted.findIndex(([pid]) => pid === myId);
+  const myGameShards = players[myId] ? (players[myId].shards || 0) : 0;
+  const bonusShards = Math.max(20, Math.floor(myGameShards * 0.5));
+
+  myShards += bonusShards;
+  saveLocal();
+
+  document.getElementById('end-shard-reward').innerHTML = `You earned <span style="color:var(--gold);font-family:'Rajdhani';font-weight:700;">💎 ${bonusShards}</span> shards!`;
+  showModal('end-modal');
+
+  // Cleanup game if host
+  if (isHost && gameCode) {
+    setTimeout(() => remove(ref(db, `prism_games/${gameCode}`)), 5000);
+  }
+}
+
+// ===== PARTICLES =====
+function initParticles() {
+  const colors = ['#7c4dff','#00e5ff','#ff4081','#ffd740'];
+  const container = document.getElementById('particles');
+  for (let i=0; i<20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random()*100 + '%';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (8 + Math.random()*12) + 's';
+    p.style.animationDelay = (Math.random()*10) + 's';
+    p.style.width = p.style.height = (2 + Math.random()*4) + 'px';
+    container.appendChild(p);
+  }
+}
+
+initParticles();
+</script>
+</body>
+</html>
