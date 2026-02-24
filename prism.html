@@ -545,6 +545,48 @@ button:focus,input:focus,textarea:focus,select:focus{
 
 <!-- SECTION:css-screens -->
 <style>
+/* HOMEPAGE SCREEN */
+#homepage-screen{align-items:center;justify-content:flex-start;padding:0;overflow-y:auto;}
+.homepage-container{width:100%;max-width:1200px;margin:0 auto;padding:3rem 2rem;display:flex;flex-direction:column;gap:3rem;}
+.homepage-hero{text-align:center;padding:2rem 0;}
+.homepage-title{font-family:'Rajdhani',sans-serif;font-size:3rem;font-weight:700;background:linear-gradient(135deg,#7c4dff 0%,#00e5ff 40%,#ff4081 70%,#ffd740 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;animation:slideUp .6s ease-out;}
+.homepage-subtitle{font-size:1.1rem;color:var(--text-dim);margin-bottom:1.5rem;animation:slideUp .6s ease-out .1s backwards;}
+.homepage-tagline{font-size:.95rem;color:var(--text-muted);max-width:500px;margin:0 auto;line-height:1.6;}
+
+.games-section{animation:slideUp .6s ease-out .2s backwards;}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:1.5rem;color:var(--text);}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;}
+.game-card{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;cursor:default;transition:all .3s ease;position:relative;overflow:hidden;}
+.game-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,77,255,.1) 0%,transparent 100%);opacity:0;transition:opacity .3s;}
+.game-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 12px 24px rgba(0,0,0,.3);}
+.game-card:hover::before{opacity:1;}
+.game-card-icon{font-size:2.5rem;margin-bottom:1rem;}
+.game-card-title{font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:.5rem;color:var(--text);}
+.game-card-desc{color:var(--text-dim);font-size:.9rem;line-height:1.5;margin-bottom:1rem;}
+.game-card-badge{display:inline-block;background:rgba(124,77,255,.15);color:var(--accent);padding:.3rem .8rem;border-radius:4px;font-size:.75rem;font-weight:600;}
+
+.cards-section{animation:slideUp .6s ease-out .3s backwards;}
+.cards-showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin-bottom:2rem;align-items:center;}
+.showcase-card{perspective:1000px;cursor:default;}
+.showcase-card-inner{position:relative;width:100%;aspect-ratio:2/3;background:linear-gradient(135deg,#7c4dff 0%,#00e5ff 40%,#ff4081 70%,#ffd740 100%);border-radius:var(--radius);padding:2px;transition:transform .6s cubic-bezier(.68,-.55,.265,1.55),box-shadow .3s;}
+.showcase-card-inner:hover{transform:rotateY(5deg) rotateX(-5deg) scale(1.05);box-shadow:0 20px 40px rgba(124,77,255,.4);}
+.showcase-card-content{width:100%;height:100%;background:var(--surface);border-radius:calc(var(--radius) - 2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;color:var(--text);}
+.showcase-card-emoji{font-size:3rem;}
+.showcase-card-name{font-weight:600;text-align:center;font-size:.85rem;}
+.showcase-card-rarity{font-size:.75rem;color:var(--text-dim);}
+
+.hero-cta{display:flex;gap:1rem;justify-content:center;margin-top:3rem;animation:slideUp .6s ease-out .4s backwards;}
+.btn{padding:.75rem 1.5rem;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:.95rem;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#00e5ff);color:white;border:none;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 16px rgba(124,77,255,.3);}
+.btn-secondary{background:transparent;border:1.5px solid var(--text);color:var(--text);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
 /* AUTH SCREEN */
 #auth-screen{align-items:center;justify-content:center;padding:2rem;}
 .auth-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:400px;}
@@ -1328,6 +1370,98 @@ button:focus,input:focus,textarea:focus,select:focus{
 <div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(255,64,129,.9);color:#fff;padding:.6rem;text-align:center;font-weight:600;font-size:.9rem;z-index:9999;border-bottom:2px solid var(--accent3);">
   ⚠️ You are offline. Some features may be limited. Your progress will sync when you're back online.
 </div>
+
+<!-- SECTION:html-homepage -->
+<div id="homepage-screen" class="screen">
+  <div class="homepage-container">
+    <div class="homepage-hero">
+      <div class="homepage-title">PRISM</div>
+      <div class="homepage-subtitle">Answer fast. Collect cards. Wreck your classmates.</div>
+      <div class="homepage-tagline">
+        Join thousands of students in the ultimate competitive learning platform. Master your curriculum while collecting legendary cards and competing for glory.
+      </div>
+    </div>
+
+    <div class="games-section">
+      <div class="section-title">Game Modes</div>
+      <div class="games-grid">
+        <div class="game-card">
+          <div class="game-card-icon">⭐</div>
+          <div class="game-card-title">Solo Practice</div>
+          <div class="game-card-desc">Practice at your own pace and earn shards. Perfect for studying and building your skills without pressure.</div>
+          <div class="game-card-badge">Learn Solo</div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">🎮</div>
+          <div class="game-card-title">Class Battles</div>
+          <div class="game-card-desc">Join your teacher's live game sessions. Compete against your classmates in real-time and show who's the smartest.</div>
+          <div class="game-card-badge">Live PvP</div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">⚡</div>
+          <div class="game-card-title">Surge Mode</div>
+          <div class="game-card-desc">Fast-paced questions with increasing difficulty. Win streaks and level up your skills to unlock higher tiers.</div>
+          <div class="game-card-badge">Competitive</div>
+        </div>
+        <div class="game-card">
+          <div class="game-card-icon">🏆</div>
+          <div class="game-card-title">Team Wars</div>
+          <div class="game-card-desc">Team up with classmates in epic team battles. Work together to outthink and outspeed rival squads.</div>
+          <div class="game-card-badge">Cooperative</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-section">
+      <div class="section-title">Collect Epic Cards</div>
+      <p style="color:var(--text-dim);margin-bottom:1.5rem;">Earn and collect hundreds of unique cards. Unlock special abilities, power-ups, and legendary characters as you level up.</p>
+      <div class="cards-showcase">
+        <div class="showcase-card">
+          <div class="showcase-card-inner">
+            <div class="showcase-card-content">
+              <div class="showcase-card-emoji">🧠</div>
+              <div class="showcase-card-name">Genius Brain</div>
+              <div class="showcase-card-rarity">Rare</div>
+            </div>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-card-inner">
+            <div class="showcase-card-content">
+              <div class="showcase-card-emoji">⚡</div>
+              <div class="showcase-card-name">Lightning Bolt</div>
+              <div class="showcase-card-rarity">Epic</div>
+            </div>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-card-inner">
+            <div class="showcase-card-content">
+              <div class="showcase-card-emoji">👑</div>
+              <div class="showcase-card-name">Crown of Kings</div>
+              <div class="showcase-card-rarity">Legendary</div>
+            </div>
+          </div>
+        </div>
+        <div class="showcase-card">
+          <div class="showcase-card-inner">
+            <div class="showcase-card-content">
+              <div class="showcase-card-emoji">🔥</div>
+              <div class="showcase-card-name">Fire Phoenix</div>
+              <div class="showcase-card-rarity">Legendary</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="showScreen('auth-screen');switchAuthTab('login')">Log In</button>
+      <button class="btn btn-secondary" onclick="showScreen('auth-screen');switchAuthTab('signup')">Sign Up</button>
+    </div>
+  </div>
+</div>
+<!-- /SECTION:html-homepage -->
 
 <!-- SECTION:html-auth -->
 <div id="auth-screen" class="screen">
@@ -2562,7 +2696,7 @@ window.doSignOut = async function() {
   try { await auth.signOut(); } catch(e) {}
   localStorage.removeItem('prism_uid');
   isGuest = true;
-  showScreen('auth-screen');
+  showScreen('homepage-screen');
 };
 
 // Firebase auth state listener — resolves loading screen
@@ -2590,8 +2724,8 @@ auth.onAuthStateChanged(async user => {
     showScreen('landing');
     updateLanding();
   } else {
-    // No user — show auth screen unless on landing already from guest skip
-    if (!isGuest) showScreen('auth-screen');
+    // No user — show homepage unless on landing already from guest skip
+    if (!isGuest) showScreen('homepage-screen');
   }
 });
 
