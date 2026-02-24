@@ -2697,8 +2697,10 @@ window.doSignOut = async function() {
 auth.onAuthStateChanged(async user => {
   console.log('🔐 Auth state changed:', {hasUser: !!user, uid: user?.uid});
   const ls = document.getElementById('loading-screen');
-  ls.classList.add('fade-out');
-  setTimeout(() => ls.classList.add('gone'), 700);
+  if (ls && !ls.classList.contains('gone')) {
+    ls.classList.add('fade-out');
+    setTimeout(() => ls.classList.add('gone'), 700);
+  }
 
   if (user) {
     localStorage.setItem('prism_uid', user.uid);
