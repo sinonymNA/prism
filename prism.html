@@ -1301,6 +1301,11 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- OFFLINE DETECTION BANNER -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(255,64,129,.9);color:#fff;padding:.6rem;text-align:center;font-weight:600;font-size:.9rem;z-index:9999;border-bottom:2px solid var(--accent3);">
+  ⚠️ You are offline. Some features may be limited. Your progress will sync when you're back online.
+</div>
+
 <!-- SECTION:html-auth -->
 <div id="auth-screen" class="screen">
   <div class="auth-box">
@@ -1802,15 +1807,86 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
-// Compat helpers
+// Input sanitization
+function sanitizeInput(str, maxLen = 50) {
+  if (!str) return '';
+  return str.trim().slice(0, maxLen).replace(/[<>\"']/g, c => ({
+    '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;'
+  }[c] || c));
+}
+
+// Error handling wrapper
+function showError(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = '⚠️ ' + message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+  console.error(message);
+}
+
+// Offline detection
+let isOffline = false;
+window.addEventListener('online', () => {
+  isOffline = false;
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.style.display = 'none';
+  showError('Connection restored ✓');
+});
+window.addEventListener('offline', () => {
+  isOffline = true;
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.style.display = 'flex';
+});
+
+// Compat helpers with error handling
 function dbRef(path) { return db.ref(path); }
-function dbSet(path, val) { return db.ref(path).set(val); }
-function dbGet(path) { return db.ref(path).once('value'); }
-function dbUpdate(updates) { return db.ref('/').update(updates); }
-function dbOn(path, cb) { const r = db.ref(path); r.on('value', cb); return r; }
-function dbOff(ref) { try { ref.off(); } catch(e){} }
-function dbRemove(path) { return db.ref(path).remove(); }
-function dbPush(path, val) { return db.ref(path).push(val); }
+
+function dbSet(path, val) {
+  return db.ref(path).set(val).catch(e => {
+    showError('Failed to save: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbGet(path) {
+  return db.ref(path).once('value').catch(e => {
+    showError('Failed to load: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbUpdate(updates) {
+  return db.ref('/').update(updates).catch(e => {
+    showError('Failed to update: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbOn(path, cb) {
+  const r = db.ref(path);
+  r.on('value', cb, (e) => {
+    showError('Connection error: ' + (e.message || 'Unknown error'));
+  });
+  return r;
+}
+
+function dbOff(ref) {
+  try { ref.off(); } catch(e) { console.error(e); }
+}
+
+function dbRemove(path) {
+  return db.ref(path).remove().catch(e => {
+    showError('Failed to remove: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbPush(path, val) {
+  return db.ref(path).push(val).catch(e => {
+    showError('Failed to push: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
 </script>
 <!-- /SECTION:js-firebase -->
 
@@ -2850,7 +2926,7 @@ window.deleteSet = async function(id) {
 window.saveSet = async function() {
   const uid = auth.currentUser?.uid;
   if (!uid) { showToast('Sign in to save sets.'); return; }
-  const name = document.getElementById('set-name-input').value.trim() || 'Untitled Set';
+  const name = sanitizeInput(document.getElementById('set-name-input').value.trim() || 'Untitled Set', 60);
   if (!currentSetQuestions.length) { showToast('Add at least one question!'); return; }
   const setData = { name, questions: currentSetQuestions, updated: Date.now() };
   if (editingSetId) {
@@ -2920,7 +2996,7 @@ window.hostGame = async function() {
   if (!setId) { showToast('Select a question set!'); return; }
   const set = teacherSets[setId];
   if (!set) return;
-  myName = name;
+  myName = sanitizeInput(name, 30);
   questions = set.questions || [];
   isHost = true;
   gameCode = Math.floor(1000 + Math.random()*9000).toString();
@@ -3309,7 +3385,7 @@ window.joinGame = async function() {
   gameListeners.forEach(r => dbOff(r));
   gameListeners = [];
 
-  myName = name;
+  myName = sanitizeInput(name, 30);
   saveLocal();
 
   let game;
