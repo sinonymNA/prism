@@ -5,1661 +5,3236 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prism</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+
+<!-- SECTION:css-base -->
 <style>
-  :root {
-    --bg: #060912;
-    --surface: #0d1220;
-    --surface2: #141a2e;
-    --border: rgba(255,255,255,0.08);
-    --text: #e8eaf6;
-    --text-dim: #7986a8;
-    --accent: #7c4dff;
-    --accent2: #00e5ff;
-    --accent3: #ff4081;
-    --gold: #ffd740;
-    --common: #78909c;
-    --rare: #42a5f5;
-    --epic: #ab47bc;
-    --legendary: #ffd740;
-    --radius: 16px;
-    --card-w: 160px;
-    --card-h: 224px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Exo 2', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background prismatic effect */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,77,255,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,255,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255,64,129,0.05) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  #app { position: relative; z-index: 1; }
-
-  /* ===== SCREENS ===== */
-  .screen { display: none; min-height: 100vh; }
-  .screen.active { display: flex; flex-direction: column; }
-
-  /* ===== LANDING ===== */
-  #landing {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 2rem;
-  }
-
-  .logo {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: clamp(4rem, 12vw, 8rem);
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    background: linear-gradient(135deg, #7c4dff 0%, #00e5ff 40%, #ff4081 70%, #ffd740 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 40px rgba(124,77,255,0.5));
-    animation: logoPulse 4s ease-in-out infinite;
-    line-height: 1;
-  }
-
-  @keyframes logoPulse {
-    0%, 100% { filter: drop-shadow(0 0 40px rgba(124,77,255,0.5)); }
-    50% { filter: drop-shadow(0 0 60px rgba(0,229,255,0.6)); }
-  }
-
-  .tagline {
-    font-size: 1.1rem;
-    color: var(--text-dim);
-    margin: 0.5rem 0 2.5rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    font-weight: 300;
-  }
-
-  .landing-cards {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-bottom: 3rem;
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    padding: 0.85rem 2rem;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #5e35b1);
-    color: white;
-    box-shadow: 0 4px 24px rgba(124,77,255,0.4);
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,77,255,0.6); }
-
-  .btn-secondary {
-    background: rgba(255,255,255,0.06);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-
-  .btn-accent {
-    background: linear-gradient(135deg, var(--accent2), #0097a7);
-    color: #000;
-    box-shadow: 0 4px 24px rgba(0,229,255,0.3);
-  }
-  .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,255,0.5); }
-
-  .btn-danger {
-    background: linear-gradient(135deg, var(--accent3), #c62828);
-    color: white;
-  }
-  .btn-danger:hover { transform: translateY(-2px); }
-
-  .btn-gold {
-    background: linear-gradient(135deg, #ffd740, #ff8f00);
-    color: #000;
-    font-weight: 700;
-    box-shadow: 0 4px 24px rgba(255,215,64,0.4);
-  }
-  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,215,64,0.6); }
-
-  .btn-sm { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
-  .btn-lg { padding: 1rem 2.5rem; font-size: 1.2rem; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-
-  .landing-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
-
-  /* ===== MODAL ===== */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem;
-    max-width: 440px;
-    width: 100%;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
-    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes modalIn {
-    from { transform: scale(0.85) translateY(20px); opacity: 0; }
-    to { transform: scale(1) translateY(0); opacity: 1; }
-  }
-
-  .modal h2 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    color: var(--text);
-  }
-
-  .input {
-    width: 100%;
-    padding: 0.85rem 1rem;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Exo 2', sans-serif;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .input:focus { border-color: var(--accent); }
-  .input::placeholder { color: var(--text-dim); }
-
-  .modal-btns { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
-  .modal-btns .btn { flex: 1; }
-
-  /* ===== CARDS ===== */
-  .card {
-    width: var(--card-w);
-    height: var(--card-h);
-    border-radius: 14px;
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-style: preserve-3d;
-    perspective: 800px;
-  }
-
-  .card:hover { transform: translateY(-8px) scale(1.03); }
-
-  .card-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 14px;
-    padding: 0;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .card-art {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3.5rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card-footer {
-    padding: 0.5rem 0.6rem;
-    background: rgba(0,0,0,0.4);
-  }
-
-  .card-name {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .card-rarity-badge {
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    opacity: 0.8;
-  }
-
-  /* Rarity styles */
-  .rarity-common .card-inner {
-    border: 2px solid #546e7a;
-    background: linear-gradient(160deg, #1a2a30 0%, #0d1720 100%);
-  }
-  .rarity-common .card-art { background: radial-gradient(ellipse at center, #1e3a45 0%, #0a1520 100%); }
-
-  .rarity-rare .card-inner {
-    border: 2px solid #1e88e5;
-    background: linear-gradient(160deg, #0d2550 0%, #061228 100%);
-  }
-  .rarity-rare .card-art { background: radial-gradient(ellipse at center, #0d3060 0%, #050e20 100%); }
-
-  .rarity-epic .card-inner {
-    border: 2px solid #9c27b0;
-    background: linear-gradient(160deg, #1a0d30 0%, #0d0620 100%);
-  }
-  .rarity-epic .card-art { background: radial-gradient(ellipse at center, #2a0d3a 0%, #0d0518 100%); }
-  .rarity-epic::after {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, transparent 30%, rgba(156,39,176,0.3) 50%, transparent 70%);
-    animation: epicShimmer 2s linear infinite;
-    pointer-events: none;
-  }
-
-  @keyframes epicShimmer {
-    0% { transform: translateX(-100%) rotate(30deg); }
-    100% { transform: translateX(200%) rotate(30deg); }
-  }
-
-  .rarity-legendary .card-inner {
-    border: 2px solid #ffd740;
-    background: linear-gradient(160deg, #2a1a00 0%, #150d00 100%);
-  }
-  .rarity-legendary .card-art { background: radial-gradient(ellipse at center, #3a2200 0%, #130900 100%); }
-
-  /* Holographic effect for legendary */
-  .rarity-legendary .card-inner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      105deg,
-      transparent 30%,
-      rgba(255,215,64,0.15) 45%,
-      rgba(255,100,200,0.1) 50%,
-      rgba(100,200,255,0.1) 55%,
-      transparent 70%
-    );
-    animation: holoShimmer 3s linear infinite;
-    pointer-events: none;
-    z-index: 2;
-    border-radius: 14px;
-  }
-
-  @keyframes holoShimmer {
-    0% { transform: translateX(-100%) skewX(-15deg); }
-    100% { transform: translateX(200%) skewX(-15deg); }
-  }
-
-  .rarity-legendary::after {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    border-radius: 17px;
-    background: linear-gradient(135deg, #ffd740, #ff4081, #7c4dff, #00e5ff, #ffd740);
-    background-size: 300% 300%;
-    animation: legendaryBorder 3s linear infinite;
-    z-index: -1;
-  }
-
-  @keyframes legendaryBorder {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 300% 50%; }
-  }
-
-  /* ===== LOBBY / HOST SCREEN ===== */
-  #host-screen, #join-screen, #game-screen, #collection-screen, #pack-screen {
-    padding: 1.5rem;
-  }
-
-  .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .screen-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--accent2), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .join-code-display {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 3rem;
-    font-weight: 700;
-    letter-spacing: 0.3em;
-    color: var(--gold);
-    text-shadow: 0 0 30px rgba(255,215,64,0.5);
-    text-align: center;
-    padding: 1rem;
-    border: 2px dashed rgba(255,215,64,0.3);
-    border-radius: var(--radius);
-    margin-bottom: 1.5rem;
-  }
-
-  .players-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .player-chip {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  .player-avatar { font-size: 1.5rem; }
-
-  /* Question area */
-  .question-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem 2rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  .question-text {
-    font-size: 1.3rem;
-    font-weight: 400;
-    line-height: 1.5;
-    margin-bottom: 0.5rem;
-  }
-
-  .question-meta {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .answers-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .answer-btn {
-    padding: 1rem;
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    background: var(--surface2);
-    color: var(--text);
-    font-family: 'Exo 2', sans-serif;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-    line-height: 1.3;
-  }
-
-  .answer-btn:hover:not(:disabled) {
-    border-color: var(--accent);
-    background: rgba(124,77,255,0.15);
-    transform: translateY(-2px);
-  }
-
-  .answer-btn.correct { border-color: #66bb6a; background: rgba(102,187,106,0.2); }
-  .answer-btn.wrong { border-color: var(--accent3); background: rgba(255,64,129,0.2); }
-  .answer-btn:disabled { cursor: not-allowed; }
-
-  /* Shard event */
-  .shard-event {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    text-align: center;
-    animation: eventPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes eventPop {
-    from { transform: scale(0.7); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  .event-icon { font-size: 3rem; margin-bottom: 0.5rem; }
-  .event-name {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-  }
-  .event-desc { color: var(--text-dim); font-size: 0.95rem; }
-
-  /* Leaderboard */
-  .leaderboard {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .lb-header {
-    padding: 0.75rem 1rem;
-    background: var(--surface2);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .lb-row {
-    display: flex;
-    align-items: center;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--border);
-    gap: 0.75rem;
-    transition: background 0.2s;
-  }
-  .lb-row:last-child { border-bottom: none; }
-  .lb-row.me { background: rgba(124,77,255,0.1); }
-
-  .lb-rank {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    width: 24px;
-    color: var(--text-dim);
-  }
-  .lb-rank.top1 { color: var(--gold); }
-  .lb-rank.top2 { color: #90caf9; }
-  .lb-rank.top3 { color: #ffb74d; }
-
-  .lb-name { flex: 1; font-size: 0.95rem; }
-  .lb-shards {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--accent2);
-  }
-
-  /* Shard display */
-  .shard-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(0,229,255,0.1);
-    border: 1px solid rgba(0,229,255,0.3);
-    border-radius: 8px;
-    padding: 0.4rem 0.8rem;
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--accent2);
-  }
-
-  /* Collection screen */
-  .collection-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
-  }
-
-  /* Pack store */
-  .packs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .pack-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .pack-card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 16px 40px rgba(124,77,255,0.3); }
-
-  .pack-emoji { font-size: 3rem; margin-bottom: 0.75rem; }
-  .pack-name {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-  }
-  .pack-desc { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem; }
-  .pack-cost {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    color: var(--accent2);
-    font-size: 1.1rem;
-  }
-
-  /* Pack opening animation */
-  #pack-opening {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  #pack-opening.active { display: flex; }
-
-  .pack-open-cards {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 900px;
-  }
-
-  .pack-card-reveal {
-    animation: cardReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-  }
-
-  @keyframes cardReveal {
-    from { transform: rotateY(90deg) scale(0.5); opacity: 0; }
-    to { transform: rotateY(0deg) scale(1); opacity: 1; }
-  }
-
-  /* Timer bar */
-  .timer-bar {
-    height: 4px;
-    background: var(--surface2);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-  }
-
-  .timer-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    border-radius: 2px;
-    transition: width 1s linear;
-  }
-
-  /* Equipped card mini */
-  .equipped-mini {
-    width: 48px;
-    height: 67px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    flex-shrink: 0;
-  }
-
-  /* Notification toast */
-  #toast {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.75rem 1.5rem;
-    font-size: 0.95rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    z-index: 500;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* Status badge */
-  .badge {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .badge-waiting { background: rgba(120,144,156,0.2); color: var(--common); border: 1px solid var(--common); }
-  .badge-playing { background: rgba(102,187,106,0.2); color: #66bb6a; border: 1px solid #66bb6a; }
-
-  /* Host question builder */
-  .question-builder {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .answers-builder {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
-
-  .answer-input-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .answer-input-row input { flex: 1; margin-bottom: 0; }
-
-  .correct-radio {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .section-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 0.5rem;
-  }
-
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .answers-grid { grid-template-columns: 1fr; } }
-
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 1.5rem 0;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-dim);
-  }
-  .empty-state .big { font-size: 3rem; margin-bottom: 1rem; }
-
-  /* Floating particles (decorative) */
-  .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-  .particle {
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    opacity: 0;
-    animation: float linear infinite;
-  }
-  @keyframes float {
-    0% { opacity: 0; transform: translateY(100vh) scale(0); }
-    10% { opacity: 0.6; }
-    90% { opacity: 0.3; }
-    100% { opacity: 0; transform: translateY(-10vh) scale(1.5); }
-  }
-
-  .host-controls {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .questions-list { margin-bottom: 1rem; }
-  .question-item {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .question-item-num {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 24px;
-  }
-  .question-item-text { flex: 1; font-size: 0.9rem; }
-  .question-item-del { cursor: pointer; color: var(--text-dim); font-size: 1.2rem; transition: color 0.2s; }
-  .question-item-del:hover { color: var(--accent3); }
-
-  /* End game */
-  .podium {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 1rem;
-    margin: 2rem 0;
-  }
-
-  .podium-spot {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem;
-    text-align: center;
-    min-width: 120px;
-  }
-
-  .podium-spot.first {
-    border-color: var(--gold);
-    box-shadow: 0 0 30px rgba(255,215,64,0.3);
-    min-height: 180px;
-  }
-  .podium-spot.second { min-height: 140px; }
-  .podium-spot.third { min-height: 110px; }
-
-  .podium-rank { font-size: 2rem; margin-bottom: 0.5rem; }
-  .podium-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; }
-  .podium-shards { color: var(--accent2); font-size: 0.9rem; }
-
-  select.input {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237986a8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-  }
+:root {
+  --bg: #060912;
+  --surface: #0d1220;
+  --surface2: #141a2e;
+  --surface3: #1c2340;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf6;
+  --text-dim: #7986a8;
+  --text-muted: #3d4a6e;
+  --accent: #7c4dff;
+  --accent2: #00e5ff;
+  --accent3: #ff4081;
+  --gold: #ffd740;
+  --green: #69f0ae;
+  --common: #78909c;
+  --rare: #42a5f5;
+  --epic: #ab47bc;
+  --legendary: #ffd740;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Exo 2',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%,rgba(124,77,255,0.12) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%,rgba(0,229,255,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 50%,rgba(255,64,129,0.05) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+#app{position:relative;z-index:1;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+button{cursor:pointer;font-family:'Exo 2',sans-serif;}
+input,textarea,select{font-family:'Exo 2',sans-serif;}
+
+/* LOADING */
+#loading-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .6s ease;
+}
+#loading-screen.fade-out{opacity:0;pointer-events:none;}
+#loading-screen.gone{display:none;}
+.loading-logo{
+  font-family:'Rajdhani',sans-serif;font-size:5rem;font-weight:700;
+  background:linear-gradient(135deg,#7c4dff 0%,#00e5ff 40%,#ff4081 70%,#ffd740 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:logoPulse 1.5s ease-in-out infinite;
+}
+@keyframes logoPulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+.loading-sub{color:var(--text-dim);margin-top:.5rem;font-size:.9rem;letter-spacing:.15em;text-transform:uppercase;}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-top:1.5rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* BUTTONS */
+.btn{
+  padding:.65rem 1.4rem;border:none;border-radius:var(--radius-sm);
+  font-size:.95rem;font-weight:600;transition:all .15s;
+  letter-spacing:.03em;
+}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1);}
+.btn:active{transform:translateY(0);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-accent2{background:var(--accent2);color:#000;}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text-dim);}
+.btn-ghost:hover{border-color:var(--text-dim);color:var(--text);}
+.btn-danger{background:var(--accent3);color:#fff;}
+.btn-green{background:var(--green);color:#000;}
+.btn-lg{padding:.85rem 2rem;font-size:1.1rem;}
+.btn-sm{padding:.35rem .8rem;font-size:.8rem;}
+.btn-block{width:100%;text-align:center;}
+
+/* INPUTS */
+.input{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  color:var(--text);padding:.7rem 1rem;font-size:.95rem;width:100%;outline:none;
+  transition:border-color .2s;
+}
+.input:focus{border-color:var(--accent);}
+.input::placeholder{color:var(--text-muted);}
+.label{font-size:.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;display:block;}
+
+/* CARDS */
+.card{
+  width:140px;height:196px;border-radius:12px;
+  border:2px solid var(--border2);background:var(--surface2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.4rem;padding:.75rem;position:relative;cursor:pointer;
+  transition:all .2s;overflow:hidden;
+}
+.card:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.card.common{border-color:var(--common);}
+.card.rare{border-color:var(--rare);box-shadow:0 0 12px rgba(66,165,245,.2);}
+.card.epic{border-color:var(--epic);box-shadow:0 0 14px rgba(171,71,188,.25);}
+.card.legendary{border-color:var(--legendary);box-shadow:0 0 18px rgba(255,215,64,.3);animation:legendaryGlow 2s ease-in-out infinite;}
+@keyframes legendaryGlow{0%,100%{box-shadow:0 0 18px rgba(255,215,64,.3);}50%{box-shadow:0 0 28px rgba(255,215,64,.5);}}
+.card-art{width:80px;height:80px;border-radius:8px;object-fit:cover;}
+.card-emoji{font-size:2.8rem;line-height:1;}
+.card-name{font-size:.7rem;font-weight:700;text-align:center;color:var(--text);letter-spacing:.05em;}
+.card-pack{font-size:.6rem;color:var(--text-dim);}
+.card-rarity-badge{
+  position:absolute;top:6px;right:6px;
+  font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  padding:2px 5px;border-radius:3px;
+}
+.card-rarity-badge.common{background:var(--common);color:#fff;}
+.card-rarity-badge.rare{background:var(--rare);color:#fff;}
+.card-rarity-badge.epic{background:var(--epic);color:#fff;}
+.card-rarity-badge.legendary{background:var(--legendary);color:#000;}
+.card-buff{font-size:.58rem;color:var(--green);text-align:center;margin-top:.2rem;}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  padding:.7rem 1.4rem;font-size:.9rem;font-weight:600;z-index:9000;
+  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;
+  max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+  z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:2rem;width:100%;max-width:440px;animation:modalIn .25s ease;
+}
+@keyframes modalIn{from{transform:scale(.93);opacity:0;}}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:1.25rem;}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.25rem;}
+
+/* LEADERBOARD */
+.lb-row{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.55rem .75rem;border-radius:var(--radius-sm);background:var(--surface2);margin-bottom:.3rem;
+  border:1px solid transparent;transition:all .2s;
+}
+.lb-row.me{border-color:var(--accent);background:rgba(124,77,255,.12);}
+.lb-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;background:var(--surface3);flex-shrink:0;}
+.lb-rank.top1{background:var(--gold);color:#000;}
+.lb-rank.top2{background:#90a4ae;color:#000;}
+.lb-rank.top3{background:#a1704a;color:#fff;}
+.lb-name{flex:1;font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-shards{font-size:.85rem;font-weight:700;color:var(--gold);}
+.lb-streak{font-size:.8rem;color:var(--accent3);}
+.lb-buff{font-size:.65rem;color:var(--green);}
+.lb-charges{font-size:.75rem;color:var(--accent2);}
+
+/* CONFETTI */
+#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:8000;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+
+/* SECTION MARKERS ARE AT HTML LEVEL (below) */
 </style>
+<!-- /SECTION:css-base -->
+
+<!-- SECTION:css-screens -->
+<style>
+/* AUTH SCREEN */
+#auth-screen{align-items:center;justify-content:center;padding:2rem;}
+.auth-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:400px;}
+.auth-logo{font-family:'Rajdhani',sans-serif;font-size:3.5rem;font-weight:700;text-align:center;background:linear-gradient(135deg,#7c4dff,#00e5ff,#ff4081);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem;}
+.auth-tagline{text-align:center;color:var(--text-dim);font-size:.85rem;margin-bottom:1.75rem;}
+.auth-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;}
+.auth-tab{flex:1;padding:.6rem;border:1px solid var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--text-dim);font-weight:600;font-size:.9rem;transition:all .15s;}
+.auth-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.auth-form{display:flex;flex-direction:column;gap:.85rem;}
+.auth-role-btns{display:flex;gap:.5rem;}
+.auth-role-btn{flex:1;padding:.6rem;border:1px solid var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--text-dim);font-size:.85rem;font-weight:600;transition:all .15s;}
+.auth-role-btn.active{border-color:var(--accent2);color:var(--accent2);background:rgba(0,229,255,.08);}
+.auth-err{color:var(--accent3);font-size:.82rem;text-align:center;}
+.auth-skip{text-align:center;margin-top:1rem;}
+.auth-skip button{background:none;border:none;color:var(--text-muted);font-size:.8rem;text-decoration:underline;cursor:pointer;}
+
+/* LANDING / PROFILE */
+#landing{align-items:center;justify-content:flex-start;padding:0;}
+.profile-header{
+  width:100%;padding:1.5rem 1.5rem 1rem;
+  background:linear-gradient(180deg,var(--surface) 0%,transparent 100%);
+  display:flex;align-items:center;gap:1rem;
+}
+.profile-avatar{font-size:2.5rem;}
+.profile-name{font-family:'Rajdhani',sans-serif;font-size:1.6rem;font-weight:700;}
+.profile-role{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
+.profile-shards{
+  margin-left:auto;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);padding:.4rem .9rem;text-align:center;
+}
+.profile-shards-val{font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:var(--gold);}
+.profile-shards-label{font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;}
+.landing-content{padding:1rem 1.5rem 2rem;width:100%;max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:.75rem;}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.action-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:.4rem;
+}
+.action-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.action-card-icon{font-size:1.8rem;}
+.action-card-title{font-weight:700;font-size:1rem;}
+.action-card-desc{font-size:.78rem;color:var(--text-dim);line-height:1.4;}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-top:.5rem;}
+
+/* HOST SCREEN */
+#host-screen{padding:0;}
+.screen-header{
+  display:flex;align-items:center;gap:1rem;
+  padding:1rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.screen-back{background:transparent;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.4rem .9rem;color:var(--text-dim);font-size:.85rem;font-weight:600;}
+.screen-back:hover{border-color:var(--text-dim);color:var(--text);}
+.screen-title{font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;}
+.screen-badge{
+  margin-left:auto;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  padding:.25rem .6rem;border-radius:4px;background:var(--surface2);color:var(--text-dim);
+}
+.screen-badge.live{background:rgba(255,64,129,.2);color:var(--accent3);animation:badgePulse 1.5s ease-in-out infinite;}
+@keyframes badgePulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+.host-body{padding:1.25rem 1.5rem;overflow-y:auto;flex:1;}
+
+/* HOST LOBBY */
+.host-lobby-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.host-code-box{
+  grid-column:1/-1;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:1.25rem;text-align:center;
+}
+.host-code-label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.15em;margin-bottom:.3rem;}
+.host-code-val{font-family:'Rajdhani',sans-serif;font-size:3.5rem;font-weight:700;color:var(--accent2);letter-spacing:.2em;}
+.host-code-sub{font-size:.75rem;color:var(--text-muted);margin-top:.25rem;}
+.host-panel{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;}
+.host-panel-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.75rem;}
+.mode-select-grid{display:grid;grid-template-columns:1fr;gap:.5rem;}
+.mode-option{
+  display:flex;align-items:center;gap:.75rem;padding:.75rem;
+  border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);
+  cursor:pointer;transition:all .15s;
+}
+.mode-option:hover,.mode-option.selected{border-color:var(--accent);background:rgba(124,77,255,.1);}
+.mode-option-icon{font-size:1.4rem;flex-shrink:0;}
+.mode-option-title{font-weight:700;font-size:.9rem;}
+.mode-option-desc{font-size:.72rem;color:var(--text-dim);line-height:1.4;}
+.player-chip{
+  display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;
+  background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:.3rem;font-size:.85rem;
+}
+.player-chip .player-avatar{font-size:1.1rem;}
+.kick-btn{margin-left:auto;background:transparent;border:none;color:var(--text-muted);font-size:.9rem;}
+.kick-btn:hover{color:var(--accent3);}
+
+/* HOST LIVE */
+.host-live-body{display:none;flex:1;overflow:hidden;}
+.host-live-grid{display:grid;grid-template-columns:1fr 280px;height:100%;gap:0;}
+.host-main-panel{padding:1.25rem 1.5rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem;}
+.host-side-panel{border-left:1px solid var(--border);padding:1rem;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;}
+.host-q-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1.25rem;}
+.host-q-meta{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;}
+.host-q-text{font-size:1.15rem;font-weight:600;line-height:1.5;}
+.host-answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.75rem;}
+.host-answer-item{
+  padding:.6rem .9rem;border-radius:var(--radius-sm);
+  background:var(--surface2);border:1px solid var(--border);font-size:.85rem;
+}
+.host-answer-item.correct-ans{border-color:var(--green);color:var(--green);background:rgba(105,240,174,.08);}
+.answered-pips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem;}
+.answered-pip{
+  width:28px;height:28px;border-radius:50%;background:var(--surface3);
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;
+  border:2px solid var(--border2);transition:all .2s;
+}
+.answered-pip.done{background:rgba(105,240,174,.2);border-color:var(--green);color:var(--green);}
+.answered-pip.wrong{background:rgba(255,64,129,.2);border-color:var(--accent3);color:var(--accent3);}
+.host-lb-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.5rem;}
+
+/* STUDENT GAME SCREEN */
+#game-screen{padding:0;}
+.game-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.75rem 1rem;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;gap:.75rem;
+}
+.game-shards{display:flex;align-items:center;gap:.4rem;font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;color:var(--gold);}
+.game-charges{display:flex;align-items:center;gap:.4rem;font-size:.85rem;font-weight:700;color:var(--accent2);}
+.game-streak{font-size:.85rem;color:var(--accent3);font-weight:700;}
+.game-mode-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:.2rem .5rem;border-radius:4px;}
+.game-body{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+
+/* QUESTION AREA */
+.question-area{padding:1rem;flex-shrink:0;}
+.question-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:1.25rem;
+}
+.question-meta{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;}
+.timer-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-bottom:.75rem;}
+.timer-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .5s linear;}
+.question-text{font-size:1.1rem;font-weight:600;line-height:1.5;}
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:0 1rem 1rem;}
+.answer-btn{
+  padding:.85rem .75rem;border:2px solid var(--border2);border-radius:var(--radius-sm);
+  background:var(--surface2);color:var(--text);font-size:.9rem;font-weight:600;
+  transition:all .15s;text-align:left;line-height:1.3;
+}
+.answer-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,77,255,.15);}
+.answer-btn.correct{border-color:var(--green)!important;background:rgba(105,240,174,.15)!important;color:var(--green);}
+.answer-btn.wrong{border-color:var(--accent3)!important;background:rgba(255,64,129,.12)!important;color:var(--accent3);}
+.answer-btn:disabled{opacity:.7;cursor:default;}
+
+/* GAME SPLIT: question left, leaderboard right on wide screens */
+.game-content{display:flex;flex:1;overflow:hidden;}
+.game-left{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.game-right{
+  width:220px;border-left:1px solid var(--border);
+  padding:.75rem;overflow-y:auto;flex-shrink:0;
+}
+@media(max-width:600px){
+  .game-right{display:none;}
+  .answers-grid{grid-template-columns:1fr;}
+}
+
+/* SABOTAGE PANEL */
+.sabotage-panel{
+  padding:.75rem 1rem;border-top:1px solid var(--border);flex-shrink:0;
+}
+.sabotage-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.5rem;}
+.sabotage-grid{display:flex;gap:.5rem;flex-wrap:wrap;}
+.sabotage-btn{
+  display:flex;flex-direction:column;align-items:center;gap:.2rem;
+  padding:.5rem .75rem;border:1px solid var(--border2);border-radius:var(--radius-sm);
+  background:var(--surface2);color:var(--text);font-size:.7rem;font-weight:700;
+  transition:all .15s;min-width:70px;
+}
+.sabotage-btn:hover:not(:disabled){border-color:var(--accent2);background:rgba(0,229,255,.08);}
+.sabotage-btn:disabled{opacity:.35;cursor:not-allowed;}
+.sabotage-btn-icon{font-size:1.2rem;}
+.sabotage-btn-cost{font-size:.58rem;color:var(--accent2);}
+.sabotage-btn.on-cooldown{border-color:var(--accent3);color:var(--text-muted);}
+
+/* RESULT POPUP */
+.result-popup{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);
+  background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);
+  padding:1.5rem 2rem;text-align:center;z-index:600;
+  opacity:0;pointer-events:none;transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  min-width:220px;
+}
+.result-popup.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:all;}
+.result-popup.correct{border-color:var(--green);}
+.result-popup.wrong{border-color:var(--accent3);}
+.result-popup-icon{font-size:2.5rem;margin-bottom:.5rem;}
+.result-popup-msg{font-size:1.1rem;font-weight:700;}
+.result-popup-shards{font-family:'Rajdhani',sans-serif;font-size:1.6rem;font-weight:700;color:var(--gold);}
+.result-popup-charges{font-size:.85rem;color:var(--accent2);}
+
+/* TARGET PICKER */
+.target-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:700;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;
+  padding:2rem;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.target-overlay.open{opacity:1;pointer-events:all;}
+.target-title{font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;}
+.target-grid{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;max-width:500px;}
+.target-btn{
+  padding:.75rem 1.25rem;border:1px solid var(--border2);border-radius:var(--radius-sm);
+  background:var(--surface2);color:var(--text);font-size:.9rem;font-weight:600;
+  transition:all .15s;display:flex;align-items:center;gap:.5rem;
+}
+.target-btn:hover{border-color:var(--accent3);background:rgba(255,64,129,.12);}
+.target-cancel{background:transparent;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.5rem 1.25rem;color:var(--text-dim);font-size:.85rem;}
+
+/* SHARD EVENT */
+.shard-event-card{
+  margin:1rem;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:1.75rem;text-align:center;
+  animation:eventPop .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes eventPop{from{transform:scale(.85);opacity:0;}}
+.event-icon{font-size:3rem;margin-bottom:.5rem;}
+.event-name{font-family:'Rajdhani',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:.3rem;}
+.event-desc{font-size:.9rem;color:var(--text-dim);line-height:1.5;}
+
+/* END GAME */
+#end-screen{align-items:center;justify-content:center;padding:2rem;}
+.end-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:480px;}
+.end-title{font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;text-align:center;margin-bottom:1.5rem;}
+.end-podium{display:flex;align-items:flex-end;justify-content:center;gap:.5rem;margin-bottom:1.5rem;}
+.podium-spot{display:flex;flex-direction:column;align-items:center;gap:.3rem;}
+.podium-avatar{font-size:1.6rem;}
+.podium-name{font-size:.75rem;font-weight:700;text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;}
+.podium-shards{font-size:.7rem;color:var(--gold);}
+.podium-block{width:60px;border-radius:4px 4px 0 0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;}
+.podium-1{height:80px;background:linear-gradient(180deg,var(--gold),#b8860b);}
+.podium-2{height:60px;background:linear-gradient(180deg,#90a4ae,#546e7a);}
+.podium-3{height:45px;background:linear-gradient(180deg,#a1704a,#6d4c41);}
+.end-results{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.5rem;}
+.end-earned{
+  background:rgba(105,240,174,.08);border:1px solid rgba(105,240,174,.2);
+  border-radius:var(--radius-sm);padding:.75rem;text-align:center;margin-bottom:1rem;
+}
+.end-earned-label{font-size:.75rem;color:var(--text-dim);margin-bottom:.2rem;}
+.end-earned-val{font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;color:var(--green);}
+
+/* COLLECTION SCREEN */
+#collection-screen{padding:0;}
+.collection-body{padding:1.25rem 1.5rem;overflow-y:auto;flex:1;}
+.collection-stats{display:flex;gap:.75rem;margin-bottom:1.25rem;}
+.stat-chip{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.5rem .9rem;text-align:center;flex:1;}
+.stat-chip-val{font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;}
+.stat-chip-label{font-size:.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+.cards-grid{display:flex;flex-wrap:wrap;gap:.75rem;}
+.loadout-picker{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;}
+.loadout-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.75rem;}
+.loadout-slots{display:flex;gap:.75rem;}
+.loadout-slot{
+  width:80px;height:100px;border:2px dashed var(--border2);border-radius:var(--radius-sm);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.3rem;font-size:.65rem;color:var(--text-muted);cursor:pointer;transition:all .15s;
+}
+.loadout-slot.filled{border-style:solid;border-color:var(--accent2);background:rgba(0,229,255,.06);}
+.loadout-slot:hover{border-color:var(--text-dim);}
+.loadout-slot-emoji{font-size:1.5rem;}
+
+/* PACK STORE */
+#store-screen{padding:0;}
+.store-body{padding:1.25rem 1.5rem;overflow-y:auto;flex:1;}
+.packs-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.pack-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
+  padding:1.25rem;text-align:center;cursor:pointer;transition:all .2s;
+}
+.pack-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.pack-icon{font-size:2.5rem;margin-bottom:.5rem;}
+.pack-name{font-weight:700;font-size:.95rem;margin-bottom:.25rem;}
+.pack-desc{font-size:.72rem;color:var(--text-dim);line-height:1.4;margin-bottom:.75rem;}
+.pack-cost{font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;color:var(--gold);}
+
+/* PACK OPENING OVERLAY */
+#pack-opening{
+  position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:800;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#pack-opening.active{opacity:1;pointer-events:all;}
+.pack-open-title{font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;color:var(--gold);}
+#pack-open-cards{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;max-width:600px;}
+.pack-card-reveal{animation:cardReveal .4s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes cardReveal{from{transform:scale(0) rotate(-10deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+.legendary-flash{position:fixed;inset:0;background:rgba(255,215,64,.15);pointer-events:none;animation:flash .6s ease;z-index:850;}
+@keyframes flash{0%,100%{opacity:0;}50%{opacity:1;}}
+@keyframes screenFlash{0%{opacity:1;}100%{opacity:0;}}
+
+/* JOIN SCREEN */
+#join-screen{align-items:center;justify-content:center;padding:2rem;}
+.join-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:2rem;width:100%;max-width:380px;}
+.join-title{font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;margin-bottom:1.25rem;}
+.join-code-input{
+  font-family:'Rajdhani',sans-serif;font-size:2.5rem;font-weight:700;letter-spacing:.3em;
+  text-align:center;text-transform:uppercase;background:var(--surface2);
+  border:2px solid var(--border2);border-radius:var(--radius-sm);
+  color:var(--accent2);width:100%;padding:.75rem;outline:none;
+}
+.join-code-input:focus{border-color:var(--accent2);}
+
+/* TEACHER DASHBOARD */
+#teacher-screen{padding:0;}
+.teacher-body{padding:1.25rem 1.5rem;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:1rem;}
+.teacher-tabs{display:flex;gap:.5rem;border-bottom:1px solid var(--border);padding-bottom:.75rem;}
+.teacher-tab{padding:.45rem .9rem;border:1px solid var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--text-dim);font-size:.85rem;font-weight:600;}
+.teacher-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.teacher-panel{display:none;}
+.teacher-panel.active{display:block;}
+.question-item{
+  display:flex;align-items:flex-start;gap:.6rem;padding:.65rem .75rem;
+  background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:.3rem;
+}
+.question-item-num{
+  width:22px;height:22px;border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;margin-top:.1rem;
+}
+.question-item-text{flex:1;font-size:.85rem;line-height:1.4;}
+.question-item-del{color:var(--text-muted);font-size:1rem;cursor:pointer;flex-shrink:0;}
+.question-item-del:hover{color:var(--accent3);}
+.set-item{
+  display:flex;align-items:center;gap:.75rem;padding:.75rem;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);margin-bottom:.4rem;cursor:pointer;
+}
+.set-item:hover{border-color:var(--accent);}
+.set-item-name{flex:1;font-weight:600;}
+.set-item-count{font-size:.78rem;color:var(--text-dim);}
+
+/* WAR MODE */
+.war-header{
+  display:flex;gap:.5rem;padding:.5rem 1rem;flex-shrink:0;
+}
+.war-team-bar{
+  flex:1;border-radius:var(--radius-sm);padding:.5rem .75rem;
+  display:flex;flex-direction:column;gap:.1rem;border:2px solid transparent;
+  transition:border-color .3s;
+}
+.war-team-bar.my-team{border-color:var(--accent2);}
+.war-team-name{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
+.war-team-score{font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;}
+.war-team-score.apollo{color:#ff9800;}
+.war-team-score.athena{color:var(--accent2);}
+.war-captures{font-size:.6rem;color:var(--text-dim);}
+.war-question-banner{
+  margin:.5rem 1rem;padding:.6rem 1rem;border-radius:var(--radius-sm);
+  text-align:center;font-weight:700;font-size:.85rem;
+  border:1px solid var(--border2);background:var(--surface2);
+  transition:all .3s;
+}
+.war-question-banner.captured-apollo{
+  background:rgba(255,152,0,.15);border-color:#ff9800;color:#ff9800;
+  animation:capturePop .4s cubic-bezier(.34,1.56,.64,1);
+}
+.war-question-banner.captured-athena{
+  background:rgba(0,229,255,.15);border-color:var(--accent2);color:var(--accent2);
+  animation:capturePop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes capturePop{from{transform:scale(.9);}to{transform:scale(1);}}
+.war-capture-needed{
+  display:flex;gap:.3rem;align-items:center;justify-content:center;
+  font-size:.75rem;color:var(--text-dim);
+}
+.capture-pip{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--surface3);border:1px solid var(--border2);
+  transition:all .2s;
+}
+.capture-pip.apollo{background:#ff9800;border-color:#ff9800;}
+.capture-pip.athena{background:var(--accent2);border-color:var(--accent2);}
+
+/* SIEGE SABOTAGE OVERLAY */
+.siege-overlay{
+  position:fixed;inset:0;background:rgba(255,64,129,.15);
+  border:3px solid var(--accent3);pointer-events:none;z-index:600;
+  animation:siegePulse 1s ease-in-out 3;
+}
+@keyframes siegePulse{0%,100%{opacity:0;}50%{opacity:1;}}
+
+/* WAR END SCREEN */
+.war-winner-banner{
+  text-align:center;padding:1.25rem;border-radius:var(--radius);
+  margin-bottom:1rem;font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;
+}
+.war-winner-banner.apollo{background:rgba(255,152,0,.15);border:2px solid #ff9800;color:#ff9800;}
+.war-winner-banner.athena{background:rgba(0,229,255,.15);border:2px solid var(--accent2);color:var(--accent2);}
+.war-winner-banner.tie{background:rgba(255,215,64,.1);border:2px solid var(--gold);color:var(--gold);}
+.war-mvp{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  padding:.75rem;text-align:center;margin-bottom:1rem;
+}
+.war-mvp-label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
+.war-mvp-name{font-size:1.1rem;font-weight:700;margin-top:.2rem;}
+
+/* ===== PHASE 4 TEACHER QOL ===== */
+.host-stats-bar {
+  display: flex;
+  gap: .5rem;
+  padding: .5rem 1rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.host-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .72rem;
+  background: var(--surface3);
+  padding: .3rem .6rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.host-stat-chip.danger { background: rgba(255,64,129,.15); color: var(--accent3); }
+.host-stat-chip.warn   { background: rgba(255,152,0,.15);  color: #ff9800; }
+.host-stat-chip.good   { background: rgba(105,240,174,.12); color: var(--green); }
+.struggle-list {
+  margin-top: .4rem;
+  font-size: .75rem;
+  color: var(--text-dim);
+}
+.struggle-player {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .2rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.struggle-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: var(--surface3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.struggle-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--green);
+  transition: width .4s ease;
+}
+.struggle-bar-fill.low { background: var(--accent3); }
+.struggle-bar-fill.mid { background: #ff9800; }
+.struggle-pct { font-size: .65rem; color: var(--text-muted); min-width: 28px; text-align: right; }
+
+/* Time limit selector in lobby */
+.time-limit-grid {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+  margin-top: .35rem;
+}
+.time-btn {
+  padding: .35rem .7rem;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface3);
+  color: var(--text);
+  font-size: .78rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.time-btn:hover { background: var(--surface2); }
+.time-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Pause overlay on student side */
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6,9,18,.85);
+  z-index: 8000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  backdrop-filter: blur(4px);
+}
+.pause-overlay-icon { font-size: 3.5rem; }
+.pause-overlay-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+.pause-overlay-sub { font-size: .9rem; color: var(--text-dim); }
+
+/* Set editor reorder buttons */
+.question-item-actions {
+  display: flex;
+  gap: .25rem;
+  align-items: center;
+}
+.reorder-btn {
+  background: var(--surface3);
+  border: none;
+  border-radius: 4px;
+  color: var(--text-dim);
+  font-size: .75rem;
+  padding: .1rem .3rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.reorder-btn:hover { color: var(--text); background: var(--surface2); }
+
+/* Host live — pause button */
+.btn-pause {
+  background: rgba(255,215,64,.12);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+.btn-pause:hover { background: rgba(255,215,64,.2); }
+
+/* Card flip reveal in pack opening */
+.pack-card-flip {
+  perspective: 600px;
+  width: 140px;
+  height: 196px;
+  cursor: pointer;
+}
+.pack-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pack-card-flip.flipped .pack-card-inner {
+  transform: rotateY(180deg);
+}
+.pack-card-face, .pack-card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pack-card-back {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+  border: 2px solid var(--border2);
+  font-size: 2.5rem;
+}
+.pack-card-face {
+  transform: rotateY(180deg);
+}
+.pack-open-instructions {
+  font-size: .8rem;
+  color: var(--text-dim);
+  animation: instructionPulse 1.5s ease-in-out infinite;
+}
+@keyframes instructionPulse { 0%,100%{opacity:.5;} 50%{opacity:1;} }
+
+/* Sabotage hit overlay */
+.sabotage-hit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  animation: sabHitIn .3s ease forwards, sabHitOut .4s ease 1.8s forwards;
+}
+@keyframes sabHitIn { from{opacity:0;} to{opacity:1;} }
+@keyframes sabHitOut { from{opacity:1;} to{opacity:0;} }
+.sabotage-hit-bg {
+  position: absolute;
+  inset: 0;
+  border: 4px solid var(--accent3);
+  animation: borderPulse .4s ease-in-out 3;
+}
+@keyframes borderPulse { 0%,100%{opacity:.3;} 50%{opacity:1;} }
+.sabotage-hit-icon { font-size: 4rem; animation: iconBounce .4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes iconBounce { from{transform:scale(0);} to{transform:scale(1);} }
+.sabotage-hit-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent3);
+  text-shadow: 0 0 20px rgba(255,64,129,.5);
+  text-align: center;
+  padding: 0 2rem;
+}
+.sabotage-hit-sub { font-size: .9rem; color: var(--text-dim); }
+
+/* Shard counter tick animation */
+@keyframes shardTick { 0%{transform:scale(1.3);color:var(--gold);} 100%{transform:scale(1);} }
+.shard-ticking { animation: shardTick .25s ease; }
+
+/* Streak fire pulse on leaderboard */
+.lb-streak-fire {
+  animation: fireWobble .6s ease-in-out infinite alternate;
+  display: inline-block;
+}
+@keyframes fireWobble { from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.15) rotate(3deg);} }
+
+/* Correct/wrong answer screen flash */
+.answer-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5000;
+  animation: ansFlash .45s ease forwards;
+}
+@keyframes ansFlash { 0%{opacity:.25;} 100%{opacity:0;} }
+
+/* Charge gain popup */
+.charge-gain-popup {
+  position: fixed;
+  bottom: 6rem;
+  right: 1rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent2);
+  pointer-events: none;
+  z-index: 6000;
+  animation: chargeFloat 1.2s ease forwards;
+}
+@keyframes chargeFloat { 0%{opacity:1;transform:translateY(0);} 100%{opacity:0;transform:translateY(-40px);} }
+
+/* Shard gain popup */
+.shard-gain-popup {
+  position: fixed;
+  bottom: 8rem;
+  right: 1rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--gold);
+  pointer-events: none;
+  z-index: 6000;
+  animation: chargeFloat 1.4s ease forwards;
+}
+
+/* Streak popup */
+.streak-popup {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 2px solid var(--accent3);
+  border-radius: var(--radius);
+  padding: .75rem 1.5rem;
+  text-align: center;
+  z-index: 6500;
+  pointer-events: none;
+  animation: streakPop .4s cubic-bezier(.34,1.56,.64,1) forwards, streakFade .3s ease 2s forwards;
+}
+@keyframes streakPop { from{transform:translateX(-50%) scale(.7);opacity:0;} to{transform:translateX(-50%) scale(1);opacity:1;} }
+@keyframes streakFade { to{opacity:0;} }
+.streak-popup-icon { font-size: 2rem; }
+.streak-popup-text { font-family:'Rajdhani',sans-serif; font-size:1.2rem; font-weight:700; color:var(--accent3); }
+
+/* Pack opening — suspense bar */
+.pack-suspense-bar {
+  width: 200px;
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.pack-suspense-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
+  border-radius: 2px;
+  transition: width .1s linear;
+}
+  position:fixed;width:3px;height:3px;border-radius:50%;pointer-events:none;z-index:1;
+  animation:particleDrift linear infinite;opacity:.4;
+}
+@keyframes particleDrift{
+  0%{transform:translateY(100vh) translateX(0);opacity:0;}
+  10%{opacity:.4;}
+  90%{opacity:.4;}
+  100%{transform:translateY(-20px) translateX(var(--drift));opacity:0;}
+}
+</style>
+<!-- /SECTION:css-screens -->
+
 </head>
 <body>
-
-<div class="particles" id="particles"></div>
-
 <div id="app">
 
-  <!-- ===== LANDING ===== -->
-  <div class="screen active" id="landing">
-    <div style="position:relative;z-index:1;">
-      <div class="logo">PRISM</div>
-      <div class="tagline">Collect · Play · Dominate</div>
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">PRISM</div>
+  <div class="loading-sub">Loading your collection…</div>
+  <div class="loading-spinner"></div>
+</div>
 
-      <!-- Preview cards -->
-      <div class="landing-cards">
-        <div class="card rarity-legendary" style="transform:rotate(-8deg);">
-          <div class="card-inner">
-            <div class="card-art">🌟</div>
-            <div class="card-footer">
-              <div class="card-name">Nebula Lord</div>
-              <div class="card-rarity-badge" style="color:var(--legendary)">Legendary</div>
-            </div>
+<!-- CONFETTI -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- SECTION:html-auth -->
+<div id="auth-screen" class="screen">
+  <div class="auth-box">
+    <div class="auth-logo">PRISM</div>
+    <div class="auth-tagline">Answer fast. Collect cards. Wreck your classmates.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <div class="auth-form">
+      <div id="signup-extras" style="display:none;">
+        <label class="label">I am a…</label>
+        <div class="auth-role-btns">
+          <button class="auth-role-btn active" id="role-student" onclick="setRole('student')">🎒 Student</button>
+          <button class="auth-role-btn" id="role-teacher" onclick="setRole('teacher')">🏫 Teacher</button>
+        </div>
+        <div style="margin-top:.85rem;">
+          <label class="label">Display Name</label>
+          <input class="input" id="auth-display" placeholder="How you'll appear in games" />
+        </div>
+      </div>
+      <div>
+        <label class="label">Email</label>
+        <input class="input" id="auth-email" type="email" placeholder="your@email.com" />
+      </div>
+      <div>
+        <label class="label">Password</label>
+        <input class="input" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()" />
+      </div>
+      <div id="auth-err" class="auth-err"></div>
+      <button class="btn btn-accent btn-block" onclick="doAuth()">Continue →</button>
+    </div>
+    <div class="auth-skip">
+      <button onclick="skipAuth()">Continue as guest</button>
+    </div>
+  </div>
+</div>
+<!-- /SECTION:html-auth -->
+
+<!-- SECTION:html-landing -->
+<div id="landing" class="screen">
+  <div class="profile-header">
+    <div class="profile-avatar" id="profile-avatar">😀</div>
+    <div>
+      <div class="profile-name" id="profile-name">Player</div>
+      <div class="profile-role" id="profile-role">Student</div>
+    </div>
+    <div class="profile-shards">
+      <div class="profile-shards-val" id="profile-shards-val">0</div>
+      <div class="profile-shards-label">💎 Shards</div>
+    </div>
+  </div>
+  <div class="landing-content">
+    <div class="action-grid">
+      <div class="action-card" onclick="showScreen('join-screen')">
+        <div class="action-card-icon">🎮</div>
+        <div class="action-card-title">Join Game</div>
+        <div class="action-card-desc">Enter a code to join your teacher's game</div>
+      </div>
+      <div class="action-card" onclick="showScreen('collection-screen');renderCollection()">
+        <div class="action-card-icon">🃏</div>
+        <div class="action-card-title">Collection</div>
+        <div class="action-card-desc">View cards and set your loadout</div>
+      </div>
+      <div class="action-card" onclick="showScreen('store-screen');renderStore()">
+        <div class="action-card-icon">🛍️</div>
+        <div class="action-card-title">Pack Store</div>
+        <div class="action-card-desc">Spend shards to open card packs</div>
+      </div>
+      <div class="action-card" id="teacher-card" style="display:none;" onclick="showScreen('teacher-screen');initTeacherDash()">
+        <div class="action-card-icon">🏫</div>
+        <div class="action-card-title">Host Game</div>
+        <div class="action-card-desc">Set up and run a class game session</div>
+      </div>
+    </div>
+    <div class="section-title">My Loadout</div>
+    <div style="display:flex;gap:.75rem;" id="landing-loadout">
+      <div style="color:var(--text-muted);font-size:.85rem;">No cards equipped. Visit your collection!</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="doSignOut()" style="margin-top:.5rem;width:fit-content;">Sign Out</button>
+  </div>
+</div>
+<!-- /SECTION:html-landing -->
+
+<!-- SECTION:html-join -->
+<div id="join-screen" class="screen">
+  <div class="join-box">
+    <div class="join-title">Join Game</div>
+    <label class="label">Your Name</label>
+    <input class="input" id="join-name" placeholder="Display name in game" style="margin-bottom:.85rem;" />
+    <label class="label">Game Code</label>
+    <input class="join-code-input" id="join-code" maxlength="4" placeholder="0000" />
+    <div style="display:flex;gap:.5rem;margin-top:1.25rem;">
+      <button class="btn btn-ghost" onclick="showScreen('landing')">Back</button>
+      <button class="btn btn-accent2" style="flex:1;" onclick="joinGame()">Join →</button>
+    </div>
+  </div>
+</div>
+<!-- /SECTION:html-join -->
+
+<!-- SECTION:html-host -->
+<div id="host-screen" class="screen">
+  <div class="screen-header">
+    <button class="screen-back" onclick="leaveHost()">← Back</button>
+    <div class="screen-title" id="host-screen-title">Host Game</div>
+    <div class="screen-badge" id="host-status-badge">LOBBY</div>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="host-body" id="host-lobby">
+    <div class="host-lobby-grid">
+      <div class="host-code-box">
+        <div class="host-code-label">Game Code</div>
+        <div class="host-code-val" id="host-code-display">----</div>
+        <div class="host-code-sub">Students enter this at prism-11024.web.app</div>
+      </div>
+      <div class="host-panel">
+        <div class="host-panel-title">Game Mode</div>
+        <div class="mode-select-grid">
+          <div class="mode-option selected" id="mode-surge" onclick="selectMode('surge')">
+            <div class="mode-option-icon">⚡</div>
+            <div><div class="mode-option-title">Shard Surge</div><div class="mode-option-desc">Answer fast, earn shards, sabotage rivals</div></div>
+          </div>
+          <div class="mode-option" id="mode-gamble" onclick="selectMode('gamble')">
+            <div class="mode-option-icon">🎰</div>
+            <div><div class="mode-option-title">Divine Gamble</div><div class="mode-option-desc">Double or nothing after every answer</div></div>
+          </div>
+          <div class="mode-option" id="mode-war" onclick="selectMode('war')">
+            <div class="mode-option-icon">⚔️</div>
+            <div><div class="mode-option-title">Pantheon War</div><div class="mode-option-desc">Two teams race to capture questions</div></div>
           </div>
         </div>
-        <div class="card rarity-epic" style="transform:rotate(2deg) translateY(-10px);">
-          <div class="card-inner">
-            <div class="card-art">🔮</div>
-            <div class="card-footer">
-              <div class="card-name">Void Sorcerer</div>
-              <div class="card-rarity-badge" style="color:var(--epic)">Epic</div>
-            </div>
-          </div>
-        </div>
-        <div class="card rarity-rare" style="transform:rotate(6deg);">
-          <div class="card-inner">
-            <div class="card-art">🌊</div>
-            <div class="card-footer">
-              <div class="card-name">Tide Walker</div>
-              <div class="card-rarity-badge" style="color:var(--rare)">Rare</div>
-            </div>
+        <div style="margin-top:.75rem;">
+          <div class="host-panel-title" style="margin-bottom:.3rem;">⏱ Time Per Question</div>
+          <div class="time-limit-grid" id="time-limit-grid">
+            <button class="time-btn" onclick="selectTimeLimit(15)">15s</button>
+            <button class="time-btn" onclick="selectTimeLimit(25)">25s</button>
+            <button class="time-btn selected" onclick="selectTimeLimit(30)">30s</button>
+            <button class="time-btn" onclick="selectTimeLimit(45)">45s</button>
+            <button class="time-btn" onclick="selectTimeLimit(60)">60s</button>
+            <button class="time-btn" onclick="selectTimeLimit(0)">∞ No limit</button>
           </div>
         </div>
       </div>
-
-      <div class="landing-btns">
-        <button class="btn btn-primary btn-lg" onclick="showModal('host-modal')">🎮 Host Game</button>
-        <button class="btn btn-accent btn-lg" onclick="showModal('join-modal')">🚀 Join Game</button>
-        <button class="btn btn-secondary btn-lg" onclick="goToCollection()">🃏 My Collection</button>
+      <div class="host-panel">
+        <div class="host-panel-title">Players (<span id="host-player-count">0</span>)</div>
+        <div id="host-players-list"></div>
+        <button class="btn btn-gold btn-block" id="start-game-btn" onclick="startGame()" disabled style="margin-top:.75rem;">▶ Start Game</button>
+      </div>
+      <div class="host-panel">
+        <div class="host-panel-title">Question Set</div>
+        <div id="host-sets-list"></div>
+        <div style="margin-top:.5rem;font-size:.75rem;color:var(--text-muted);" id="host-q-count">No set selected</div>
       </div>
     </div>
   </div>
 
-  <!-- ===== HOST SETUP SCREEN ===== -->
-  <div class="screen" id="host-screen">
-    <div class="top-bar">
-      <div class="screen-title">Host Setup</div>
-      <div style="display:flex;gap:0.75rem;align-items:center;">
-        <div class="shard-count">💎 <span id="host-shards">0</span></div>
-        <button class="btn btn-secondary btn-sm" onclick="goHome()">← Home</button>
-      </div>
+  <!-- LIVE -->
+  <div class="host-live-body" id="host-live">
+    <!-- Stats bar -->
+    <div class="host-stats-bar" id="host-stats-bar">
+      <div class="host-stat-chip" id="stat-answered">✅ 0/0 answered</div>
+      <div class="host-stat-chip" id="stat-correct-rate">🎯 —%</div>
+      <div class="host-stat-chip" id="stat-struggling">😓 0 struggling</div>
+      <div class="host-stat-chip" id="stat-q-progress">Q1/1</div>
     </div>
-
-    <div class="two-col">
-      <div>
-        <div class="section-label">Game Code</div>
-        <div class="join-code-display" id="host-code-display">----</div>
-
-        <div class="section-label">Players Waiting</div>
-        <div class="players-grid" id="host-players-list">
-          <div class="empty-state" style="padding:1rem;">
-            <div>Waiting for players...</div>
-          </div>
+    <div class="host-live-grid">
+      <div class="host-main-panel">
+        <div class="host-q-card" id="host-q-card">
+          <div class="host-q-meta" id="host-live-qmeta">Question 1</div>
+          <div class="host-q-text" id="host-live-qtext">Ready to start…</div>
+          <div class="host-answers-grid" id="host-live-answers"></div>
         </div>
-
-        <div class="host-controls">
-          <button class="btn btn-gold btn-lg" id="start-game-btn" onclick="startGame()" disabled>▶ Start Game</button>
-          <span class="badge badge-waiting" id="host-status-badge">LOBBY</span>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-label">Questions</div>
-        <div class="question-builder">
-          <input class="input" id="q-text" placeholder="Question text..." />
-          <div class="answers-builder">
-            <div class="answer-input-row">
-              <input type="radio" name="correct-ans" class="correct-radio" value="0" />
-              <input class="input" id="ans-0" placeholder="Answer A" />
-            </div>
-            <div class="answer-input-row">
-              <input type="radio" name="correct-ans" class="correct-radio" value="1" />
-              <input class="input" id="ans-1" placeholder="Answer B" />
-            </div>
-            <div class="answer-input-row">
-              <input type="radio" name="correct-ans" class="correct-radio" value="2" />
-              <input class="input" id="ans-2" placeholder="Answer C" />
-            </div>
-            <div class="answer-input-row">
-              <input type="radio" name="correct-ans" class="correct-radio" value="3" />
-              <input class="input" id="ans-3" placeholder="Answer D" />
-            </div>
-          </div>
-          <div style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-dim)">Select radio button for correct answer</div>
-          <div style="margin-top:0.75rem;">
-            <button class="btn btn-secondary btn-sm" onclick="addQuestion()">+ Add Question</button>
-          </div>
-        </div>
-
-        <div class="questions-list" id="questions-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== STUDENT GAME SCREEN ===== -->
-  <div class="screen" id="game-screen">
-    <div class="top-bar">
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <div id="my-equipped-mini" class="equipped-mini">🃏</div>
         <div>
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.1rem;" id="my-name-display">Player</div>
-          <div class="shard-count" style="font-size:0.9rem;">💎 <span id="my-shards-display">0</span></div>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.4rem;">Answered</div>
+          <div class="answered-pips" id="host-answered-pips"></div>
+        </div>
+        <!-- Struggle list (who got it wrong) -->
+        <div id="host-struggle-panel" style="display:none;margin-bottom:.75rem;">
+          <div style="font-size:.72rem;color:var(--accent3);font-weight:700;margin-bottom:.3rem;">⚠️ Students who answered wrong this question:</div>
+          <div class="struggle-list" id="host-struggle-list"></div>
+        </div>
+        <div style="display:flex;gap:.75rem;">
+          <button class="btn btn-accent" id="next-q-btn" onclick="hostNextQuestion()" style="flex:1;">Next Question →</button>
+          <button class="btn btn-pause" id="pause-btn" onclick="hostTogglePause()">⏸ Pause</button>
+          <button class="btn btn-danger" onclick="hostEndGame()">End</button>
         </div>
       </div>
-      <div class="screen-title" style="font-size:1.3rem;">PRISM</div>
+      <div class="host-side-panel">
+        <div class="host-lb-title">Leaderboard</div>
+        <div id="host-leaderboard"></div>
+      </div>
     </div>
+  </div>
+</div>
+<!-- /SECTION:html-host -->
 
-    <div class="two-col">
+<!-- SECTION:html-game -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <button class="screen-back" onclick="if(confirm('Leave the game?'))leaveGame()">←</button>
+    <div class="game-shards">💎 <span id="my-shards-display">0</span></div>
+    <div class="game-charges">⚡ <span id="my-charges-display">0</span> charges</div>
+    <div class="game-streak" id="my-streak-display"></div>
+    <div class="game-mode-badge" id="game-mode-badge" style="background:rgba(124,77,255,.2);color:var(--accent);">Surge</div>
+  </div>
+
+  <!-- WAR MODE TEAM HEADER (hidden unless war mode) -->
+  <div id="war-header" style="display:none;">
+    <div class="war-header">
+      <div class="war-team-bar" id="war-bar-apollo">
+        <div class="war-team-name" style="color:#ff9800;">🔥 Team Apollo</div>
+        <div class="war-team-score apollo" id="war-score-apollo">0</div>
+        <div class="war-captures" id="war-caps-apollo">0 captures</div>
+      </div>
+      <div style="display:flex;align-items:center;font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;color:var(--text-dim);padding:0 .25rem;">VS</div>
+      <div class="war-team-bar" id="war-bar-athena">
+        <div class="war-team-name" style="color:var(--accent2);">⚡ Team Athena</div>
+        <div class="war-team-score athena" id="war-score-athena">0</div>
+        <div class="war-captures" id="war-caps-athena">0 captures</div>
+      </div>
+    </div>
+    <div class="war-question-banner" id="war-question-banner">Waiting for question…</div>
+  </div>
+
+  <div class="game-content">
+    <div class="game-left">
       <div id="game-main">
-        <!-- Dynamic content: question, shard event, waiting -->
-        <div class="empty-state" id="waiting-msg">
-          <div class="big">⏳</div>
-          <div>Waiting for host to start...</div>
-        </div>
+        <div style="padding:2rem;text-align:center;color:var(--text-dim);">Waiting for game to start…</div>
       </div>
-
-      <div>
-        <div class="section-label">Leaderboard</div>
-        <div class="leaderboard" id="leaderboard">
-          <div class="lb-header">Shards</div>
-        </div>
+      <div class="sabotage-panel" id="sabotage-panel" style="display:none;">
+        <div class="sabotage-title">⚡ Sabotage (spend charges)</div>
+        <div class="sabotage-grid" id="sabotage-grid"></div>
       </div>
+    </div>
+    <div class="game-right">
+      <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.5rem;" id="lb-title">Leaderboard</div>
+      <div id="leaderboard"></div>
     </div>
   </div>
+</div>
+<!-- /SECTION:html-game -->
 
-  <!-- ===== COLLECTION SCREEN ===== -->
-  <div class="screen" id="collection-screen">
-    <div class="top-bar">
-      <div class="screen-title">My Collection</div>
-      <div style="display:flex;gap:0.75rem;align-items:center;">
-        <div class="shard-count">💎 <span id="coll-shards">0</span></div>
-        <button class="btn btn-gold btn-sm" onclick="goToPackStore()">🛍 Pack Store</button>
-        <button class="btn btn-secondary btn-sm" onclick="goHome()">← Home</button>
-      </div>
-    </div>
-
-    <div id="collection-equipped" style="margin-bottom:1.5rem;">
-      <div class="section-label">Equipped Card</div>
-      <div id="equipped-display"></div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="section-label" style="margin-bottom:1rem;">All Cards (<span id="coll-count">0</span>)</div>
-    <div class="collection-grid" id="collection-grid"></div>
+<!-- SECTION:html-collection -->
+<div id="collection-screen" class="screen">
+  <div class="screen-header">
+    <button class="screen-back" onclick="showScreen('landing')">← Back</button>
+    <div class="screen-title">My Collection</div>
   </div>
-
-  <!-- ===== PACK STORE SCREEN ===== -->
-  <div class="screen" id="pack-screen">
-    <div class="top-bar">
-      <div class="screen-title">Pack Store</div>
-      <div style="display:flex;gap:0.75rem;align-items:center;">
-        <div class="shard-count">💎 <span id="store-shards">0</span></div>
-        <button class="btn btn-secondary btn-sm" onclick="goToCollection()">← Collection</button>
+  <div class="collection-body">
+    <div class="loadout-picker">
+      <div class="loadout-title">Active Loadout (choose up to 3 cards — buffs apply in games)</div>
+      <div class="loadout-slots" id="loadout-slots">
+        <div class="loadout-slot" onclick="openLoadoutPicker(0)"><div class="loadout-slot-emoji">+</div><div>Slot 1</div></div>
+        <div class="loadout-slot" onclick="openLoadoutPicker(1)"><div class="loadout-slot-emoji">+</div><div>Slot 2</div></div>
+        <div class="loadout-slot" onclick="openLoadoutPicker(2)"><div class="loadout-slot-emoji">+</div><div>Slot 3</div></div>
       </div>
     </div>
+    <div class="collection-stats">
+      <div class="stat-chip"><div class="stat-chip-val" id="coll-total">0</div><div class="stat-chip-label">Cards</div></div>
+      <div class="stat-chip"><div class="stat-chip-val" id="coll-unique">0</div><div class="stat-chip-label">Unique</div></div>
+      <div class="stat-chip"><div class="stat-chip-val" id="coll-legendary">0</div><div class="stat-chip-label">Legendary</div></div>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+</div>
+<!-- /SECTION:html-collection -->
 
+<!-- SECTION:html-store -->
+<div id="store-screen" class="screen">
+  <div class="screen-header">
+    <button class="screen-back" onclick="showScreen('landing')">← Back</button>
+    <div class="screen-title">Pack Store</div>
+    <div style="margin-left:auto;font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;color:var(--gold);">💎 <span id="store-shards">0</span></div>
+  </div>
+  <div class="store-body">
     <div class="packs-grid" id="packs-grid"></div>
   </div>
+</div>
+<!-- /SECTION:html-store -->
+
+<!-- SECTION:html-teacher -->
+<div id="teacher-screen" class="screen">
+  <div class="screen-header">
+    <button class="screen-back" onclick="showScreen('landing')">← Back</button>
+    <div class="screen-title">Teacher Dashboard</div>
+  </div>
+  <div class="teacher-body">
+    <div class="teacher-tabs">
+      <button class="teacher-tab active" onclick="switchTeacherTab('sets')">Question Sets</button>
+      <button class="teacher-tab" onclick="switchTeacherTab('host')">Host Game</button>
+      <button class="teacher-tab" onclick="switchTeacherTab('import')">CSV Import</button>
+    </div>
+
+    <!-- SETS -->
+    <div class="teacher-panel active" id="tab-sets">
+      <div id="sets-list" style="margin-bottom:1rem;"></div>
+      <button class="btn btn-accent btn-sm" onclick="createNewSet()">+ New Question Set</button>
+    </div>
+
+    <!-- HOST -->
+    <div class="teacher-panel" id="tab-host">
+      <div style="margin-bottom:1rem;">
+        <label class="label">Your Name</label>
+        <input class="input" id="host-name" placeholder="Mr. S" style="margin-bottom:.85rem;" />
+        <label class="label">Select Question Set</label>
+        <select class="input" id="host-set-select">
+          <option value="">— choose a set —</option>
+        </select>
+      </div>
+      <button class="btn btn-gold btn-block btn-lg" onclick="hostGame()">Create Game →</button>
+    </div>
+
+    <!-- IMPORT -->
+    <div class="teacher-panel" id="tab-import">
+      <p style="color:var(--text-dim);font-size:.85rem;margin-bottom:1rem;line-height:1.6;">
+        Upload a CSV with columns: <code>question,a,b,c,d,correct</code><br>
+        where <code>correct</code> is 0-3 (index of correct answer).
+      </p>
+      <input type="file" id="csv-file" accept=".csv" onchange="handleCSV(event)" style="display:none;">
+      <div style="display:flex;gap:.75rem;align-items:center;">
+        <button class="btn btn-accent" onclick="document.getElementById('csv-file').click()">Upload CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="generatePrompt()">🤖 AI Prompt</button>
+      </div>
+      <div id="import-result" style="margin-top:1rem;font-size:.85rem;color:var(--green);"></div>
+      <div id="ai-prompt-box" style="display:none;margin-top:1rem;">
+        <textarea class="input" id="ai-prompt-text" rows="6" readonly style="font-size:.75rem;"></textarea>
+        <button class="btn btn-ghost btn-sm" onclick="copyPrompt()" style="margin-top:.5rem;">Copy Prompt</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /SECTION:html-teacher -->
+
+<!-- SECTION:html-end -->
+<div id="end-screen" class="screen">
+  <div class="end-box">
+    <div class="end-title">🏆 Game Over!</div>
+    <div class="end-podium" id="end-podium"></div>
+    <div class="end-earned">
+      <div class="end-earned-label">You earned</div>
+      <div class="end-earned-val" id="end-earned-val">+0 💎</div>
+    </div>
+    <div class="end-results" id="end-results"></div>
+    <button class="btn btn-accent2 btn-block" onclick="showScreen('landing');updateLanding()">Back to Home</button>
+  </div>
+</div>
+<!-- /SECTION:html-end -->
+
+<!-- PACK OPENING OVERLAY -->
+<div id="pack-opening">
+  <div class="pack-open-title" id="pack-open-title">✨ Tap each card to reveal</div>
+  <div class="pack-suspense-bar"><div class="pack-suspense-fill" id="pack-suspense-fill" style="width:0%"></div></div>
+  <div id="pack-open-cards"></div>
+  <button class="btn btn-gold" onclick="closePack()" id="pack-collect-btn" style="display:none;">Collect Cards</button>
+  <div class="pack-open-instructions" id="pack-open-instructions">Tap cards to reveal them</div>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div id="pause-overlay" style="display:none;" class="pause-overlay">
+  <div class="pause-overlay-icon">⏸</div>
+  <div class="pause-overlay-text">Game Paused</div>
+  <div class="pause-overlay-sub">Your teacher has paused the game</div>
+</div>
+
+<!-- TARGET PICKER OVERLAY -->
+<div class="target-overlay" id="target-overlay">
+  <div class="target-title" id="target-title">Choose a target</div>
+  <div class="target-grid" id="target-grid"></div>
+  <button class="target-cancel btn btn-ghost" onclick="closeTargetPicker()">Cancel</button>
+</div>
+
+<!-- RESULT POPUP -->
+<div class="result-popup" id="result-popup">
+  <div class="result-popup-icon" id="result-icon">✅</div>
+  <div class="result-popup-msg" id="result-msg">Correct!</div>
+  <div class="result-popup-shards" id="result-shards"></div>
+  <div class="result-popup-charges" id="result-charges"></div>
+</div>
+
+<!-- SECTION:html-modals -->
+<!-- Set Editor Modal -->
+<div class="modal-overlay" id="set-editor-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title" id="set-editor-title">New Question Set</div>
+    <label class="label">Set Name</label>
+    <input class="input" id="set-name-input" placeholder="e.g. Unit 3 Review" style="margin-bottom:1rem;" />
+    <div style="display:grid;grid-template-columns:1fr auto;gap:.75rem;margin-bottom:.75rem;">
+      <input class="input" id="q-text" placeholder="Question text…" />
+      <button class="btn btn-accent btn-sm" onclick="addQuestion()">Add</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
+      <input class="input" id="ans-0" placeholder="Answer A" />
+      <input class="input" id="ans-1" placeholder="Answer B" />
+      <input class="input" id="ans-2" placeholder="Answer C" />
+      <input class="input" id="ans-3" placeholder="Answer D" />
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;font-size:.8rem;">
+      Correct: 
+      <label><input type="radio" name="correct-ans" value="0"> A</label>
+      <label><input type="radio" name="correct-ans" value="1"> B</label>
+      <label><input type="radio" name="correct-ans" value="2"> C</label>
+      <label><input type="radio" name="correct-ans" value="3"> D</label>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+      <div style="font-size:.75rem;color:var(--text-dim);" id="q-list-count">0 questions</div>
+      <button class="btn btn-ghost btn-sm" onclick="shuffleQuestions()" style="font-size:.72rem;">🔀 Shuffle</button>
+    </div>
+    <div id="questions-list" style="max-height:200px;overflow-y:auto;margin-bottom:1rem;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('set-editor-modal')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveSet()" style="flex:1;">Save Set</button>
+    </div>
+  </div>
+</div>
+<!-- /SECTION:html-modals -->
 
 </div><!-- #app -->
 
-<!-- ===== MODALS ===== -->
-<div class="modal-overlay" id="host-modal">
-  <div class="modal">
-    <h2>🎮 Host a Game</h2>
-    <input class="input" id="host-name" placeholder="Your name..." maxlength="20" />
-    <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeModal('host-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="createGame()">Create Game</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="join-modal">
-  <div class="modal">
-    <h2>🚀 Join a Game</h2>
-    <input class="input" id="join-name" placeholder="Your name..." maxlength="20" />
-    <input class="input" id="join-code" placeholder="Game code (e.g. 4829)" maxlength="6" style="letter-spacing:0.2em;font-size:1.2rem;font-family:'Rajdhani',sans-serif;" />
-    <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeModal('join-modal')">Cancel</button>
-      <button class="btn btn-accent" onclick="joinGame()">Join!</button>
-    </div>
-  </div>
-</div>
-
-<!-- End game modal -->
-<div class="modal-overlay" id="end-modal">
-  <div class="modal" style="max-width:560px;">
-    <h2 style="text-align:center;">🏆 Game Over!</h2>
-    <div class="podium" id="end-podium"></div>
-    <div id="end-shard-reward" style="text-align:center;font-size:1.1rem;margin-bottom:1rem;color:var(--accent2);"></div>
-    <div class="modal-btns">
-      <button class="btn btn-gold" onclick="closeModal('end-modal');goToPackStore()">🛍 Open Packs</button>
-      <button class="btn btn-secondary" onclick="closeModal('end-modal');goHome()">Home</button>
-    </div>
-  </div>
-</div>
-
-<!-- Pack opening overlay -->
-<div id="pack-opening">
-  <div style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;color:var(--gold);">✨ Pack Opened!</div>
-  <div class="pack-open-cards" id="pack-open-cards"></div>
-  <button class="btn btn-primary btn-lg" onclick="closePack()">Sweet! Close</button>
-</div>
-
-<!-- Toast -->
-<div id="toast"></div>
-
-<!-- ===== FIREBASE ===== -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, push, onValue, off, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-
+<!-- SECTION:js-firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBkUUEvwdJ4paQwFYV5UYkSTLVXaPZZT9M",
   authDomain: "history-write-app.firebaseapp.com",
+  databaseURL: "https://history-write-app-default-rtdb.firebaseio.com",
   projectId: "history-write-app",
   storageBucket: "history-write-app.firebasestorage.app",
   messagingSenderId: "435981000839",
-  appId: "1:435981000839:web:0842c89a7391743aacd822",
-  databaseURL: "https://history-write-app-default-rtdb.firebaseio.com"
+  appId: "1:435981000839:web:0842c89a7391743aacd822"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
+// Compat helpers
+function dbRef(path) { return db.ref(path); }
+function dbSet(path, val) { return db.ref(path).set(val); }
+function dbGet(path) { return db.ref(path).once('value'); }
+function dbUpdate(updates) { return db.ref('/').update(updates); }
+function dbOn(path, cb) { const r = db.ref(path); r.on('value', cb); return r; }
+function dbOff(ref) { try { ref.off(); } catch(e){} }
+function dbRemove(path) { return db.ref(path).remove(); }
+function dbPush(path, val) { return db.ref(path).push(val); }
+</script>
+<!-- /SECTION:js-firebase -->
 
+<!-- SECTION:js-data -->
+<script>
 // ===== CARD DATA =====
 const CARDS = [
   // Cosmic Pack
-  { id:'c1', name:'Nebula Lord', emoji:'🌟', pack:'Cosmic', rarity:'legendary' },
-  { id:'c2', name:'Black Hole', emoji:'🌑', pack:'Cosmic', rarity:'epic' },
-  { id:'c3', name:'Star Cluster', emoji:'✨', pack:'Cosmic', rarity:'rare' },
-  { id:'c4', name:'Asteroid', emoji:'🪨', pack:'Cosmic', rarity:'common' },
-  { id:'c5', name:'Space Probe', emoji:'🛸', pack:'Cosmic', rarity:'common' },
-  { id:'c6', name:'Comet Rider', emoji:'☄️', pack:'Cosmic', rarity:'rare' },
-  { id:'c7', name:'Supernova', emoji:'💥', pack:'Cosmic', rarity:'epic' },
-  { id:'c8', name:'Galaxy Brain', emoji:'🌌', pack:'Cosmic', rarity:'legendary' },
-  // Mythic Pack
-  { id:'m1', name:'Thunder God', emoji:'⚡', pack:'Mythic', rarity:'legendary' },
-  { id:'m2', name:'Sea Titan', emoji:'🔱', pack:'Mythic', rarity:'epic' },
-  { id:'m3', name:'Phoenix', emoji:'🦅', pack:'Mythic', rarity:'rare' },
-  { id:'m4', name:'Goblin Scout', emoji:'👺', pack:'Mythic', rarity:'common' },
-  { id:'m5', name:'Stone Troll', emoji:'🗿', pack:'Mythic', rarity:'common' },
-  { id:'m6', name:'Moon Witch', emoji:'🌙', pack:'Mythic', rarity:'rare' },
-  { id:'m7', name:'Cerberus', emoji:'🐺', pack:'Mythic', rarity:'epic' },
-  { id:'m8', name:'The Fates', emoji:'🌀', pack:'Mythic', rarity:'legendary' },
+  { id:'c1', name:'Nebula Lord',   emoji:'🌟', pack:'cosmic', rarity:'legendary', buff:'shards', buffVal:20, buffDesc:'+20% shards on correct answers' },
+  { id:'c2', name:'Black Hole',    emoji:'🌑', pack:'cosmic', rarity:'epic',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards' },
+  { id:'c3', name:'Star Cluster',  emoji:'✨', pack:'cosmic', rarity:'rare',      buff:'streak', buffVal:1,  buffDesc:'Streak bonuses trigger 1 step earlier' },
+  { id:'c4', name:'Asteroid',      emoji:'🪨', pack:'cosmic', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'c5', name:'Space Probe',   emoji:'🛸', pack:'cosmic', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'c6', name:'Comet Rider',   emoji:'☄️', pack:'cosmic', rarity:'rare',      buff:'speed',  buffVal:10, buffDesc:'Speed bonus +10% for fast answers' },
+  { id:'c7', name:'Supernova',     emoji:'💥', pack:'cosmic', rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer' },
+  { id:'c8', name:'Galaxy Brain',  emoji:'🌌', pack:'cosmic', rarity:'legendary', buff:'shards', buffVal:25, buffDesc:'+25% shards on correct answers' },
+  // Mythic Pack (Gods at Blue Collar Jobs)
+  { id:'m1', name:'Zeus the Electrician', emoji:'⚡', pack:'mythic', rarity:'legendary', buff:'shards', buffVal:25, buffDesc:'+25% shards — the power is yours', art:'/images/zeus-electrician.png' },
+  { id:'m2', name:'Poseidon Car Wash',    emoji:'🔱', pack:'mythic', rarity:'epic',      buff:'shield', buffVal:1,  buffDesc:'Start each game with 1 free shield', art:'/images/poseidon-carwash.png' },
+  { id:'m3', name:'Athena DMV',           emoji:'🏛️', pack:'mythic', rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer', art:'/images/athena-dmv.png' },
+  { id:'m9', name:'Anubis the Waiter',    emoji:'🐺', pack:'mythic', rarity:'rare',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards', art:'/images/anubis-diner.png' },
+  { id:'m3', name:'Phoenix',       emoji:'🦅', pack:'mythic', rarity:'rare',      buff:'streak', buffVal:1,  buffDesc:'Streak bonuses trigger 1 step earlier' },
+  { id:'m4', name:'Goblin Scout',  emoji:'👺', pack:'mythic', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'m5', name:'Stone Troll',   emoji:'🗿', pack:'mythic', rarity:'common',    buff:'armor',  buffVal:1,  buffDesc:'Freeze sabotages last 5s shorter on you' },
+  { id:'m6', name:'Moon Witch',    emoji:'🌙', pack:'mythic', rarity:'rare',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards' },
+  { id:'m7', name:'Cerberus',      emoji:'🐺', pack:'mythic', rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer' },
+  { id:'m8', name:'The Fates',     emoji:'🌀', pack:'mythic', rarity:'legendary', buff:'shards', buffVal:20, buffDesc:'+20% shards — fate favors you' },
   // Arcane Pack
-  { id:'a1', name:'Void Sorcerer', emoji:'🔮', pack:'Arcane', rarity:'legendary' },
-  { id:'a2', name:'Hex Witch', emoji:'🧙', pack:'Arcane', rarity:'epic' },
-  { id:'a3', name:'Rune Stone', emoji:'🪬', pack:'Arcane', rarity:'rare' },
-  { id:'a4', name:'Magic Wand', emoji:'🪄', pack:'Arcane', rarity:'common' },
-  { id:'a5', name:'Spell Book', emoji:'📖', pack:'Arcane', rarity:'common' },
-  { id:'a6', name:'Crystal Ball', emoji:'🔭', pack:'Arcane', rarity:'rare' },
-  { id:'a7', name:'Shadow Mage', emoji:'🌫️', pack:'Arcane', rarity:'epic' },
-  { id:'a8', name:'The Lich', emoji:'💀', pack:'Arcane', rarity:'legendary' },
+  { id:'a1', name:'Void Sorcerer', emoji:'🔮', pack:'arcane', rarity:'legendary', buff:'shards', buffVal:20, buffDesc:'+20% shards on correct answers' },
+  { id:'a2', name:'Hex Witch',     emoji:'🧙', pack:'arcane', rarity:'epic',      buff:'steal',  buffVal:15, buffDesc:'Steal +15 bonus when stealing shards' },
+  { id:'a3', name:'Rune Stone',    emoji:'🪬', pack:'arcane', rarity:'rare',      buff:'armor',  buffVal:2,  buffDesc:'Freeze sabotages last 10s shorter on you' },
+  { id:'a4', name:'Magic Wand',    emoji:'🪄', pack:'arcane', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'a5', name:'Spell Book',    emoji:'📖', pack:'arcane', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'a6', name:'Crystal Ball',  emoji:'🔭', pack:'arcane', rarity:'rare',      buff:'speed',  buffVal:15, buffDesc:'Speed bonus +15% for fast answers' },
+  { id:'a7', name:'Shadow Mage',   emoji:'🌫️', pack:'arcane', rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer' },
+  { id:'a8', name:'The Lich',      emoji:'💀', pack:'arcane', rarity:'legendary', buff:'shards', buffVal:25, buffDesc:'+25% shards — death is profitable' },
   // Deep Pack
-  { id:'d1', name:'Leviathan', emoji:'🐉', pack:'Deep', rarity:'legendary' },
-  { id:'d2', name:'Giant Squid', emoji:'🦑', pack:'Deep', rarity:'epic' },
-  { id:'d3', name:'Tide Walker', emoji:'🌊', pack:'Deep', rarity:'rare' },
-  { id:'d4', name:'Clownfish', emoji:'🐟', pack:'Deep', rarity:'common' },
-  { id:'d5', name:'Crab King', emoji:'🦀', pack:'Deep', rarity:'common' },
-  { id:'d6', name:'Anglerfish', emoji:'🐠', pack:'Deep', rarity:'rare' },
-  { id:'d7', name:'Shark Lord', emoji:'🦈', pack:'Deep', rarity:'epic' },
-  { id:'d8', name:'The Abyss', emoji:'🌊', pack:'Deep', rarity:'legendary' },
+  { id:'d1', name:'Leviathan',     emoji:'🐉', pack:'deep',   rarity:'legendary', buff:'shards', buffVal:20, buffDesc:'+20% shards on correct answers' },
+  { id:'d2', name:'Giant Squid',   emoji:'🦑', pack:'deep',   rarity:'epic',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards' },
+  { id:'d3', name:'Tide Walker',   emoji:'🌊', pack:'deep',   rarity:'rare',      buff:'streak', buffVal:1,  buffDesc:'Streak bonuses trigger 1 step earlier' },
+  { id:'d4', name:'Clownfish',     emoji:'🐟', pack:'deep',   rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'d5', name:'Crab King',     emoji:'🦀', pack:'deep',   rarity:'common',    buff:'armor',  buffVal:1,  buffDesc:'Freeze sabotages last 5s shorter' },
+  { id:'d6', name:'Anglerfish',    emoji:'🐠', pack:'deep',   rarity:'rare',      buff:'speed',  buffVal:10, buffDesc:'Speed bonus +10% for fast answers' },
+  { id:'d7', name:'Shark Lord',    emoji:'🦈', pack:'deep',   rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer' },
+  { id:'d8', name:'The Abyss',     emoji:'🫧', pack:'deep',   rarity:'legendary', buff:'shards', buffVal:25, buffDesc:'+25% shards from the depths' },
 ];
 
 const PACKS = [
   { id:'cosmic', name:'Cosmic Pack', emoji:'🌌', desc:'Stars, aliens, and cosmic horrors', cost:150 },
-  { id:'mythic', name:'Mythic Pack', emoji:'⚡', desc:'Gods, monsters, and legends', cost:150 },
-  { id:'arcane', name:'Arcane Pack', emoji:'🔮', desc:'Wizards, spells, and dark magic', cost:150 },
-  { id:'deep', name:'Deep Pack', emoji:'🌊', desc:'Sea monsters and ocean legends', cost:150 },
-  { id:'prism', name:'Prism Pack', emoji:'🌈', desc:'Any card from any pack — includes bonus odds', cost:300 },
+  { id:'mythic',  name:'Mythic Pack', emoji:'⚡', desc:'Gods grinding blue-collar jobs',    cost:150 },
+  { id:'arcane',  name:'Arcane Pack', emoji:'🔮', desc:'Wizards, spells, and dark magic',   cost:150 },
+  { id:'deep',    name:'Deep Pack',   emoji:'🌊', desc:'Sea monsters and ocean legends',    cost:150 },
+  { id:'prism',   name:'Prism Pack',  emoji:'🌈', desc:'Any card, boosted legendary odds',  cost:300 },
 ];
 
-const SHARD_EVENTS = [
-  { id:'surge', name:'Surge', emoji:'⚡', desc:'You gain +50 bonus shards!', fn: (me, players) => ({ [me]: 50 }) },
-  { id:'refract', name:'Refract', emoji:'🔷', desc:'Your shards are doubled!', fn: (me, players, shards) => ({ [me]: shards[me] || 0 }) },
-  { id:'shatter', name:'Shatter', emoji:'💥', desc:'You steal 30 shards from a random player!', fn: (me, players, shards) => {
-    const others = Object.keys(players).filter(p => p !== me);
-    if (!others.length) return {};
-    const target = others[Math.floor(Math.random() * others.length)];
-    return { [me]: 30, [target]: -30 };
-  }},
-  { id:'eclipse', name:'Eclipse', emoji:'🌑', desc:'Everyone loses 20 shards!', fn: (me, players, shards) => {
-    const delta = {};
-    Object.keys(players).forEach(p => delta[p] = -20);
-    return delta;
-  }},
-  { id:'prismlock', name:'Prism Lock', emoji:'🛡️', desc:'Your shards are protected. Gain +20!', fn: (me) => ({ [me]: 20 }) },
-  { id:'void', name:'Void', emoji:'🕳️', desc:'Nothing happens... this time.', fn: () => ({}) },
-  { id:'jackpot', name:'Jackpot', emoji:'💰', desc:'Massive shard haul! +100 shards!', fn: (me) => ({ [me]: 100 }) },
-  { id:'steal', name:'Blind Theft', emoji:'🦝', desc:'Steal from the leader!', fn: (me, players, shards) => {
-    const others = Object.keys(players).filter(p => p !== me);
-    if (!others.length) return {};
-    const leader = others.reduce((a,b) => (shards[a]||0) > (shards[b]||0) ? a : b, others[0]);
-    return { [me]: 40, [leader]: -40 };
-  }},
+const RARITY_WEIGHTS = { common:55, rare:28, epic:13, legendary:4 };
+
+// SABOTAGE MOVES — cost charges, need a target
+const SABOTAGES = [
+  { id:'freeze',  name:'Freeze',   icon:'🧊', cost:2, desc:'Lock target out for 20s',    needsTarget:true,  modes:['surge','gamble'] },
+  { id:'steal',   name:'Steal',    icon:'🦝', cost:3, desc:'Take 30 shards from target', needsTarget:true,  modes:['surge','gamble'] },
+  { id:'swap',    name:'Swap',     icon:'🔄', cost:4, desc:'Swap scores with target',    needsTarget:true,  modes:['surge','gamble'] },
+  { id:'shield',  name:'Shield',   icon:'🛡️', cost:2, desc:'Block next sabotage on you', needsTarget:false, modes:['surge','gamble','war'] },
+  { id:'double',  name:'Double',   icon:'💰', cost:5, desc:'Double your shards right now',needsTarget:false, modes:['surge','gamble'] },
+  { id:'siege',   name:'Siege',    icon:'⚔️', cost:8, desc:'Freeze entire enemy team 10s',needsTarget:false, modes:['war'] },
+  { id:'rally',   name:'Rally',    icon:'📯', cost:4, desc:'+50 shards to whole team',   needsTarget:false, modes:['war'] },
 ];
 
-const RARITY_WEIGHTS = { common: 55, rare: 28, epic: 13, legendary: 4 };
+// SAMPLE QUESTIONS
+const SAMPLE_QUESTIONS = [
+  { text:"What is the largest planet in our solar system?", answers:["Saturn","Jupiter","Neptune","Uranus"], correct:1 },
+  { text:"Which element has the chemical symbol 'Au'?", answers:["Silver","Aluminum","Gold","Argon"], correct:2 },
+  { text:"Who painted the Mona Lisa?", answers:["Michelangelo","Raphael","Leonardo da Vinci","Donatello"], correct:2 },
+  { text:"What year did World War II end?", answers:["1943","1944","1945","1946"], correct:2 },
+  { text:"What is the speed of light?", answers:["200,000 km/s","300,000 km/s","150,000 km/s","400,000 km/s"], correct:1 },
+  { text:"Which ancient wonder still stands?", answers:["Colossus of Rhodes","Lighthouse of Alexandria","Great Pyramid","Hanging Gardens"], correct:2 },
+  { text:"What is the powerhouse of the cell?", answers:["Nucleus","Ribosome","Mitochondria","Golgi Apparatus"], correct:2 },
+  { text:"What is the capital of Australia?", answers:["Sydney","Melbourne","Canberra","Brisbane"], correct:2 },
+  { text:"Who wrote Romeo and Juliet?", answers:["Charles Dickens","William Shakespeare","Jane Austen","Homer"], correct:1 },
+  { text:"Which planet is known as the Red Planet?", answers:["Venus","Jupiter","Saturn","Mars"], correct:3 },
+];
+</script>
+<!-- /SECTION:js-data -->
 
-// ===== LOCAL STATE =====
-let myId = 'player_' + Math.random().toString(36).slice(2,8);
-let myName = '';
+<!-- SECTION:js-state -->
+<script>
+// ===== PERSISTENT STATE =====
+let myId = localStorage.getItem('prism_id');
+if (!myId) {
+  myId = 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  localStorage.setItem('prism_id', myId);
+}
+let myName = localStorage.getItem('prism_name') || 'Player';
+let myRole = localStorage.getItem('prism_role') || 'student';
+let myShards = parseInt(localStorage.getItem('prism_shards') || '300');
+let myCollection = JSON.parse(localStorage.getItem('prism_collection') || '[]');
+let myLoadout = JSON.parse(localStorage.getItem('prism_loadout') || '[]'); // array of 3 card ids (or null)
+let isGuest = !localStorage.getItem('prism_uid');
+
+function saveLocal() {
+  localStorage.setItem('prism_name', myName);
+  localStorage.setItem('prism_role', myRole);
+  localStorage.setItem('prism_shards', myShards);
+  localStorage.setItem('prism_collection', JSON.stringify(myCollection));
+  localStorage.setItem('prism_loadout', JSON.stringify(myLoadout));
+}
+
+// ===== GAME STATE =====
 let isHost = false;
 let gameCode = '';
-let gameRef = null;
-let myShards = parseInt(localStorage.getItem('prism_shards') || '0');
-let myCollection = JSON.parse(localStorage.getItem('prism_collection') || '[]');
-let myEquipped = localStorage.getItem('prism_equipped') || null;
+let gameMode = 'surge';
 let questions = [];
 let currentQ = -1;
 let answered = false;
+let myCharges = 0;
+let myShielded = false;
+let myFrozenUntil = 0;
 let gameListeners = [];
+let pendingSetId = null;
+let currentSetQuestions = [];
+let editingSetId = null;
+let pendingSabotage = null;
+let loadoutPickerSlot = null;
+let endScreenShown = false;
 
-function saveLocal() {
-  localStorage.setItem('prism_shards', myShards);
-  localStorage.setItem('prism_collection', JSON.stringify(myCollection));
-  if (myEquipped) localStorage.setItem('prism_equipped', myEquipped);
+// War mode state
+let myTeam = null; // 'apollo' or 'athena'
+let warCaptures = { apollo: 0, athena: 0 };
+let warCurrentCaptures = { apollo: 0, athena: 0 }; // captures on current question
+const WAR_CAPTURES_TO_WIN_Q = 3; // correct answers to capture a question
+
+// Teacher settings
+let hostTimeLimit = 30; // seconds per question (0 = unlimited)
+let isPaused = false;
+
+// Compute loadout buffs from equipped cards
+function getLoadoutBuffs() {
+  const buffs = { shards: 0, steal: 0, speed: 0, charges: 0, streak: 0, armor: 0, shield: 0 };
+  for (const cid of myLoadout) {
+    if (!cid) continue;
+    const card = CARDS.find(c => c.id === cid);
+    if (!card) continue;
+    if (card.buff === 'flat') buffs.shards += card.buffVal; // flat is treated as bonus shards
+    else if (card.buff && buffs[card.buff] !== undefined) buffs[card.buff] += card.buffVal;
+  }
+  return buffs;
+}
+</script>
+<!-- /SECTION:js-state -->
+
+<!-- SECTION:js-ui-helpers -->
+<script>
+// ===== UI HELPERS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const s = document.getElementById(id);
+  if (s) s.classList.add('active');
 }
 
-// ===== UI HELPERS =====
-window.showModal = function(id) { document.getElementById(id).classList.add('open'); }
-window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); }
-
+let toastTimer;
 function showToast(msg, dur=2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+function showModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showResultPopup(correct, shardsEarned, chargesEarned) {
+  const popup = document.getElementById('result-popup');
+  popup.className = 'result-popup ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('result-icon').textContent = correct ? '✅' : '❌';
+  document.getElementById('result-msg').textContent = correct ? 'Correct!' : 'Wrong answer';
+  document.getElementById('result-shards').textContent = correct ? '+' + shardsEarned + ' 💎' : '';
+  document.getElementById('result-charges').textContent = correct && chargesEarned ? '+' + chargesEarned + ' ⚡' : '';
+  popup.classList.add('show');
+  setTimeout(() => popup.classList.remove('show'), 1800);
 }
 
-window.goHome = function() {
-  cleanupListeners();
-  showScreen('landing');
-}
-
-function cleanupListeners() {
-  gameListeners.forEach(([r,fn]) => off(r, 'value', fn));
-  gameListeners = [];
-  isHost = false;
-  gameCode = '';
-  gameRef = null;
-  currentQ = -1;
-  answered = false;
-  questions = [];
-}
-
-// ===== CARD RENDERING =====
-function renderCard(cardId, size='normal', showEquip=false) {
+// Render a single card element
+function renderCard(cardId, compact=false) {
   const card = CARDS.find(c => c.id === cardId);
   if (!card) return '';
-  const isEquipped = myEquipped === cardId;
-  const scale = size === 'small' ? 'style="--card-w:100px;--card-h:140px;"' : '';
-  return `<div class="card rarity-${card.rarity}" ${scale} onclick="${showEquip ? `equipCard('${cardId}')` : ''}">
-    <div class="card-inner">
-      <div class="card-art">${card.emoji}${isEquipped ? '<span style="position:absolute;top:4px;right:4px;font-size:0.6rem;background:rgba(124,77,255,0.8);padding:2px 4px;border-radius:4px;letter-spacing:0.05em;">ON</span>' : ''}</div>
-      <div class="card-footer">
-        <div class="card-name">${card.name}</div>
-        <div class="card-rarity-badge" style="color:var(--${card.rarity})">${card.rarity}</div>
-      </div>
-    </div>
-  </div>`;
+  const count = myCollection.filter(id => id === cardId).length;
+  const inLoadout = myLoadout.includes(cardId);
+  return `
+    <div class="card ${card.rarity}" onclick="toggleLoadout('${card.id}')">
+      ${card.art ? `<img class="card-art" src="${card.art}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+      <div style="display:none;font-size:2.8rem;">${card.emoji}</div>` : `<div class="card-emoji">${card.emoji}</div>`}
+      <div class="card-name">${card.name}</div>
+      <div class="card-pack">${card.pack}</div>
+      <div class="card-buff">${card.buffDesc}</div>
+      <div class="card-rarity-badge ${card.rarity}">${card.rarity}</div>
+      ${count > 1 ? `<div style="position:absolute;bottom:6px;left:6px;font-size:.55rem;background:var(--surface3);padding:1px 5px;border-radius:3px;">×${count}</div>` : ''}
+      ${inLoadout ? `<div style="position:absolute;top:6px;left:6px;font-size:.7rem;">✓</div>` : ''}
+    </div>`;
 }
 
-window.equipCard = function(cardId) {
-  myEquipped = cardId;
+function toggleLoadout(cardId) {
+  if (myLoadout.includes(cardId)) {
+    myLoadout = myLoadout.filter(id => id !== cardId);
+  } else if (myLoadout.filter(Boolean).length < 3) {
+    // Find first null slot or add
+    const idx = myLoadout.indexOf(null);
+    if (idx >= 0) myLoadout[idx] = cardId;
+    else myLoadout.push(cardId);
+  } else {
+    showToast('Loadout full! Tap a card to remove it first.');
+    return;
+  }
   saveLocal();
   renderCollection();
-  showToast('✅ Card equipped!');
+  updateLanding();
 }
 
-// ===== COLLECTION =====
-window.goToCollection = function() {
-  document.getElementById('coll-shards').textContent = myShards;
-  renderCollection();
-  showScreen('collection-screen');
+function openLoadoutPicker(slot) { loadoutPickerSlot = slot; renderCollection(); }
+
+// Play sounds
+function playCorrectSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + .15);
+    gain.gain.setValueAtTime(.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .3);
+    osc.start(); osc.stop(ctx.currentTime + .3);
+  } catch(e) {}
 }
 
+function playLegendarySound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [523,659,784,1047].forEach((freq, i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const t = ctx.currentTime + i * .12;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(.3, t + .05);
+      gain.gain.exponentialRampToValueAtTime(.001, t + .5);
+      osc.start(t); osc.stop(t + .6);
+    });
+  } catch(e) {}
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const parts = [];
+  const colors = ['#ffd740','#ff4081','#7c4dff','#00e5ff','#69f0ae','#ff9800'];
+  for (let i = 0; i < 100; i++) {
+    parts.push({
+      x: Math.random() * canvas.width, y: -10,
+      vx: (Math.random() - .5) * 6, vy: Math.random() * 3 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 4, rotation: Math.random() * 360
+    });
+  }
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    parts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rotation += 3;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    });
+    if (frame++ < 120) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+function initParticles() {
+  const container = document.body;
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const colors = ['#7c4dff','#00e5ff','#ff4081','#ffd740'];
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${8+Math.random()*12}s;
+      animation-delay:${Math.random()*15}s;
+      --drift:${(Math.random()-0.5)*60}px;
+    `;
+    container.appendChild(p);
+  }
+}
+
+function updateLanding() {
+  document.getElementById('profile-name').textContent = myName;
+  document.getElementById('profile-role').textContent = myRole === 'teacher' ? '🏫 Teacher' : '🎒 Student';
+  document.getElementById('profile-shards-val').textContent = myShards.toLocaleString();
+
+  const tCard = document.getElementById('teacher-card');
+  if (tCard) tCard.style.display = myRole === 'teacher' ? 'flex' : 'none';
+
+  // Loadout preview
+  const ll = document.getElementById('landing-loadout');
+  const equipped = myLoadout.filter(Boolean);
+  if (equipped.length === 0) {
+    ll.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;">No cards equipped. Visit your collection!</div>';
+  } else {
+    ll.innerHTML = equipped.map(cid => {
+      const card = CARDS.find(c => c.id === cid);
+      if (!card) return '';
+      return `<div style="display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.4rem .75rem;font-size:.8rem;">
+        <span>${card.emoji}</span><span style="font-weight:600;">${card.name}</span>
+        <span style="color:var(--green);font-size:.7rem;">${card.buffDesc}</span>
+      </div>`;
+    }).join('');
+  }
+}
+</script>
+<!-- /SECTION:js-ui-helpers -->
+
+<!-- SECTION:js-auth -->
+<script>
+let authTab = 'login';
+let authRole = 'student';
+
+window.switchAuthTab = function(tab) {
+  authTab = tab;
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
+  document.getElementById('signup-extras').style.display = tab === 'signup' ? 'block' : 'none';
+};
+
+window.setRole = function(role) {
+  authRole = role;
+  document.getElementById('role-student').classList.toggle('active', role === 'student');
+  document.getElementById('role-teacher').classList.toggle('active', role === 'teacher');
+};
+
+window.doAuth = async function() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-err');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please fill in all fields.'; return; }
+  try {
+    let cred;
+    if (authTab === 'login') {
+      cred = await auth.signInWithEmailAndPassword(email, pass);
+    } else {
+      const displayName = document.getElementById('auth-display').value.trim() || email.split('@')[0];
+      cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await cred.user.updateProfile({ displayName });
+      // Save role to database
+      await dbSet('users/' + cred.user.uid + '/role', authRole);
+      await dbSet('users/' + cred.user.uid + '/name', displayName);
+    }
+  } catch(e) {
+    errEl.textContent = friendlyAuthErr(e.code);
+  }
+};
+
+function friendlyAuthErr(code) {
+  const map = {
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/user-not-found': 'No account with that email.',
+    'auth/email-already-in-use': 'Email already registered. Try logging in.',
+    'auth/weak-password': 'Password must be at least 6 characters.',
+    'auth/invalid-email': 'Invalid email address.',
+    'auth/invalid-credential': 'Invalid email or password.',
+  };
+  return map[code] || 'Something went wrong. Try again.';
+}
+
+window.skipAuth = function() {
+  isGuest = true;
+  showScreen('landing');
+  updateLanding();
+};
+
+window.doSignOut = async function() {
+  try { await auth.signOut(); } catch(e) {}
+  localStorage.removeItem('prism_uid');
+  isGuest = true;
+  showScreen('auth-screen');
+};
+
+// Firebase auth state listener — resolves loading screen
+auth.onAuthStateChanged(async user => {
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('fade-out');
+  setTimeout(() => ls.classList.add('gone'), 700);
+
+  if (user) {
+    localStorage.setItem('prism_uid', user.uid);
+    isGuest = false;
+    myName = user.displayName || user.email.split('@')[0];
+    // Load role from db
+    try {
+      const snap = await dbGet('users/' + user.uid + '/role');
+      if (snap.val()) { myRole = snap.val(); localStorage.setItem('prism_role', myRole); }
+      // Load shards from db (merge with local, take higher)
+      const shardSnap = await dbGet('users/' + user.uid + '/shards');
+      if (shardSnap.val() !== null) myShards = Math.max(myShards, shardSnap.val());
+      // Load collection from db
+      const collSnap = await dbGet('users/' + user.uid + '/collection');
+      if (collSnap.val()) myCollection = collSnap.val();
+    } catch(e) {}
+    saveLocal();
+    showScreen('landing');
+    updateLanding();
+  } else {
+    // No user — show auth screen unless on landing already from guest skip
+    if (!isGuest) showScreen('auth-screen');
+  }
+});
+
+async function saveProgress() {
+  saveLocal();
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    await dbUpdate({
+      ['users/' + user.uid + '/shards']: myShards,
+      ['users/' + user.uid + '/collection']: myCollection.length ? myCollection : [],
+      ['users/' + user.uid + '/name']: myName,
+      ['users/' + user.uid + '/loadout']: myLoadout,
+      ['users/' + user.uid + '/lastSeen']: Date.now(),
+    });
+  } catch(e) { console.warn('saveProgress failed:', e); }
+}
+</script>
+<!-- /SECTION:js-auth -->
+
+<!-- SECTION:js-collection -->
+<script>
 function renderCollection() {
-  document.getElementById('coll-shards').textContent = myShards;
-  document.getElementById('coll-count').textContent = myCollection.length;
-  const grid = document.getElementById('collection-grid');
-  const equipped = document.getElementById('equipped-display');
-
-  if (!myCollection.length) {
-    grid.innerHTML = '<div class="empty-state"><div class="big">🃏</div><div>No cards yet! Play games to earn shards and open packs.</div></div>';
+  const owned = [...new Set(myCollection)];
+  const grid = document.getElementById('cards-grid');
+  if (owned.length === 0) {
+    grid.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:1rem 0;">No cards yet! Open packs in the store.</div>';
   } else {
-    grid.innerHTML = myCollection.map(id => renderCard(id, 'normal', true)).join('');
+    grid.innerHTML = owned.map(id => renderCard(id)).join('');
   }
+  document.getElementById('coll-total').textContent = myCollection.length;
+  document.getElementById('coll-unique').textContent = owned.length;
+  document.getElementById('coll-legendary').textContent = myCollection.filter(id => {
+    const c = CARDS.find(c => c.id === id); return c && c.rarity === 'legendary';
+  }).length;
 
-  if (myEquipped && CARDS.find(c=>c.id===myEquipped)) {
-    equipped.innerHTML = renderCard(myEquipped);
-  } else {
-    equipped.innerHTML = '<div style="color:var(--text-dim);font-size:0.9rem;">No card equipped. Click a card in your collection to equip it.</div>';
-  }
+  // Render loadout slots
+  const slots = document.getElementById('loadout-slots');
+  slots.innerHTML = [0,1,2].map(i => {
+    const cid = myLoadout[i];
+    const card = cid ? CARDS.find(c => c.id === cid) : null;
+    return `<div class="loadout-slot ${card?'filled':''}" onclick="toggleLoadout('${card?card.id:''}')">
+      <div class="loadout-slot-emoji">${card ? card.emoji : '+'}</div>
+      <div style="font-size:.58rem;">${card ? card.name : 'Empty'}</div>
+    </div>`;
+  }).join('');
 }
 
-// ===== PACK STORE =====
-window.goToPackStore = function() {
-  document.getElementById('store-shards').textContent = myShards;
+function renderStore() {
+  document.getElementById('store-shards').textContent = myShards.toLocaleString();
   const grid = document.getElementById('packs-grid');
   grid.innerHTML = PACKS.map(pack => `
     <div class="pack-card" onclick="buyPack('${pack.id}')">
-      <div class="pack-emoji">${pack.emoji}</div>
+      <div class="pack-icon">${pack.emoji}</div>
       <div class="pack-name">${pack.name}</div>
       <div class="pack-desc">${pack.desc}</div>
-      <div class="pack-cost">💎 ${pack.cost} Shards</div>
+      <div class="pack-cost">💎 ${pack.cost}</div>
     </div>
   `).join('');
-  showScreen('pack-screen');
 }
 
 window.buyPack = function(packId) {
   const pack = PACKS.find(p => p.id === packId);
-  if (myShards < pack.cost) { showToast('❌ Not enough shards!'); return; }
+  if (!pack) return;
+  if (myShards < pack.cost) { showToast('Not enough shards! Earn more by playing games.'); return; }
   myShards -= pack.cost;
-  saveLocal();
-  document.getElementById('store-shards').textContent = myShards;
-  openPackAnimation(packId);
-}
+  document.getElementById('store-shards').textContent = myShards.toLocaleString();
 
-function rollCard(packId) {
-  let pool = CARDS;
-  if (packId !== 'prism') pool = CARDS.filter(c => c.pack.toLowerCase() === packId);
+  // Pull 5 cards
+  const pool = packId === 'prism' ? CARDS : CARDS.filter(c => c.pack === packId);
+  const pulled = [];
+  for (let i = 0; i < 5; i++) {
+    pulled.push(pullCard(pool));
+  }
+  pulled.forEach(c => myCollection.push(c.id));
+  saveProgress();
+  openPackAnimation(pulled);
+};
 
-  // weighted random rarity
-  const total = Object.values(RARITY_WEIGHTS).reduce((a,b) => a+b, 0);
-  let roll = Math.random() * total;
+function pullCard(pool) {
+  const totalWeight = Object.values(RARITY_WEIGHTS).reduce((a,b)=>a+b,0);
+  let roll = Math.random() * totalWeight;
   let rarity = 'common';
   for (const [r, w] of Object.entries(RARITY_WEIGHTS)) {
-    roll -= w;
-    if (roll <= 0) { rarity = r; break; }
+    roll -= w; if (roll <= 0) { rarity = r; break; }
   }
-
-  // for prism pack boost legendary odds slightly
-  if (packId === 'prism' && Math.random() < 0.08) rarity = 'legendary';
-
-  const rarityPool = pool.filter(c => c.rarity === rarity);
-  if (!rarityPool.length) return pool[Math.floor(Math.random()*pool.length)];
-  return rarityPool[Math.floor(Math.random()*rarityPool.length)];
+  const eligible = pool.filter(c => c.rarity === rarity);
+  if (!eligible.length) return pool[Math.floor(Math.random()*pool.length)];
+  return eligible[Math.floor(Math.random()*eligible.length)];
 }
 
-function openPackAnimation(packId) {
-  const numCards = packId === 'prism' ? 6 : 5;
-  const pulled = [];
-  for (let i=0; i<numCards; i++) pulled.push(rollCard(packId));
-
-  // Add to collection
-  pulled.forEach(card => {
-    if (!myCollection.includes(card.id)) myCollection.push(card.id);
-  });
-  saveLocal();
-
+function openPackAnimation(pulled) {
   const container = document.getElementById('pack-open-cards');
   container.innerHTML = '';
-  const overlay = document.getElementById('pack-opening');
-  overlay.classList.add('active');
+  document.getElementById('pack-open-title').textContent = '✨ Tap each card to reveal';
+  document.getElementById('pack-collect-btn').style.display = 'none';
+  document.getElementById('pack-open-instructions').style.display = 'block';
+  document.getElementById('pack-suspense-fill').style.width = '0%';
+  document.getElementById('pack-opening').classList.add('active');
+
+  let revealedCount = 0;
 
   pulled.forEach((card, i) => {
+    // Create flip container — start face-down
+    const flipEl = document.createElement('div');
+    flipEl.className = 'pack-card-flip';
+    flipEl.innerHTML = `
+      <div class="pack-card-inner">
+        <div class="pack-card-back">🌈</div>
+        <div class="pack-card-face">${renderCard(card.id)}</div>
+      </div>`;
+
+    // Tap to flip
+    flipEl.addEventListener('click', () => {
+      if (flipEl.classList.contains('flipped')) return;
+      flipEl.classList.add('flipped');
+      revealedCount++;
+
+      // Update suspense bar
+      const pct = (revealedCount / pulled.length) * 100;
+      document.getElementById('pack-suspense-fill').style.width = pct + '%';
+
+      // Play sound
+      if (card.rarity === 'legendary') {
+        setTimeout(() => {
+          const flash = document.createElement('div');
+          flash.className = 'legendary-flash';
+          document.body.appendChild(flash);
+          playLegendarySound();
+          launchConfetti();
+          setTimeout(() => flash.remove(), 1200);
+        }, 300);
+      } else if (card.rarity === 'epic') {
+        playEpicRevealSound();
+      } else {
+        playCardFlipSound();
+      }
+
+      // All revealed
+      if (revealedCount === pulled.length) {
+        setTimeout(() => {
+          document.getElementById('pack-collect-btn').style.display = 'block';
+          document.getElementById('pack-open-instructions').style.display = 'none';
+          document.getElementById('pack-open-title').textContent = '🎉 Pack Complete!';
+        }, 400);
+      }
+    });
+
+    // Stagger appearance of face-down cards
+    flipEl.style.opacity = '0';
+    flipEl.style.transform = 'scale(0.8)';
+    container.appendChild(flipEl);
     setTimeout(() => {
-      const div = document.createElement('div');
-      div.className = 'pack-card-reveal';
-      div.style.animationDelay = `0s`;
-      div.innerHTML = renderCard(card.id);
-      container.appendChild(div);
-    }, i * 300);
+      flipEl.style.transition = 'opacity .3s ease, transform .3s cubic-bezier(.34,1.56,.64,1)';
+      flipEl.style.opacity = '1';
+      flipEl.style.transform = 'scale(1)';
+    }, i * 120 + 50);
   });
 }
 
 window.closePack = function() {
   document.getElementById('pack-opening').classList.remove('active');
   renderCollection();
+  showScreen('collection-screen');
+};
+</script>
+<!-- /SECTION:js-collection -->
+
+<!-- SECTION:js-teacher -->
+<script>
+let teacherSets = {}; // loaded from firebase
+
+function initTeacherDash() {
+  switchTeacherTab('sets');
+  loadSets();
 }
 
-// ===== HOST GAME =====
-window.createGame = function() {
-  const name = document.getElementById('host-name').value.trim();
-  if (!name) { showToast('Enter your name!'); return; }
-  myName = name;
-  isHost = true;
-  gameCode = Math.floor(1000 + Math.random()*9000).toString();
-  closeModal('host-modal');
-
-  gameRef = ref(db, `prism_games/${gameCode}`);
-  set(gameRef, {
-    host: myId,
-    status: 'lobby',
-    currentQ: -1,
-    players: {
-      [myId]: { name: myName, shards: 0, equipped: myEquipped || null, isHost: true }
-    }
+window.switchTeacherTab = function(tab) {
+  document.querySelectorAll('.teacher-tab').forEach((t,i) => {
+    const tabs = ['sets','host','import'];
+    t.classList.toggle('active', tabs[i] === tab);
   });
+  document.querySelectorAll('.teacher-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'host') loadSetsIntoHostDropdown();
+};
 
-  document.getElementById('host-code-display').textContent = gameCode;
-  document.getElementById('host-shards').textContent = myShards;
-  document.getElementById('start-game-btn').disabled = true;
-  showScreen('host-screen');
-  listenToGame_host();
+async function loadSets() {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  const snap = await dbGet('teacher_sets/' + uid);
+  teacherSets = snap.val() || {};
+  renderSets();
 }
 
-function listenToGame_host() {
-  const playersRef = ref(db, `prism_games/${gameCode}/players`);
-  const fn = onValue(playersRef, snap => {
-    const players = snap.val() || {};
-    const list = document.getElementById('host-players-list');
-    const pArr = Object.values(players);
-    list.innerHTML = pArr.map(p => `
-      <div class="player-chip">
-        <div class="player-avatar">${p.isHost ? '👑' : (getEquippedEmoji(p.equipped) || '😀')}</div>
-        <div>${p.name}</div>
-      </div>
-    `).join('');
-    document.getElementById('start-game-btn').disabled = pArr.length < 1;
-  });
-  gameListeners.push([playersRef, fn]);
-
-  // Listen for game state to detect end
-  const stateRef = ref(db, `prism_games/${gameCode}/status`);
-  const sfn = onValue(stateRef, snap => {
-    if (snap.val() === 'ended') showEndGame();
-  });
-  gameListeners.push([stateRef, sfn]);
+function renderSets() {
+  const list = document.getElementById('sets-list');
+  const entries = Object.entries(teacherSets);
+  if (!entries.length) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;margin-bottom:.75rem;">No question sets yet. Create one below!</div>';
+    return;
+  }
+  list.innerHTML = entries.map(([id, set]) => `
+    <div class="set-item" onclick="editSet('${id}')">
+      <div class="set-item-name">${set.name || 'Untitled'}</div>
+      <div class="set-item-count">${(set.questions||[]).length} questions</div>
+      <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteSet('${id}')">Delete</button>
+    </div>
+  `).join('');
 }
 
-function getEquippedEmoji(cardId) {
-  if (!cardId) return null;
-  const card = CARDS.find(c => c.id === cardId);
-  return card ? card.emoji : null;
-}
+window.createNewSet = function() {
+  editingSetId = null;
+  currentSetQuestions = [...SAMPLE_QUESTIONS];
+  document.getElementById('set-name-input').value = '';
+  document.getElementById('set-editor-title').textContent = 'New Question Set';
+  renderQuestionsList();
+  showModal('set-editor-modal');
+};
+
+window.editSet = function(id) {
+  editingSetId = id;
+  const set = teacherSets[id];
+  currentSetQuestions = [...(set.questions || [])];
+  document.getElementById('set-name-input').value = set.name || '';
+  document.getElementById('set-editor-title').textContent = 'Edit Set';
+  renderQuestionsList();
+  showModal('set-editor-modal');
+};
+
+window.deleteSet = async function(id) {
+  if (!confirm('Delete this set?')) return;
+  const uid = auth.currentUser?.uid;
+  await dbRemove('teacher_sets/' + uid + '/' + id);
+  delete teacherSets[id];
+  renderSets();
+};
+
+window.saveSet = async function() {
+  const uid = auth.currentUser?.uid;
+  if (!uid) { showToast('Sign in to save sets.'); return; }
+  const name = document.getElementById('set-name-input').value.trim() || 'Untitled Set';
+  if (!currentSetQuestions.length) { showToast('Add at least one question!'); return; }
+  const setData = { name, questions: currentSetQuestions, updated: Date.now() };
+  if (editingSetId) {
+    await dbSet('teacher_sets/' + uid + '/' + editingSetId, setData);
+    teacherSets[editingSetId] = setData;
+  } else {
+    const ref = await dbPush('teacher_sets/' + uid, setData);
+    teacherSets[ref.key] = setData;
+  }
+  closeModal('set-editor-modal');
+  renderSets();
+  showToast('✅ Set saved!');
+};
 
 window.addQuestion = function() {
   const text = document.getElementById('q-text').value.trim();
-  const answers = [0,1,2,3].map(i => document.getElementById(`ans-${i}`).value.trim());
+  const answers = [0,1,2,3].map(i => document.getElementById('ans-'+i).value.trim());
   const correctEl = document.querySelector('input[name="correct-ans"]:checked');
   if (!text || answers.some(a=>!a) || !correctEl) {
-    showToast('Fill in all fields and select the correct answer!');
+    showToast('Fill in the question, all 4 answers, and select the correct one!');
     return;
   }
-  const correct = parseInt(correctEl.value);
-  questions.push({ text, answers, correct });
+  currentSetQuestions.push({ text, answers, correct: parseInt(correctEl.value) });
   document.getElementById('q-text').value = '';
-  [0,1,2,3].forEach(i => document.getElementById(`ans-${i}`).value = '');
+  [0,1,2,3].forEach(i => document.getElementById('ans-'+i).value = '');
   correctEl.checked = false;
   renderQuestionsList();
-  showToast('✅ Question added!');
-}
+};
 
 function renderQuestionsList() {
   const list = document.getElementById('questions-list');
-  if (!questions.length) { list.innerHTML = ''; return; }
-  list.innerHTML = questions.map((q,i) => `
+  const countEl = document.getElementById('q-list-count');
+  if (countEl) countEl.textContent = currentSetQuestions.length + ' question' + (currentSetQuestions.length !== 1 ? 's' : '');
+  list.innerHTML = currentSetQuestions.map((q, i) => `
     <div class="question-item">
       <div class="question-item-num">${i+1}</div>
-      <div class="question-item-text">${q.text}</div>
-      <div class="question-item-del" onclick="removeQuestion(${i})">✕</div>
+      <div class="question-item-text" style="flex:1;">${q.text}</div>
+      <div class="question-item-actions">
+        <button class="reorder-btn" onclick="moveQuestion(${i},-1)" ${i===0?'disabled':''}>↑</button>
+        <button class="reorder-btn" onclick="moveQuestion(${i},1)" ${i===currentSetQuestions.length-1?'disabled':''}>↓</button>
+        <div class="question-item-del" onclick="removeQuestion(${i})">✕</div>
+      </div>
     </div>
   `).join('');
 }
 
 window.removeQuestion = function(i) {
-  questions.splice(i,1);
+  currentSetQuestions.splice(i,1);
   renderQuestionsList();
+};
+
+async function loadSetsIntoHostDropdown() {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  if (!Object.keys(teacherSets).length) await loadSets();
+  const sel = document.getElementById('host-set-select');
+  sel.innerHTML = '<option value="">— choose a set —</option>' +
+    Object.entries(teacherSets).map(([id,s]) =>
+      `<option value="${id}">${s.name} (${(s.questions||[]).length}q)</option>`
+    ).join('');
+}
+
+window.hostGame = async function() {
+  const name = document.getElementById('host-name').value.trim();
+  const setId = document.getElementById('host-set-select').value;
+  if (!name) { showToast('Enter your name!'); return; }
+  if (!setId) { showToast('Select a question set!'); return; }
+  const set = teacherSets[setId];
+  if (!set) return;
+  myName = name;
+  questions = set.questions || [];
+  isHost = true;
+  gameCode = Math.floor(1000 + Math.random()*9000).toString();
+  await dbSet('prism_games/' + gameCode, {
+    host: myId,
+    hostName: myName,
+    status: 'lobby',
+    mode: gameMode,
+    currentQ: -1,
+    questionState: 'waiting',
+    players: {
+      [myId]: { name: myName, shards: 0, charges: 0, streak: 0, shielded: false, isHost: true, loadout: myLoadout }
+    }
+  });
+  document.getElementById('host-code-display').textContent = gameCode;
+  document.getElementById('host-lobby').style.display = 'block';
+  document.getElementById('host-live').style.display = 'none';
+  document.getElementById('start-game-btn').disabled = true;
+  showScreen('host-screen');
+  document.getElementById('host-status-badge').textContent = 'LOBBY';
+  listenHost();
+  // Populate sets list in lobby
+  loadSetsForLobby();
+};
+
+async function loadSetsForLobby() {
+  const uid = auth.currentUser?.uid;
+  const setList = document.getElementById('host-sets-list');
+  if (!uid) { setList.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted);">Sign in to use saved sets.</div>'; return; }
+  if (!Object.keys(teacherSets).length) await loadSets();
+  setList.innerHTML = Object.entries(teacherSets).map(([id,s]) => `
+    <div class="set-item" style="cursor:default;" onclick="selectSet('${id}')">
+      <div class="set-item-name" style="font-size:.82rem;">${s.name}</div>
+      <div class="set-item-count">${(s.questions||[]).length}q</div>
+    </div>
+  `).join('');
+}
+
+window.selectSet = function(id) {
+  const set = teacherSets[id];
+  if (!set) return;
+  questions = set.questions || [];
+  document.getElementById('host-q-count').textContent = questions.length + ' questions loaded';
+  document.getElementById('start-game-btn').disabled = questions.length === 0;
+  showToast('✅ ' + set.name + ' loaded!');
+};
+
+window.selectMode = function(mode) {
+  gameMode = mode;
+  document.querySelectorAll('.mode-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('mode-' + mode).classList.add('selected');
+};
+
+window.selectTimeLimit = function(secs) {
+  hostTimeLimit = secs;
+  document.querySelectorAll('.time-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === (secs === 0 ? '∞ No limit' : secs + 's'));
+  });
+};
+
+window.hostTogglePause = async function() {
+  isPaused = !isPaused;
+  const btn = document.getElementById('pause-btn');
+  await dbUpdate({
+    ['prism_games/' + gameCode + '/paused']: isPaused,
+  });
+  btn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+  btn.style.background = isPaused ? 'rgba(105,240,174,.12)' : '';
+  btn.style.color = isPaused ? 'var(--green)' : '';
+  showToast(isPaused ? '⏸ Game paused' : '▶ Game resumed');
+};
+
+window.shuffleQuestions = function() {
+  for (let i = currentSetQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentSetQuestions[i], currentSetQuestions[j]] = [currentSetQuestions[j], currentSetQuestions[i]];
+  }
+  renderQuestionsList();
+  showToast('🔀 Questions shuffled!');
+};
+
+window.moveQuestion = function(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= currentSetQuestions.length) return;
+  [currentSetQuestions[i], currentSetQuestions[j]] = [currentSetQuestions[j], currentSetQuestions[i]];
+  renderQuestionsList();
+};
+
+// CSV Import
+window.handleCSV = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const qs = parseCSV(ev.target.result);
+    if (!qs.length) { showToast('No valid questions found in CSV. Check the format.'); return; }
+    currentSetQuestions = qs;
+    // Auto-fill set name from filename
+    const autoName = file.name.replace(/\.csv$/i, '').replace(/[-_]/g, ' ');
+    document.getElementById('set-name-input').value = autoName;
+    document.getElementById('set-editor-title').textContent = 'New Set from CSV';
+    document.getElementById('import-result').textContent = `✅ ${qs.length} questions ready — click Save Set to finish.`;
+    renderQuestionsList();
+    showModal('set-editor-modal');
+    // Reset file input so same file can be re-uploaded
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+};
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const qs = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.length < 6) continue;
+    const [qtext, a, b, c, d, correct] = cols;
+    qs.push({ text: qtext, answers: [a, b, c, d], correct: parseInt(correct) || 0 });
+  }
+  return qs;
+}
+
+function parseCSVLine(line) {
+  const result = []; let cur = ''; let inQuotes = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+window.generatePrompt = function() {
+  const prompt = `Generate 15 multiple choice questions about AP World History Modern.
+Format as CSV with this exact header and structure:
+question,a,b,c,d,correct
+"Question text here","Answer A","Answer B","Answer C","Answer D",2
+
+Rules:
+- correct is 0-3 (index of the right answer)
+- All four answers should be plausible
+- Questions should be appropriate for 9th grade AP level
+- Cover a range of units and topics
+- Return ONLY the CSV, no explanation`;
+  document.getElementById('ai-prompt-box').style.display = 'block';
+  document.getElementById('ai-prompt-text').value = prompt;
+};
+
+window.copyPrompt = function() {
+  navigator.clipboard.writeText(document.getElementById('ai-prompt-text').value);
+  showToast('Prompt copied!');
+};
+</script>
+<!-- /SECTION:js-teacher -->
+
+<!-- SECTION:js-host -->
+<script>
+function listenHost() {
+  const r1 = dbOn('prism_games/' + gameCode + '/players', snap => {
+    const players = snap.val() || {};
+    renderHostLobbyPlayers(players);
+    updateHostLeaderboard(players);
+    const nonHost = Object.values(players).filter(p => !p.isHost);
+    document.getElementById('host-player-count').textContent = nonHost.length;
+    if (questions.length > 0) {
+      document.getElementById('start-game-btn').disabled = nonHost.length < 1;
+    }
+  });
+  gameListeners.push(r1);
+
+  const r2 = dbOn('prism_games/' + gameCode + '/answeredPlayers', snap => {
+    updateAnsweredPips(snap.val() || {});
+  });
+  gameListeners.push(r2);
+}
+
+function renderHostLobbyPlayers(players) {
+  const list = document.getElementById('host-players-list');
+  const arr = Object.entries(players).filter(([,p]) => !p.isHost);
+  if (!arr.length) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;padding:.3rem 0;">Waiting for players…</div>';
+    return;
+  }
+  list.innerHTML = arr.map(([pid, p]) => `
+    <div class="player-chip">
+      <div class="player-avatar">${getEquippedEmoji(p.loadout) || '😀'}</div>
+      <div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85rem;">${p.name}</div>
+      <button class="kick-btn" onclick="kickPlayer('${pid}','${p.name.replace(/'/g,"\\'")}')">✕</button>
+    </div>
+  `).join('');
+}
+
+window.kickPlayer = async function(pid, pname) {
+  if (!confirm('Remove ' + pname + '?')) return;
+  await dbRemove('prism_games/' + gameCode + '/players/' + pid);
+  await dbSet('prism_games/' + gameCode + '/kicked/' + pid, true);
+};
+
+function updateHostLeaderboard(players) {
+  const lb = document.getElementById('host-leaderboard');
+  const sorted = Object.entries(players).sort((a,b) => (b[1].shards||0) - (a[1].shards||0));
+
+  if (gameMode === 'war') {
+    let apolloTotal = 0, athenaTotal = 0;
+    Object.values(players).forEach(p => {
+      if (p.team === 'apollo') apolloTotal += (p.shards||0);
+      else if (p.team === 'athena') athenaTotal += (p.shards||0);
+    });
+    lb.innerHTML = `
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem;">
+        <div style="flex:1;background:rgba(255,152,0,.1);border:1px solid #ff9800;border-radius:var(--radius-sm);padding:.4rem;text-align:center;">
+          <div style="font-size:.6rem;color:#ff9800;font-weight:700;">🔥 Apollo</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:#ff9800;">💎${apolloTotal}</div>
+        </div>
+        <div style="flex:1;background:rgba(0,229,255,.1);border:1px solid var(--accent2);border-radius:var(--radius-sm);padding:.4rem;text-align:center;">
+          <div style="font-size:.6rem;color:var(--accent2);font-weight:700;">⚡ Athena</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--accent2);">💎${athenaTotal}</div>
+        </div>
+      </div>` +
+      sorted.map(([pid, p], i) => {
+        const rc = i===0?'top1':i===1?'top2':i===2?'top3':'';
+        const teamIcon = p.team === 'apollo' ? '🔥' : p.team === 'athena' ? '⚡' : '';
+        return `<div class="lb-row">
+          <div class="lb-rank ${rc}">${i+1}</div>
+          <div style="font-size:.85rem;">${teamIcon}${p.isHost?'👑':(getEquippedEmoji(p.loadout)||'😀')}</div>
+          <div class="lb-name">${p.name}</div>
+          ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+          <div class="lb-shards">💎${p.shards||0}</div>
+        </div>`;
+      }).join('');
+  } else {
+    lb.innerHTML = sorted.map(([pid, p], i) => {
+      const rc = i===0?'top1':i===1?'top2':i===2?'top3':'';
+      return `<div class="lb-row">
+        <div class="lb-rank ${rc}">${i+1}</div>
+        <div style="font-size:1rem;">${p.isHost?'👑':(getEquippedEmoji(p.loadout)||'😀')}</div>
+        <div class="lb-name">${p.name}</div>
+        ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+        <div class="lb-shards">💎${p.shards||0}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function updateAnsweredPips(answered) {
+  dbGet('prism_games/' + gameCode + '/players').then(snap => {
+    const players = snap.val() || {};
+    const nonHost = Object.entries(players).filter(([,p]) => !p.isHost);
+    const total = nonHost.length;
+    const answeredCount = Object.keys(answered).length;
+    const correctCount = Object.values(answered).filter(a => a.correct).length;
+    const wrongPlayers = nonHost.filter(([pid]) => answered[pid] && !answered[pid].correct);
+    const notAnswered = nonHost.filter(([pid]) => !answered[pid]);
+
+    // Pips
+    const pips = document.getElementById('host-answered-pips');
+    pips.innerHTML = nonHost.map(([pid, p]) => {
+      const a = answered[pid];
+      const cls = !a ? '' : a.correct ? 'done' : 'wrong';
+      return `<div class="answered-pip ${cls}" title="${p.name}${a ? (a.correct ? ' ✓' : ' ✗') : ''}">${(p.name||'?')[0].toUpperCase()}</div>`;
+    }).join('');
+
+    // Stats bar
+    const pct = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
+    const correctPct = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+    const strugglingCount = wrongPlayers.length;
+    document.getElementById('stat-answered').textContent = `✅ ${answeredCount}/${total} answered`;
+    document.getElementById('stat-answered').className = 'host-stat-chip' + (pct === 100 ? ' good' : '');
+    document.getElementById('stat-correct-rate').textContent = `🎯 ${answeredCount > 0 ? correctPct + '%' : '—'} correct`;
+    document.getElementById('stat-correct-rate').className = 'host-stat-chip' + (correctPct >= 70 ? ' good' : correctPct >= 40 ? ' warn' : answeredCount > 0 ? ' danger' : '');
+    document.getElementById('stat-struggling').textContent = `😓 ${strugglingCount} wrong`;
+    document.getElementById('stat-struggling').className = 'host-stat-chip' + (strugglingCount > 0 ? ' danger' : ' good');
+
+    // Struggle panel: show who got it wrong
+    if (wrongPlayers.length > 0) {
+      document.getElementById('host-struggle-panel').style.display = 'block';
+      document.getElementById('host-struggle-list').innerHTML = wrongPlayers.map(([,p]) => `
+        <div class="struggle-player">
+          <span>${getEquippedEmoji(p.loadout)||'😀'}</span>
+          <span style="min-width:80px;">${p.name}</span>
+          <div class="struggle-bar-wrap">
+            <div class="struggle-bar-fill low" style="width:100%;"></div>
+          </div>
+          <span class="struggle-pct">✗</span>
+        </div>
+      `).join('');
+    }
+  });
 }
 
 window.startGame = function() {
-  if (!questions.length) { showToast('Add at least one question first!'); return; }
-  update(ref(db, `prism_games/${gameCode}`), { status:'playing', currentQ: -1, questions });
-  document.getElementById('host-status-badge').textContent = 'PLAYING';
-  document.getElementById('host-status-badge').className = 'badge badge-playing';
-  hostAdvanceQuestion();
-}
-
-async function hostAdvanceQuestion() {
-  currentQ++;
-  if (currentQ >= questions.length) {
-    // End game
-    await update(ref(db, `prism_games/${gameCode}`), { status:'ended', currentQ: questions.length });
-    showEndGame();
-    return;
-  }
-  await update(ref(db, `prism_games/${gameCode}`), {
-    currentQ,
-    questionState: 'question',
-    answeredPlayers: null,
+  if (!questions.length) { showToast('Load a question set first!'); return; }
+  document.getElementById('host-lobby').style.display = 'none';
+  document.getElementById('host-live').style.display = 'block';
+  document.getElementById('host-status-badge').textContent = 'LIVE';
+  document.getElementById('host-status-badge').classList.add('live');
+  dbUpdate({
+    ['prism_games/' + gameCode + '/status']: 'playing',
+    ['prism_games/' + gameCode + '/mode']: gameMode,
+    ['prism_games/' + gameCode + '/questions']: questions,
+    ['prism_games/' + gameCode + '/currentQ']: -1,
+    ['prism_games/' + gameCode + '/questionState']: 'waiting',
   });
-  // Auto advance after 20 seconds
-  setTimeout(() => {
-    update(ref(db, `prism_games/${gameCode}`), { questionState: 'events' });
-    // next question after another 6 seconds
-    setTimeout(hostAdvanceQuestion, 6000);
-  }, 20000);
-}
+  currentQ = -1;
+  hostNextQuestion();
+};
 
-// ===== JOIN GAME =====
+window.hostNextQuestion = async function() {
+  currentQ++;
+  if (currentQ >= questions.length) { hostEndGame(); return; }
+  const q = questions[currentQ];
+  document.getElementById('host-live-qmeta').textContent = 'Question ' + (currentQ+1) + ' of ' + questions.length;
+  document.getElementById('host-live-qtext').textContent = q.text;
+  document.getElementById('host-live-answers').innerHTML = q.answers.map((a,i) =>
+    `<div class="host-answer-item ${i===q.correct?'correct-ans':''}">${i===q.correct?'✓ ':''}${a}</div>`
+  ).join('');
+  document.getElementById('next-q-btn').disabled = true;
+  setTimeout(() => document.getElementById('next-q-btn').disabled = false, 3000);
+
+  // Update stats bar question progress
+  document.getElementById('stat-q-progress').textContent = 'Q' + (currentQ+1) + '/' + questions.length;
+
+  // Clear struggle panel
+  document.getElementById('host-struggle-panel').style.display = 'none';
+  document.getElementById('host-struggle-list').innerHTML = '';
+
+  // Reset pause if was paused
+  if (isPaused) {
+    isPaused = false;
+    document.getElementById('pause-btn').textContent = '⏸ Pause';
+  }
+
+  await dbUpdate({
+    ['prism_games/' + gameCode + '/currentQ']: currentQ,
+    ['prism_games/' + gameCode + '/questionState']: 'question',
+    ['prism_games/' + gameCode + '/answeredPlayers']: null,
+    ['prism_games/' + gameCode + '/sabotages']: null,
+    ['prism_games/' + gameCode + '/paused']: false,
+    ['prism_games/' + gameCode + '/timeLimit']: hostTimeLimit,
+  });
+};
+
+window.hostEndGame = async function() {
+  await dbUpdate({
+    ['prism_games/' + gameCode + '/status']: 'ended',
+    ['prism_games/' + gameCode + '/questionState']: 'ended',
+  });
+};
+
+window.leaveHost = function() {
+  if (gameListeners.length) {
+    gameListeners.forEach(r => dbOff(r));
+    gameListeners = [];
+  }
+  if (gameCode) {
+    dbRemove('prism_games/' + gameCode).catch(()=>{});
+  }
+  gameCode = '';
+  isHost = false;
+  questions = [];
+  currentQ = -1;
+  endScreenShown = false;
+  showScreen('landing');
+};
+
+function getEquippedEmoji(loadout) {
+  if (!loadout || !loadout.length) return null;
+  const cid = loadout.find(Boolean);
+  if (!cid) return null;
+  const card = CARDS.find(c => c.id === cid);
+  return card ? card.emoji : null;
+}
+</script>
+<!-- /SECTION:js-host -->
+
+<!-- SECTION:js-game -->
+<script>
 window.joinGame = async function() {
   const name = document.getElementById('join-name').value.trim();
-  const code = document.getElementById('join-code').value.trim();
-  if (!name || !code) { showToast('Enter your name and code!'); return; }
+  const code = document.getElementById('join-code').value.trim().replace(/\D/g,'');
+  if (!name) { showToast('Enter your name!'); return; }
+  if (code.length !== 4) { showToast('Enter the 4-digit game code!'); return; }
 
-  const snap = await get(ref(db, `prism_games/${code}`));
-  if (!snap.exists()) { showToast('❌ Game not found!'); return; }
-  const game = snap.val();
-  if (game.status === 'ended') { showToast('❌ Game already ended!'); return; }
+  // Clean up any previous game listeners
+  gameListeners.forEach(r => dbOff(r));
+  gameListeners = [];
 
   myName = name;
+  saveLocal();
+
+  let game;
+  try {
+    const snap = await dbGet('prism_games/' + code);
+    game = snap.val();
+  } catch(e) { showToast('Network error — check your connection.'); return; }
+
+  if (!game) { showToast('Game not found. Check the code!'); return; }
+  if (game.status === 'ended') { showToast('That game has already ended.'); return; }
+
+  // Check if kicked
+  if (game.kicked && game.kicked[myId]) { showToast('You were removed from this game.'); return; }
+
   gameCode = code;
-  gameRef = ref(db, `prism_games/${gameCode}`);
+  gameMode = game.mode || 'surge';
+  isHost = false;
+  myCharges = 0;
+  answered = false;
+  lastQState = '';
+  myShielded = getLoadoutBuffs().shield > 0;
+  myFrozenUntil = 0;
+  endScreenShown = false;
+  myTeam = null;
+  warCaptures = { apollo: 0, athena: 0 };
 
-  await update(ref(db, `prism_games/${gameCode}/players/${myId}`), {
-    name: myName, shards: 0, equipped: myEquipped || null, isHost: false
-  });
+  // Assign team for war mode — balance by counting existing teams
+  if (gameMode === 'war') {
+    const players = game.players ? Object.values(game.players) : [];
+    const apolloCount = players.filter(p => p.team === 'apollo').length;
+    const athenaCount = players.filter(p => p.team === 'athena').length;
+    myTeam = apolloCount <= athenaCount ? 'apollo' : 'athena';
+  }
 
-  closeModal('join-modal');
-  document.getElementById('my-name-display').textContent = myName;
-  document.getElementById('my-shards-display').textContent = 0;
+  try {
+    await dbSet('prism_games/' + gameCode + '/players/' + myId, {
+      name: myName,
+      shards: 0,
+      charges: 0,
+      streak: 0,
+      shielded: myShielded,
+      frozenUntil: 0,
+      isHost: false,
+      loadout: myLoadout,
+      team: myTeam,
+      joinedAt: Date.now(),
+    });
+  } catch(e) { showToast('Could not join — try again.'); return; }
 
-  // Set equipped mini
-  const eqEmoji = getEquippedEmoji(myEquipped);
-  document.getElementById('my-equipped-mini').textContent = eqEmoji || '🃏';
+  document.getElementById('game-mode-badge').textContent = {
+    surge: '⚡ Surge', gamble: '🎰 Gamble', war: '⚔️ War'
+  }[gameMode] || gameMode;
+
+  // War mode UI
+  const warHeader = document.getElementById('war-header');
+  if (gameMode === 'war') {
+    warHeader.style.display = 'block';
+    const myBar = document.getElementById('war-bar-' + myTeam);
+    if (myBar) myBar.classList.add('my-team');
+    showToast('⚔️ You are on Team ' + (myTeam === 'apollo' ? '🔥 Apollo' : '⚡ Athena') + '!', 3500);
+    document.getElementById('lb-title').textContent = 'My Team';
+  } else {
+    warHeader.style.display = 'none';
+    document.getElementById('lb-title').textContent = 'Leaderboard';
+  }
+
+  // Reset HUD
+  document.getElementById('my-shards-display').textContent = '0';
+  document.getElementById('my-charges-display').textContent = '0';
+  document.getElementById('my-streak-display').textContent = '';
 
   showScreen('game-screen');
-  listenToGame_student();
-}
+  renderSabotagePanel();
+  listenGame();
+};
 
-function listenToGame_student() {
-  // Listen to game state
-  const gameR = ref(db, `prism_games/${gameCode}`);
-  const fn = onValue(gameR, snap => {
+function listenGame() {
+  const r1 = dbOn('prism_games/' + gameCode, snap => {
     const game = snap.val();
     if (!game) return;
-    if (game.status === 'ended') { showEndGame(game.players); return; }
-    if (game.status !== 'playing') return;
-
-    updateLeaderboard(game.players);
-
-    if (game.questionState === 'question' && game.currentQ >= 0) {
-      showQuestion(game.questions[game.currentQ], game.currentQ, game.players);
-    } else if (game.questionState === 'events') {
-      showShardEvent(game.players);
-    }
+    handleGameUpdate(game);
   });
-  gameListeners.push([gameR, fn]);
+  gameListeners.push(r1);
+
+  // Listen for being kicked
+  const r2 = dbOn('prism_games/' + gameCode + '/kicked/' + myId, snap => {
+    if (snap.val()) { showToast('You were removed from the game.'); leaveGame(); }
+  });
+  gameListeners.push(r2);
+
+  // Listen for sabotages targeting me
+  const r3 = dbOn('prism_games/' + gameCode + '/sabotages/' + myId, snap => {
+    const sab = snap.val();
+    if (sab) handleIncomingSabotage(sab);
+  });
+  gameListeners.push(r3);
 }
 
-function showQuestion(q, qIdx, players) {
-  if (currentQ === qIdx && answered) return; // already answered this one
-  currentQ = qIdx;
-  answered = false;
-  const main = document.getElementById('game-main');
-  main.innerHTML = `
-    <div class="question-box">
-      <div class="question-meta">Question ${qIdx+1}</div>
-      <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
-      <div class="question-text">${q.text}</div>
-    </div>
-    <div class="answers-grid">
-      ${q.answers.map((a,i) => `
-        <button class="answer-btn" id="ans-btn-${i}" onclick="submitAnswer(${i},${q.correct})">${a}</button>
-      `).join('')}
-    </div>
-  `;
-  // Timer animation
-  const fill = document.getElementById('timer-fill');
-  setTimeout(() => fill.style.width = '0%', 50);
-}
+let lastQState = '';
+let endScreenShown = false;
 
-window.submitAnswer = function(selected, correct) {
-  if (answered) return;
-  answered = true;
-  const isCorrect = selected === correct;
-  // Disable all buttons, highlight
-  [0,1,2,3].forEach(i => {
-    const btn = document.getElementById(`ans-btn-${i}`);
-    btn.disabled = true;
-    if (i === correct) btn.classList.add('correct');
-    else if (i === selected && !isCorrect) btn.classList.add('wrong');
-  });
+function handleGameUpdate(game) {
+  if (!game) return;
+  const players = game.players || {};
+  const state = game.questionState;
 
-  if (isCorrect) {
-    // Mark as answered correctly in firebase
-    update(ref(db, `prism_games/${gameCode}/answeredPlayers/${myId}`), { correct: true });
-    showToast('✅ Correct!');
+  // Sync my own HUD from live data
+  if (players[myId]) {
+    const me = players[myId];
+    document.getElementById('my-shards-display').textContent = me.shards || 0;
+    myCharges = me.charges || 0;
+    document.getElementById('my-charges-display').textContent = myCharges;
+    const streak = me.streak || 0;
+    document.getElementById('my-streak-display').textContent = streak >= 2 ? '🔥' + streak : '';
+    renderSabotagePanel();
+  }
+
+  // Handle pause
+  const pauseOverlay = document.getElementById('pause-overlay');
+  if (game.paused) {
+    pauseOverlay.style.display = 'flex';
+    return; // don't process question updates while paused
   } else {
-    showToast('❌ Wrong!');
+    pauseOverlay.style.display = 'none';
+  }
+
+  updateLeaderboard(players);
+
+  // War mode: update team scores and capture progress
+  if (gameMode === 'war') {
+    updateWarScores(players, game);
+  }
+
+  if (game.status === 'ended') {
+    if (!endScreenShown) {
+      endScreenShown = true;
+      showEndScreen(players);
+    }
+    return;
+  }
+
+  // Only re-render question area when state actually changes
+  const stateKey = state + '_' + game.currentQ;
+  if (stateKey === lastQState) return;
+  lastQState = stateKey;
+
+  if (state === 'question' && game.questions) {
+    const q = game.questions[game.currentQ];
+    if (q) renderQuestion(q, game.currentQ, game.questions.length, game.timeLimit || 30);
+    answered = false;
+  } else if (state === 'waiting') {
+    document.getElementById('game-main').innerHTML = `
+      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+        <div style="font-size:2rem;margin-bottom:.5rem;">⏳</div>
+        Waiting for the next question…
+      </div>`;
   }
 }
 
-function showShardEvent(players) {
-  if (!players || !players[myId]) return;
-  // Only trigger event if we answered correctly this round
-  // Check by seeing if answeredPlayers has us (handled by host timeout)
-  // We'll just show a random event and apply it locally + to firebase
-  const event = SHARD_EVENTS[Math.floor(Math.random() * SHARD_EVENTS.length)];
-  const shards = {};
-  Object.keys(players).forEach(pid => shards[pid] = players[pid].shards || 0);
-
-  // Check if this player answered correctly (from firebase answeredPlayers)
-  get(ref(db, `prism_games/${gameCode}/answeredPlayers/${myId}`)).then(snap => {
-    const didAnswer = snap.exists() && snap.val().correct;
-    const main = document.getElementById('game-main');
-
-    if (didAnswer) {
-      const delta = event.fn(myId, players, shards);
-      // Apply shard changes
-      const updates = {};
-      Object.entries(delta).forEach(([pid, change]) => {
-        const cur = players[pid] ? (players[pid].shards || 0) : 0;
-        updates[`prism_games/${gameCode}/players/${pid}/shards`] = Math.max(0, cur + change);
-      });
-      if (Object.keys(updates).length) update(ref(db), updates);
-
-      main.innerHTML = `
-        <div class="shard-event">
-          <div class="event-icon">${event.emoji}</div>
-          <div class="event-name" style="background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${event.name}</div>
-          <div class="event-desc">${event.desc}</div>
+function renderQuestion(q, qIdx, total, timeLimit=30) {
+  const main = document.getElementById('game-main');
+  const isFrozen = Date.now() < myFrozenUntil;
+  const timeLimitLabel = timeLimit === 0 ? '∞' : timeLimit + 's';
+  main.innerHTML = `
+    <div class="question-area">
+      <div class="question-card">
+        <div class="question-meta" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Question ${qIdx+1} of ${total}</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--gold);" id="timer-label">${timeLimitLabel}</span>
         </div>
-      `;
-    } else {
-      // didn't answer, just show waiting
-      main.innerHTML = `<div class="empty-state"><div class="big">⏳</div><div>Next question coming...</div></div>`;
-    }
-  });
+        ${timeLimit > 0 ? `<div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%;"></div></div>` : ''}
+        <div class="question-text">${q.text}</div>
+      </div>
+    </div>
+    <div class="answers-grid" id="answers-grid">
+      ${isFrozen
+        ? '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent2);">🧊 You are frozen! Thawing soon…</div>'
+        : q.answers.map((a,i) => `<button class="answer-btn" id="ans-${i}" onclick="submitAnswer(${i},${q.correct},${qIdx})">${a}</button>`).join('')
+      }
+    </div>`;
+
+  if (timeLimit > 0) {
+    // Animate timer bar and countdown label
+    requestAnimationFrame(() => {
+      const fill = document.getElementById('timer-fill');
+      if (fill) {
+        fill.style.transition = `width ${timeLimit}s linear`;
+        fill.style.width = '0%';
+      }
+    });
+
+    // Countdown label
+    let remaining = timeLimit;
+    const labelEl = document.getElementById('timer-label');
+    const timerInterval = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        if (labelEl) labelEl.textContent = '0s';
+        return;
+      }
+      if (labelEl) {
+        labelEl.textContent = remaining + 's';
+        if (remaining <= 5) labelEl.style.color = 'var(--accent3)';
+      }
+    }, 1000);
+  }
+
+  if (gameMode === 'gamble') renderGambleUI();
 }
 
+function submitAnswer(selected, correct, qIdx) {
+  if (answered) return;
+  if (Date.now() < myFrozenUntil) { showToast('🧊 You are frozen!'); return; }
+  answered = true;
+
+  const isCorrect = selected === correct;
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach(b => b.disabled = true);
+  if (btns[correct]) btns[correct].classList.add('correct');
+  if (!isCorrect && btns[selected]) btns[selected].classList.add('wrong');
+
+  // Flash screen
+  const flash = document.createElement('div');
+  flash.style.cssText = `position:fixed;inset:0;pointer-events:none;z-index:9000;
+    background:${isCorrect ? 'rgba(105,240,174,.12)' : 'rgba(255,64,129,.12)'};
+    animation:flash .4s ease;`;
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 400);
+
+  if (isCorrect) {
+    playCorrectSound();
+    const buffs = getLoadoutBuffs();
+
+    // Speed bonus: how much of the 25s timer is left
+    const fill = document.getElementById('timer-fill');
+    const pct = fill ? parseFloat(fill.style.width) / 100 : 0;
+    const baseShards = 100;
+    const flatBonus = buffs.flat || 0;
+    const speedBonus = Math.round(pct * 50 * (1 + (buffs.speed || 0) / 100));
+    const shardsEarned = Math.round((baseShards + flatBonus + speedBonus) * (1 + (buffs.shards || 0) / 100));
+    const chargesEarned = 1 + (buffs.charges || 0);
+
+    // Read current values then write — using transaction-style read-then-write
+    dbGet('prism_games/' + gameCode + '/players/' + myId).then(snap => {
+      if (!snap.val()) return; // player removed
+      const p = snap.val();
+      const newShards = (p.shards || 0) + shardsEarned;
+      const newStreak = (p.streak || 0) + 1;
+      const newCharges = (p.charges || 0) + chargesEarned;
+      const updates = {
+        ['prism_games/' + gameCode + '/players/' + myId + '/shards']: newShards,
+        ['prism_games/' + gameCode + '/players/' + myId + '/streak']: newStreak,
+        ['prism_games/' + gameCode + '/players/' + myId + '/charges']: newCharges,
+        ['prism_games/' + gameCode + '/answeredPlayers/' + myId]: { correct: true, qIdx, ts: Date.now() },
+      };
+      // War mode: increment team capture count for this question
+      if (gameMode === 'war' && myTeam) {
+        updates['prism_games/' + gameCode + '/warCaptures/' + myTeam + '/' + qIdx + '/' + myId] = true;
+      }
+      return dbUpdate(updates).then(() => checkStreakBonus(newStreak));
+    }).catch(e => console.warn('submitAnswer write failed:', e));
+
+    showResultPopup(true, shardsEarned, chargesEarned);
+
+    if (gameMode === 'gamble') {
+      setTimeout(() => showGambleOffer(shardsEarned), 1200);
+    }
+
+  } else {
+    dbUpdate({
+      ['prism_games/' + gameCode + '/players/' + myId + '/streak']: 0,
+      ['prism_games/' + gameCode + '/answeredPlayers/' + myId]: { correct: false, qIdx, ts: Date.now() },
+    }).catch(e => console.warn('submitAnswer wrong write failed:', e));
+    showResultPopup(false, 0, 0);
+  }
+}
+
+function checkStreakBonus(streak) {
+  const buffs = getLoadoutBuffs();
+  const reduction = buffs.streak || 0;
+
+  let bonusShards = 0;
+  let msg = '';
+  if (streak === Math.max(2, 3 - reduction)) { bonusShards = 50; msg = '🔥 On Fire! +50 shards!'; }
+  else if (streak === Math.max(3, 5 - reduction)) { bonusShards = 100; msg = '🔥🔥 Unstoppable! +100 shards!'; }
+  else if (streak > 5 && streak % 5 === 0) { bonusShards = 150; msg = '🔥🔥🔥 Legendary Streak! +150!'; }
+
+  if (bonusShards) {
+    dbGet('prism_games/' + gameCode + '/players/' + myId + '/shards').then(snap => {
+      const cur = snap.val() || 0;
+      dbSet('prism_games/' + gameCode + '/players/' + myId + '/shards', cur + bonusShards);
+    });
+    showToast(msg, 3000);
+    if (streak >= 5) launchConfetti();
+  }
+}
+
+// HUD is kept in sync by handleGameUpdate listener — no separate polling needed
+
 function updateLeaderboard(players) {
-  if (!players) return;
   const sorted = Object.entries(players).sort((a,b) => (b[1].shards||0)-(a[1].shards||0));
   const lb = document.getElementById('leaderboard');
 
-  // Update my shards
-  if (players[myId]) {
-    const mine = players[myId].shards || 0;
-    document.getElementById('my-shards-display').textContent = mine;
-  }
-
-  lb.innerHTML = `<div class="lb-header">Shards</div>` +
-    sorted.map(([pid, p], i) => {
-      let rankClass = '';
-      if (i===0) rankClass='top1'; else if(i===1) rankClass='top2'; else if(i===2) rankClass='top3';
+  if (gameMode === 'war' && myTeam) {
+    // Show only teammates
+    const teammates = sorted.filter(([pid, p]) => p.team === myTeam);
+    lb.innerHTML = `<div style="font-size:.6rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em;">${myTeam === 'apollo' ? '🔥 Apollo' : '⚡ Athena'}</div>` +
+      teammates.map(([pid, p], i) => `
+        <div class="lb-row ${pid===myId?'me':''}">
+          <div class="lb-rank">${i+1}</div>
+          <div style="font-size:.85rem;">${getEquippedEmoji(p.loadout)||'😀'}</div>
+          <div class="lb-name">${p.name}${p.shielded?'🛡️':''}</div>
+          ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+          <div class="lb-shards">💎${p.shards||0}</div>
+        </div>`).join('');
+  } else {
+    lb.innerHTML = sorted.map(([pid, p], i) => {
+      const rc = i===0?'top1':i===1?'top2':i===2?'top3':'';
       return `<div class="lb-row ${pid===myId?'me':''}">
-        <div class="lb-rank ${rankClass}">${i+1}</div>
-        <div class="player-avatar">${p.isHost ? '👑' : (getEquippedEmoji(p.equipped)||'😀')}</div>
-        <div class="lb-name">${p.name}${p.isHost?' (host)':''}</div>
-        <div class="lb-shards">💎 ${p.shards||0}</div>
+        <div class="lb-rank ${rc}">${i+1}</div>
+        <div style="font-size:.9rem;">${p.isHost?'👑':(getEquippedEmoji(p.loadout)||'😀')}</div>
+        <div class="lb-name">${p.name}${p.shielded?'🛡️':''}</div>
+        ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+        <div class="lb-shards">💎${p.shards||0}</div>
       </div>`;
     }).join('');
+  }
 }
 
-async function showEndGame(playersData) {
-  let players = playersData;
-  if (!players) {
-    const snap = await get(ref(db, `prism_games/${gameCode}/players`));
-    players = snap.val() || {};
+function updateWarScores(players, game) {
+  // Sum shards by team
+  let apolloShards = 0, athenaShards = 0;
+  let apolloCaps = 0, athenaCaps = 0;
+
+  Object.values(players).forEach(p => {
+    if (p.team === 'apollo') apolloShards += (p.shards || 0);
+    else if (p.team === 'athena') athenaShards += (p.shards || 0);
+  });
+
+  // Count question captures from warCaptures
+  const wc = game.warCaptures || {};
+  Object.keys(wc).forEach(qIdx => {
+    const apolloCount = Object.keys(wc[qIdx]?.apollo || {}).length;
+    const athenaCount = Object.keys(wc[qIdx]?.athena || {}).length;
+    if (apolloCount >= WAR_CAPTURES_TO_WIN_Q && apolloCount > athenaCaps) apolloCaps++;
+    if (athenaCount >= WAR_CAPTURES_TO_WIN_Q && athenaCount > apolloCaps) athenaCaps++;
+  });
+
+  // Recalculate properly
+  apolloCaps = 0; athenaCaps = 0;
+  Object.keys(wc).forEach(qIdx => {
+    const apolloCount = Object.keys(wc[qIdx]?.apollo || {}).length;
+    const athenaCount = Object.keys(wc[qIdx]?.athena || {}).length;
+    if (apolloCount >= WAR_CAPTURES_TO_WIN_Q) apolloCaps++;
+    if (athenaCount >= WAR_CAPTURES_TO_WIN_Q) athenaCaps++;
+  });
+
+  warCaptures = { apollo: apolloCaps, athena: athenaCaps };
+
+  document.getElementById('war-score-apollo').textContent = apolloShards.toLocaleString();
+  document.getElementById('war-score-athena').textContent = athenaShards.toLocaleString();
+  document.getElementById('war-caps-apollo').textContent = apolloCaps + ' capture' + (apolloCaps!==1?'s':'');
+  document.getElementById('war-caps-athena').textContent = athenaCaps + ' capture' + (athenaCaps!==1?'s':'');
+
+  // Update question capture banner for current question
+  if (game.currentQ >= 0 && game.questionState === 'question') {
+    const qWC = wc[game.currentQ] || {};
+    const apolloOnQ = Object.keys(qWC.apollo || {}).length;
+    const athenaOnQ = Object.keys(qWC.athena || {}).length;
+    const banner = document.getElementById('war-question-banner');
+
+    if (apolloOnQ >= WAR_CAPTURES_TO_WIN_Q) {
+      banner.textContent = '🔥 Team Apollo captured this question!';
+      banner.className = 'war-question-banner captured-apollo';
+    } else if (athenaOnQ >= WAR_CAPTURES_TO_WIN_Q) {
+      banner.textContent = '⚡ Team Athena captured this question!';
+      banner.className = 'war-question-banner captured-athena';
+    } else {
+      // Show pip progress
+      const apolloPips = Array(WAR_CAPTURES_TO_WIN_Q).fill(0).map((_,i) =>
+        `<div class="capture-pip ${i < apolloOnQ ? 'apollo' : ''}"></div>`).join('');
+      const athenaPips = Array(WAR_CAPTURES_TO_WIN_Q).fill(0).map((_,i) =>
+        `<div class="capture-pip ${i < athenaOnQ ? 'athena' : ''}"></div>`).join('');
+      banner.innerHTML = `<div class="war-capture-needed">
+        <span style="color:#ff9800;font-size:.7rem;font-weight:700;">🔥</span>
+        ${apolloPips}
+        <span style="color:var(--text-muted);font-size:.7rem;margin:0 .3rem;">vs</span>
+        ${athenaPips}
+        <span style="color:var(--accent2);font-size:.7rem;font-weight:700;">⚡</span>
+      </div>`;
+      banner.className = 'war-question-banner';
+    }
   }
-  const sorted = Object.entries(players).sort((a,b) => (b[1].shards||0)-(a[1].shards||0));
+}
 
-  const podium = document.getElementById('end-podium');
-  const top3 = sorted.slice(0,3);
-  const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : (top3.length>=2 ? [null,top3[0],top3[1]] : [null,top3[0],null]);
-  const classes = ['second','first','third'];
-  const medals = ['🥈','🥇','🥉'];
+// ===== SABOTAGE SYSTEM =====
+function renderSabotagePanel() {
+  const panel = document.getElementById('sabotage-panel');
+  const grid = document.getElementById('sabotage-grid');
+  const modeSabs = SABOTAGES.filter(s => s.modes.includes(gameMode));
+  if (!modeSabs.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  grid.innerHTML = modeSabs.map(s => `
+    <button class="sabotage-btn" id="sab-${s.id}" onclick="useSabotage('${s.id}')" ${myCharges < s.cost ? 'disabled' : ''} title="${s.desc}">
+      <div class="sabotage-btn-icon">${s.icon}</div>
+      <div>${s.name}</div>
+      <div class="sabotage-btn-cost">${s.cost} ⚡</div>
+    </button>
+  `).join('');
+}
 
-  podium.innerHTML = order.map((entry, i) => {
-    if (!entry) return `<div class="podium-spot ${classes[i]}" style="opacity:0.3"><div class="podium-rank">—</div></div>`;
-    const [pid, p] = entry;
-    return `<div class="podium-spot ${classes[i]}">
-      <div class="podium-rank">${medals[i]}</div>
-      <div class="podium-name">${p.name}</div>
-      <div class="podium-shards">💎 ${p.shards||0}</div>
+window.useSabotage = async function(sabId) {
+  const sab = SABOTAGES.find(s => s.id === sabId);
+  if (!sab) return;
+  if (myCharges < sab.cost) { showToast('Not enough charges!'); return; }
+
+  if (!sab.needsTarget) {
+    // Apply immediately
+    applySabotageOnSelf(sab);
+    return;
+  }
+
+  // Show target picker
+  const snap = await dbGet('prism_games/' + gameCode + '/players');
+  const players = snap.val() || {};
+  const others = Object.entries(players).filter(([pid, p]) => pid !== myId && !p.isHost);
+  if (!others.length) { showToast('No targets available!'); return; }
+
+  pendingSabotage = sab;
+  document.getElementById('target-title').textContent = sab.icon + ' ' + sab.name + ' — Pick a target';
+  document.getElementById('target-grid').innerHTML = others.map(([pid, p]) => `
+    <button class="target-btn" onclick="confirmTarget('${pid}','${p.name.replace(/'/g,"\\'")}')">
+      ${getEquippedEmoji(p.loadout) || '😀'} ${p.name}
+      ${p.shielded ? ' 🛡️' : ''}
+      <span style="color:var(--gold);font-size:.75rem;">💎${p.shards||0}</span>
+    </button>
+  `).join('');
+  document.getElementById('target-overlay').classList.add('open');
+};
+
+window.confirmTarget = async function(targetId, targetName) {
+  closeTargetPicker();
+  if (!pendingSabotage) return;
+  const sab = pendingSabotage;
+  pendingSabotage = null;
+
+  // Check if target is shielded
+  const tSnap = await dbGet('prism_games/' + gameCode + '/players/' + targetId);
+  const target = tSnap.val() || {};
+  if (target.shielded) {
+    showToast(targetName + ' is shielded! 🛡️ Sabotage blocked!');
+    // Remove their shield
+    dbSet('prism_games/' + gameCode + '/players/' + targetId + '/shielded', false);
+    return;
+  }
+
+  // Deduct charges
+  myCharges -= sab.cost;
+  dbSet('prism_games/' + gameCode + '/players/' + myId + '/charges', myCharges);
+  document.getElementById('my-charges-display').textContent = myCharges;
+  renderSabotagePanel();
+
+  // Apply sabotage
+  if (sab.id === 'freeze') {
+    const dur = 20000;
+    const buffs = getLoadoutBuffs();
+    const frozenUntil = Date.now() + dur;
+    await dbUpdate({
+      ['prism_games/' + gameCode + '/sabotages/' + targetId]: { type:'freeze', frozenUntil, from: myName },
+    });
+    showToast('🧊 Froze ' + targetName + ' for 20 seconds!');
+
+  } else if (sab.id === 'steal') {
+    const buffs = getLoadoutBuffs();
+    const stealAmt = 30 + buffs.steal;
+    const mySnap = await dbGet('prism_games/' + gameCode + '/players/' + myId + '/shards');
+    const tShardsSnap = await dbGet('prism_games/' + gameCode + '/players/' + targetId + '/shards');
+    const myS = mySnap.val() || 0;
+    const tS = tShardsSnap.val() || 0;
+    const stolen = Math.min(stealAmt, tS);
+    await dbUpdate({
+      ['prism_games/' + gameCode + '/players/' + myId + '/shards']: myS + stolen,
+      ['prism_games/' + gameCode + '/players/' + targetId + '/shards']: Math.max(0, tS - stolen),
+    });
+    showToast('🦝 Stole ' + stolen + ' shards from ' + targetName + '!');
+    updateGameHUD();
+
+  } else if (sab.id === 'swap') {
+    const mySnap = await dbGet('prism_games/' + gameCode + '/players/' + myId + '/shards');
+    const tShardsSnap = await dbGet('prism_games/' + gameCode + '/players/' + targetId + '/shards');
+    const myS = mySnap.val() || 0;
+    const tS = tShardsSnap.val() || 0;
+    await dbUpdate({
+      ['prism_games/' + gameCode + '/players/' + myId + '/shards']: tS,
+      ['prism_games/' + gameCode + '/players/' + targetId + '/shards']: myS,
+    });
+    showToast('🔄 Swapped scores with ' + targetName + '!');
+    updateGameHUD();
+  }
+};
+
+async function applySabotageOnSelf(sab) {
+  myCharges -= sab.cost;
+  dbSet('prism_games/' + gameCode + '/players/' + myId + '/charges', myCharges);
+  document.getElementById('my-charges-display').textContent = myCharges;
+  renderSabotagePanel();
+
+  if (sab.id === 'shield') {
+    myShielded = true;
+    dbSet('prism_games/' + gameCode + '/players/' + myId + '/shielded', true);
+    showToast('🛡️ Shield activated! Next sabotage on you is blocked.');
+
+  } else if (sab.id === 'double') {
+    const snap = await dbGet('prism_games/' + gameCode + '/players/' + myId + '/shards');
+    const s = snap.val() || 0;
+    dbSet('prism_games/' + gameCode + '/players/' + myId + '/shards', s * 2);
+    showToast('💰 Doubled your shards! ' + s + ' → ' + (s*2) + '!');
+    launchConfetti();
+
+  } else if (sab.id === 'siege') {
+    // Freeze entire enemy team
+    const enemyTeam = myTeam === 'apollo' ? 'athena' : 'apollo';
+    const snap = await dbGet('prism_games/' + gameCode + '/players');
+    const players = snap.val() || {};
+    const frozenUntil = Date.now() + 10000;
+    const updates = {};
+    Object.entries(players).forEach(([pid, p]) => {
+      if (p.team === enemyTeam && !p.isHost) {
+        updates['prism_games/' + gameCode + '/sabotages/' + pid] = { type: 'freeze', frozenUntil, from: myName + ' (Siege)' };
+      }
+    });
+    if (Object.keys(updates).length) {
+      await dbUpdate(updates);
+      showToast('⚔️ Siege launched! Enemy team frozen for 10 seconds!', 3500);
+    } else {
+      showToast('No enemy players to siege!');
+      // Refund
+      myCharges += sab.cost;
+      dbSet('prism_games/' + gameCode + '/players/' + myId + '/charges', myCharges);
+    }
+
+  } else if (sab.id === 'rally') {
+    // Give +50 shards to each teammate
+    const snap = await dbGet('prism_games/' + gameCode + '/players');
+    const players = snap.val() || {};
+    const updates = {};
+    Object.entries(players).forEach(([pid, p]) => {
+      if (p.team === myTeam && !p.isHost) {
+        updates['prism_games/' + gameCode + '/players/' + pid + '/shards'] = (p.shards || 0) + 50;
+      }
+    });
+    if (Object.keys(updates).length) {
+      await dbUpdate(updates);
+      showToast('📯 Rally! +50 shards to all teammates!', 3000);
+    }
+  }
+}
+
+function handleIncomingSabotage(sab) {
+  if (!sab || !sab.type) return;
+  if (sab.type === 'freeze') {
+    myFrozenUntil = sab.frozenUntil;
+    showToast('🧊 ' + (sab.from||'Someone') + ' froze you for 20 seconds!', 4000);
+    // Clear after duration
+    const remaining = sab.frozenUntil - Date.now();
+    if (remaining > 0) setTimeout(() => {
+      myFrozenUntil = 0;
+      showToast('🔥 You are thawed!');
+      // Clear from db
+      dbSet('prism_games/' + gameCode + '/sabotages/' + myId, null);
+    }, remaining);
+  }
+}
+
+window.closeTargetPicker = function() {
+  document.getElementById('target-overlay').classList.remove('open');
+  pendingSabotage = null;
+};
+
+// ===== GAMBLE MODE =====
+function showGambleOffer(shardsJustEarned) {
+  const main = document.getElementById('game-main');
+  const current = shardsJustEarned;
+  main.innerHTML += `
+    <div style="margin:0 1rem 1rem;background:var(--surface);border:2px solid var(--gold);border-radius:var(--radius);padding:1.25rem;text-align:center;animation:eventPop .3s cubic-bezier(.34,1.56,.64,1);">
+      <div style="font-size:1.8rem;margin-bottom:.3rem;">🎰</div>
+      <div style="font-weight:700;font-size:1.05rem;margin-bottom:.5rem;">Divine Gamble!</div>
+      <div style="color:var(--text-dim);font-size:.85rem;margin-bottom:.75rem;">Risk your ${current} shards for double or lose half</div>
+      <div style="display:flex;gap:.75rem;justify-content:center;">
+        <button class="btn btn-gold" onclick="takeGamble(${current},true)">🎲 Gamble! (×2)</button>
+        <button class="btn btn-ghost" onclick="takeGamble(${current},false)">🏦 Bank it</button>
+      </div>
+    </div>`;
+}
+
+window.takeGamble = async function(amount, risk) {
+  const snap = await dbGet('prism_games/' + gameCode + '/players/' + myId + '/shards');
+  const current = snap.val() || 0;
+  if (risk) {
+    const win = Math.random() > 0.45; // 55% win rate
+    const diff = win ? amount : -Math.floor(amount / 2);
+    const newShards = Math.max(0, current + diff);
+    dbSet('prism_games/' + gameCode + '/players/' + myId + '/shards', newShards);
+    showToast(win ? '🎉 You won! +' + amount + ' shards!' : '💀 Lost the gamble! -' + Math.floor(amount/2) + ' shards!', 3000);
+    if (win) launchConfetti();
+  } else {
+    showToast('🏦 Shards banked safely!');
+  }
+  updateGameHUD();
+  // Clear gamble UI
+  document.querySelectorAll('.gamble-offer').forEach(el => el.remove());
+};
+
+function renderGambleUI() {} // called on question render but gamble UI appears after answering
+
+// ===== LEAVE GAME =====
+window.leaveGame = function() {
+  gameListeners.forEach(r => dbOff(r));
+  gameListeners = [];
+  if (gameCode && !isHost) {
+    dbRemove('prism_games/' + gameCode + '/players/' + myId).catch(()=>{});
+  }
+  gameCode = '';
+  answered = false;
+  myCharges = 0;
+  myShielded = false;
+  myFrozenUntil = 0;
+  lastQState = '';
+  endScreenShown = false;
+  myTeam = null;
+  document.getElementById('war-header').style.display = 'none';
+  showScreen('landing');
+  updateLanding();
+};
+
+function showEndScreen(players) {
+  // Stop all listeners
+  gameListeners.forEach(r => dbOff(r));
+  gameListeners = [];
+
+  const allPlayers = Object.entries(players).filter(([,p]) => !p.isHost);
+  const sorted = [...allPlayers].sort((a,b) => (b[1].shards||0) - (a[1].shards||0));
+  const myResult = players[myId];
+  const shardsEarned = myResult ? (myResult.shards || 0) : 0;
+
+  // Award shards permanently
+  myShards += shardsEarned;
+  saveProgress();
+
+  // Schedule game cleanup
+  if (isHost && gameCode) {
+    setTimeout(() => dbRemove('prism_games/' + gameCode).catch(()=>{}), 30000);
+  }
+
+  const endBox = document.querySelector('.end-box');
+
+  if (gameMode === 'war') {
+    // Team totals
+    let apolloTotal = 0, athenaTotal = 0;
+    allPlayers.forEach(([,p]) => {
+      if (p.team === 'apollo') apolloTotal += (p.shards||0);
+      else if (p.team === 'athena') athenaTotal += (p.shards||0);
+    });
+
+    // Captures bonus
+    const apolloCaps = warCaptures.apollo || 0;
+    const athenaCaps = warCaptures.athena || 0;
+    const capBonus = 200;
+    apolloTotal += apolloCaps * capBonus;
+    athenaTotal += athenaCaps * capBonus;
+
+    let winnerTeam, winnerLabel;
+    if (apolloTotal > athenaTotal) { winnerTeam = 'apollo'; winnerLabel = '🔥 Team Apollo Wins!'; }
+    else if (athenaTotal > apolloTotal) { winnerTeam = 'athena'; winnerLabel = '⚡ Team Athena Wins!'; }
+    else { winnerTeam = 'tie'; winnerLabel = '🤝 It\'s a Tie!'; }
+
+    // MVP: highest individual shards
+    const mvp = sorted[0];
+    const myTeamWon = (winnerTeam === myTeam);
+
+    document.getElementById('end-podium').innerHTML = `
+      <div class="war-winner-banner ${winnerTeam}">${winnerLabel}</div>
+      <div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:.75rem;">
+        <div style="flex:1;background:rgba(255,152,0,.1);border:1px solid #ff9800;border-radius:var(--radius-sm);padding:.75rem;text-align:center;">
+          <div style="font-size:.65rem;color:#ff9800;font-weight:700;text-transform:uppercase;margin-bottom:.2rem;">🔥 Apollo</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:#ff9800;">💎${apolloTotal.toLocaleString()}</div>
+          <div style="font-size:.65rem;color:var(--text-dim);">${apolloCaps} capture${apolloCaps!==1?'s':''}</div>
+        </div>
+        <div style="flex:1;background:rgba(0,229,255,.1);border:1px solid var(--accent2);border-radius:var(--radius-sm);padding:.75rem;text-align:center;">
+          <div style="font-size:.65rem;color:var(--accent2);font-weight:700;text-transform:uppercase;margin-bottom:.2rem;">⚡ Athena</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;color:var(--accent2);">💎${athenaTotal.toLocaleString()}</div>
+          <div style="font-size:.65rem;color:var(--text-dim);">${athenaCaps} capture${athenaCaps!==1?'s':''}</div>
+        </div>
+      </div>
+      ${mvp ? `<div class="war-mvp">
+        <div class="war-mvp-label">⭐ Individual MVP</div>
+        <div class="war-mvp-name">${getEquippedEmoji(mvp[1].loadout)||'😀'} ${mvp[1].name}</div>
+        <div style="font-size:.8rem;color:var(--gold);">💎${mvp[1].shards||0} shards</div>
+      </div>` : ''}`;
+
+    document.getElementById('end-earned-val').textContent = '+' + shardsEarned + ' 💎' + (myTeamWon && winnerTeam !== 'tie' ? ' 🏆 Team Win!' : '');
+
+    if (myTeamWon && winnerTeam !== 'tie') setTimeout(launchConfetti, 300);
+
+  } else {
+    // Surge / Gamble podium
+    const top3 = sorted.slice(0, 3);
+    let podiumOrder, podiumLabels, blockClasses;
+    if (top3.length >= 3) {
+      podiumOrder = [top3[1], top3[0], top3[2]];
+      podiumLabels = ['2', '1', '3'];
+      blockClasses = ['podium-2','podium-1','podium-3'];
+    } else if (top3.length === 2) {
+      podiumOrder = [top3[1], top3[0]];
+      podiumLabels = ['2', '1'];
+      blockClasses = ['podium-2','podium-1'];
+    } else {
+      podiumOrder = top3;
+      podiumLabels = ['1'];
+      blockClasses = ['podium-1'];
+    }
+
+    document.getElementById('end-podium').innerHTML = podiumOrder.map(([pid,p], i) => `
+      <div class="podium-spot">
+        <div class="podium-avatar">${getEquippedEmoji(p.loadout)||'😀'}</div>
+        <div class="podium-name">${p.name}</div>
+        <div class="podium-shards">💎${p.shards||0}</div>
+        <div class="podium-block ${blockClasses[i]}">${podiumLabels[i]}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('end-earned-val').textContent = '+' + shardsEarned + ' 💎';
+    if (sorted.length && sorted[0][0] === myId) setTimeout(launchConfetti, 300);
+  }
+
+  document.getElementById('end-results').innerHTML = sorted.map(([pid,p], i) => {
+    const teamDot = gameMode === 'war' && p.team
+      ? `<span style="font-size:.7rem;margin-right:.2rem;">${p.team==='apollo'?'🔥':'⚡'}</span>` : '';
+    return `<div class="lb-row ${pid===myId?'me':''}">
+      <div class="lb-rank ${i===0?'top1':i===1?'top2':i===2?'top3':''}">${i+1}</div>
+      <div style="font-size:.9rem;">${getEquippedEmoji(p.loadout)||'😀'}</div>
+      <div class="lb-name">${teamDot}${p.name}${pid===myId?' (you)':''}</div>
+      <div class="lb-shards">💎${p.shards||0}</div>
     </div>`;
   }).join('');
 
-  // Award shards based on finish position
-  const myRank = sorted.findIndex(([pid]) => pid === myId);
-  const myGameShards = players[myId] ? (players[myId].shards || 0) : 0;
-  const bonusShards = Math.max(20, Math.floor(myGameShards * 0.5));
+  // Reset game state
+  gameCode = '';
+  answered = false;
+  myCharges = 0;
+  myShielded = false;
+  myFrozenUntil = 0;
+  lastQState = '';
+  myTeam = null;
 
-  myShards += bonusShards;
-  saveLocal();
-
-  document.getElementById('end-shard-reward').innerHTML = `You earned <span style="color:var(--gold);font-family:'Rajdhani';font-weight:700;">💎 ${bonusShards}</span> shards!`;
-  showModal('end-modal');
-
-  // Cleanup game if host
-  if (isHost && gameCode) {
-    setTimeout(() => remove(ref(db, `prism_games/${gameCode}`)), 5000);
-  }
+  showScreen('end-screen');
 }
-
-// ===== PARTICLES =====
-function initParticles() {
-  const colors = ['#7c4dff','#00e5ff','#ff4081','#ffd740'];
-  const container = document.getElementById('particles');
-  for (let i=0; i<20; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random()*100 + '%';
-    p.style.background = colors[Math.floor(Math.random()*colors.length)];
-    p.style.animationDuration = (8 + Math.random()*12) + 's';
-    p.style.animationDelay = (Math.random()*10) + 's';
-    p.style.width = p.style.height = (2 + Math.random()*4) + 'px';
-    container.appendChild(p);
-  }
-}
-
-initParticles();
 </script>
+<!-- /SECTION:js-game -->
+
+<!-- SECTION:js-init -->
+<script>
+// Init on load
+document.addEventListener('DOMContentLoaded', () => {
+  initParticles();
+  // Auth state change handles loading screen dismissal
+  // Fallback: dismiss after 4s if auth hasn't resolved
+  setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    if (!ls.classList.contains('gone')) {
+      ls.classList.add('fade-out');
+      setTimeout(() => ls.classList.add('gone'), 700);
+      if (!isGuest && !auth.currentUser) showScreen('auth-screen');
+    }
+  }, 4000);
+});
+</script>
+<!-- /SECTION:js-init -->
+
 </body>
 </html>
