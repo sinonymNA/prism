@@ -516,6 +516,31 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
 
+/* ACCESSIBILITY */
+button:focus,input:focus,textarea:focus,select:focus{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+.btn:focus-visible,.answer-btn:focus-visible{
+  box-shadow:0 0 0 3px rgba(124,77,255,.3);
+}
+
+/* Empty states */
+.empty-state{
+  text-align:center;padding:2rem 1rem;color:var(--text-muted);
+}
+.empty-state-icon{font-size:3rem;margin-bottom:.75rem;}
+.empty-state-title{font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:.25rem;}
+.empty-state-desc{font-size:.85rem;line-height:1.5;}
+.empty-state-action{margin-top:1rem;}
+
+/* Mobile optimizations */
+@media(max-width:600px){
+  .answer-btn{padding:1rem .75rem;font-size:1rem;}
+  .action-grid{grid-template-columns:1fr;}
+  .game-right{display:none;}
+}
+
 /* SECTION MARKERS ARE AT HTML LEVEL (below) */
 </style>
 <!-- /SECTION:css-base -->
@@ -1390,7 +1415,10 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
     <div style="display:flex;gap:.75rem;" id="landing-loadout">
       <div style="color:var(--text-muted);font-size:.85rem;">No cards equipped. Visit your collection!</div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="doSignOut()" style="margin-top:.5rem;width:fit-content;">Sign Out</button>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('settings-modal');updateSettingsModal()">⚙️ Settings</button>
+      <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign Out</button>
+    </div>
   </div>
 </div>
 <!-- /SECTION:html-landing -->
@@ -1785,6 +1813,37 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
     </div>
   </div>
 </div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">⚙️ Settings</div>
+
+    <div style="margin-bottom:1.5rem;">
+      <label class="label">Your Name</label>
+      <input class="input" id="settings-name-input" placeholder="Enter your name" />
+      <button class="btn btn-accent btn-sm" onclick="saveName()" style="margin-top:.5rem;width:100%;">Update Name</button>
+    </div>
+
+    <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--surface2);border-radius:var(--radius-sm);">
+      <div class="label" style="margin-bottom:.5rem;">Personal Records</div>
+      <div id="settings-records" style="font-size:.85rem;">
+        <div style="color:var(--text-muted);">No solo records yet.</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--surface3);border-radius:var(--radius-sm);">
+      <div style="font-size:.9rem;font-weight:600;margin-bottom:.5rem;">Data Management</div>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="clearLocalData()" style="margin-bottom:.3rem;">🗑 Clear Local Data</button>
+      <div style="font-size:.7rem;color:var(--text-muted);">This will clear your cached collection and records.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('settings-modal')" style="flex:1;">Close</button>
+      <button class="btn btn-danger" onclick="doSignOut();closeModal('settings-modal')">Sign Out</button>
+    </div>
+  </div>
+</div>
 <!-- /SECTION:html-modals -->
 
 </div><!-- #app -->
@@ -2104,8 +2163,60 @@ function showToast(msg, dur=2500) {
   toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function showModal(id) { document.getElementById(id).classList.add('open'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showModal(id) { document.getElementById(id).classList.add('open'); }
+
+// Settings modal functions
+function updateSettingsModal() {
+  document.getElementById('settings-name-input').value = myName;
+
+  // Load records
+  const records = JSON.parse(localStorage.getItem('soloRecords') || '{}');
+  const recordsHtml = Object.entries(records).length > 0
+    ? Object.entries(records).map(([diff, record]) => `
+        <div style="padding:.4rem;background:var(--surface3);border-radius:4px;margin-bottom:.3rem;">
+          <div style="text-transform:capitalize;font-weight:600;font-size:.85rem;">${diff}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">Score: ${record.score}% | Shards: ${record.shards}</div>
+        </div>
+      `).join('')
+    : '<div style="color:var(--text-muted);font-size:.85rem;">No solo records yet.</div>';
+
+  document.getElementById('settings-records').innerHTML = recordsHtml;
+}
+
+window.saveName = function() {
+  const newName = document.getElementById('settings-name-input').value.trim();
+  if (!newName) { showError('Name cannot be empty'); return; }
+
+  myName = sanitizeInput(newName, 30);
+  localStorage.setItem('prism_name', myName);
+  dbSet('prism_users/' + myId + '/name', myName);
+
+  renderLanding();
+  showError('Name updated! ✓');
+  closeModal('settings-modal');
+};
+
+window.clearLocalData = function() {
+  if (!confirm('Clear all local data? This cannot be undone.')) return;
+  localStorage.removeItem('soloRecords');
+  sessionStorage.clear();
+  showError('Local data cleared. ✓');
+};
+
+// Keyboard navigation for game
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('game-screen')?.classList.contains('active')) return;
+
+  const key = parseInt(e.key);
+  if (key >= 1 && key <= 4) {
+    const buttons = document.querySelectorAll('.answer-btn');
+    if (buttons[key - 1] && !buttons[key - 1].disabled) {
+      buttons[key - 1].click();
+    }
+  }
+});
 
 function showResultPopup(correct, shardsEarned, chargesEarned) {
   const popup = document.getElementById('result-popup');
@@ -2509,7 +2620,14 @@ function renderCollection() {
   const owned = [...new Set(myCollection)];
   const grid = document.getElementById('cards-grid');
   if (owned.length === 0) {
-    grid.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:1rem 0;">No cards yet! Open packs in the store.</div>';
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-state-icon">🃏</div>
+      <div class="empty-state-title">No cards yet!</div>
+      <div class="empty-state-desc">Open packs in the store to start your collection.</div>
+      <div class="empty-state-action">
+        <button class="btn btn-accent btn-sm" onclick="showScreen('store-screen');renderStore()">Open Store →</button>
+      </div>
+    </div>`;
   } else {
     grid.innerHTML = owned.map(id => renderCard(id)).join('');
     // Attach cursor tracking to legendary cards
