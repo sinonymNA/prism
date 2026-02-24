@@ -3652,7 +3652,15 @@ function handleGameUpdate(game) {
 
   if (state === 'question' && game.questions) {
     const q = game.questions[game.currentQ];
-    if (q) renderQuestion(q, game.currentQ, game.questions.length, game.timeLimit || 30);
+    if (q) {
+      renderQuestion(q, game.currentQ, game.questions.length, game.timeLimit || 30);
+    } else {
+      document.getElementById('game-main').innerHTML = `
+        <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+          <div style="font-size:2rem;margin-bottom:.5rem;">📋</div>
+          Loading question…
+        </div>`;
+    }
     answered = false;
   } else if (state === 'waiting') {
     document.getElementById('game-main').innerHTML = `
@@ -3660,14 +3668,34 @@ function handleGameUpdate(game) {
         <div style="font-size:2rem;margin-bottom:.5rem;">⏳</div>
         Waiting for the next question…
       </div>`;
+  } else if (!state || state === 'waiting') {
+    // Game hasn't started yet or is preparing
+    document.getElementById('game-main').innerHTML = `
+      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+        <div style="font-size:2rem;margin-bottom:.5rem;">🎮</div>
+        Waiting for the host to start the game…
+      </div>`;
+  } else {
+    // Unknown state - show loading
+    document.getElementById('game-main').innerHTML = `
+      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+        <div style="font-size:2rem;margin-bottom:.5rem;">⏸</div>
+        ${state || 'Loading…'}
+      </div>`;
   }
 }
 
 function renderQuestion(q, qIdx, total, timeLimit=30) {
-  const main = document.getElementById('game-main');
-  const isFrozen = Date.now() < myFrozenUntil;
-  const timeLimitLabel = timeLimit === 0 ? '∞' : timeLimit + 's';
-  main.innerHTML = `
+  try {
+    const main = document.getElementById('game-main');
+    if (!main) {
+      console.error('game-main element not found');
+      showError('Error rendering question');
+      return;
+    }
+    const isFrozen = Date.now() < myFrozenUntil;
+    const timeLimitLabel = timeLimit === 0 ? '∞' : timeLimit + 's';
+    main.innerHTML = `
     <div class="question-area">
       <div class="question-card">
         <div class="question-meta" style="display:flex;justify-content:space-between;align-items:center;">
@@ -3713,6 +3741,12 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
   }
 
   if (gameMode === 'gamble') renderGambleUI();
+  } catch(e) {
+    console.error('Error in renderQuestion:', e);
+    showError('Failed to render question');
+    const main = document.getElementById('game-main');
+    if (main) main.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--accent3);">Error loading question. Please wait…</div>`;
+  }
 }
 
 function submitAnswer(selected, correct, qIdx) {
