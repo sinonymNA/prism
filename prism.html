@@ -48,6 +48,34 @@ body::before{
     radial-gradient(ellipse 50% 60% at 50% 50%,rgba(255,64,129,0.05) 0%,transparent 70%);
   pointer-events:none;z-index:0;
 }
+
+/* Parallax particle system — depth layers */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #7c4dff, rgba(124,77,255,0)),
+    radial-gradient(2px 2px at 60px 70px, #00e5ff, rgba(0,229,255,0)),
+    radial-gradient(1.5px 1.5px at 50px 50px, #ff4081, rgba(255,64,129,0)),
+    radial-gradient(1px 1px at 130px 80px, #7c4dff, rgba(124,77,255,0)),
+    radial-gradient(2px 2px at 90px 10px, #00e5ff, rgba(0,229,255,0));
+  background-repeat:repeat;
+  background-size:200px 200px, 150px 150px, 250px 250px, 300px 300px, 350px 350px;
+  background-position:0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;
+  pointer-events:none;z-index:0;
+  opacity:.6;
+  animation:parallax1 120s linear infinite, parallax2 100s linear infinite reverse;
+}
+
+@keyframes parallax1{
+  0%{background-position:0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;}
+  100%{background-position:-200px -200px, 40px 60px, 130px 270px, 70px 100px, 0 0;}
+}
+
+@keyframes parallax2{
+  0%{background-position:0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;}
+  100%{background-position:200px 200px, 40px 60px, 130px 270px, 70px 100px, -350px -350px;}
+}
 #app{position:relative;z-index:1;}
 .screen{display:none;min-height:100vh;}
 .screen.active{display:flex;flex-direction:column;}
@@ -77,10 +105,10 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .btn{
   padding:.65rem 1.4rem;border:none;border-radius:var(--radius-sm);
   font-size:.95rem;font-weight:600;transition:all .15s;
-  letter-spacing:.03em;
+  letter-spacing:.03em;position:relative;overflow:hidden;
 }
-.btn:hover{transform:translateY(-1px);filter:brightness(1.1);}
-.btn:active{transform:translateY(0);}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.btn:active:not(:disabled){transform:translateY(0) scale(.97);box-shadow:0 2px 4px rgba(0,0,0,.2);}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .btn-accent{background:var(--accent);color:#fff;}
 .btn-accent2{background:var(--accent2);color:#000;}
@@ -107,16 +135,76 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .card{
   width:140px;height:196px;border-radius:12px;
   border:2px solid var(--border2);background:var(--surface2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:.4rem;padding:.75rem;position:relative;cursor:pointer;
-  transition:all .2s;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:.3rem;padding:.5rem;position:relative;cursor:pointer;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);overflow:hidden;
+  perspective:1000px;
 }
-.card:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.card:hover{transform:translateY(-6px) scale(1.05) rotateX(2deg);box-shadow:0 12px 40px rgba(0,0,0,.6);}
+
+/* Holographic foil effect on hover */
+.card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:conic-gradient(from 0deg at 50% 50%,
+    rgba(255,0,0,.1) 0deg,
+    rgba(255,127,0,.1) 60deg,
+    rgba(0,255,0,.1) 120deg,
+    rgba(0,127,255,.1) 180deg,
+    rgba(127,0,255,.1) 240deg,
+    rgba(255,0,0,.1) 360deg);
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+  border-radius:12px;
+  z-index:5;
+}
+.card:hover::before{opacity:0.4;animation:holoBreathe 2s ease-in-out infinite;}
+
+@keyframes holoBreathe{
+  0%,100%{opacity:.4;}
+  50%{opacity:.7;}
+}
+
+/* Card portrait area — top 60% */
+.card-portrait{
+  width:100%;height:100px;border-radius:8px;
+  background:linear-gradient(135deg, rgba(124,77,255,.3), rgba(0,229,255,.2));
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.card-portrait-inner{
+  font-size:3rem;line-height:1;filter:drop-shadow(0 0 4px rgba(0,0,0,.5));
+  transition:transform .3s;
+}
+
+.card:hover .card-portrait-inner{
+  transform:scale(1.2);
+}
+
+/* Rarity-specific glows */
 .card.common{border-color:var(--common);}
-.card.rare{border-color:var(--rare);box-shadow:0 0 12px rgba(66,165,245,.2);}
-.card.epic{border-color:var(--epic);box-shadow:0 0 14px rgba(171,71,188,.25);}
-.card.legendary{border-color:var(--legendary);box-shadow:0 0 18px rgba(255,215,64,.3);animation:legendaryGlow 2s ease-in-out infinite;}
-@keyframes legendaryGlow{0%,100%{box-shadow:0 0 18px rgba(255,215,64,.3);}50%{box-shadow:0 0 28px rgba(255,215,64,.5);}}
+.card.common:hover{box-shadow:0 0 20px rgba(120,144,156,.4), 0 12px 40px rgba(0,0,0,.6);}
+
+.card.rare{border-color:var(--rare);}
+.card.rare:hover{box-shadow:0 0 20px rgba(66,165,245,.5), 0 12px 40px rgba(0,0,0,.6);}
+
+.card.epic{border-color:var(--epic);}
+.card.epic:hover{box-shadow:0 0 20px rgba(171,71,188,.6), 0 12px 40px rgba(0,0,0,.6);}
+
+.card.legendary{border-color:var(--legendary);}
+.card.legendary:hover{
+  box-shadow:0 0 25px rgba(255,215,64,.7), 0 0 40px rgba(255,215,64,.4), 0 12px 40px rgba(0,0,0,.6);
+  animation:legendaryPulse .8s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse{
+  0%,100%{box-shadow:0 0 25px rgba(255,215,64,.7), 0 0 40px rgba(255,215,64,.4), 0 12px 40px rgba(0,0,0,.6);}
+  50%{box-shadow:0 0 35px rgba(255,215,64,.9), 0 0 60px rgba(255,215,64,.6), 0 12px 40px rgba(0,0,0,.6);}
+}
+
 .card-art{width:80px;height:80px;border-radius:8px;object-fit:cover;}
 .card-emoji{font-size:2.8rem;line-height:1;}
 .card-name{font-size:.7rem;font-weight:700;text-align:center;color:var(--text);letter-spacing:.05em;}
@@ -124,13 +212,130 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .card-rarity-badge{
   position:absolute;top:6px;right:6px;
   font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-  padding:2px 5px;border-radius:3px;
+  padding:2px 5px;border-radius:3px;z-index:10;
 }
 .card-rarity-badge.common{background:var(--common);color:#fff;}
 .card-rarity-badge.rare{background:var(--rare);color:#fff;}
 .card-rarity-badge.epic{background:var(--epic);color:#fff;}
 .card-rarity-badge.legendary{background:var(--legendary);color:#000;}
 .card-buff{font-size:.58rem;color:var(--green);text-align:center;margin-top:.2rem;}
+
+/* CARD BACKS */
+.card-back{
+  width:140px;height:196px;border-radius:12px;
+  border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  cursor:pointer;
+}
+
+/* Pack-specific card backs */
+.card-back.cosmic{
+  background:linear-gradient(135deg, #0a0e27 0%, #1a0f3d 50%, #0d1a4a 100%);
+  box-shadow:inset 0 0 20px rgba(0,229,255,.2);
+}
+
+.card-back.cosmic::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0,229,255,.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(124,77,255,.1) 0%, transparent 50%);
+  animation:cosmicShift 8s ease-in-out infinite;
+}
+
+@keyframes cosmicShift{
+  0%,100%{background-position:0 0;}
+  50%{background-position:10px 10px;}
+}
+
+.card-back.mythic{
+  background:linear-gradient(45deg, #2d1810 0%, #5d3a1a 50%, #3d2515 100%);
+  box-shadow:inset 0 0 15px rgba(255,215,64,.15);
+  border-color:#ffd740;
+}
+
+.card-back.mythic::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255,215,64,.05) 10px,
+    rgba(255,215,64,.05) 20px
+  );
+}
+
+.card-back.arcane{
+  background:linear-gradient(135deg, #0d1220 0%, #1a2b4a 50%, #0f1a3a 100%);
+  box-shadow:inset 0 0 15px rgba(124,77,255,.2);
+}
+
+.card-back.arcane::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(124,77,255,.05) 25%, rgba(124,77,255,.05) 26%, transparent 27%, transparent 74%, rgba(124,77,255,.05) 75%, rgba(124,77,255,.05) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(124,77,255,.05) 25%, rgba(124,77,255,.05) 26%, transparent 27%, transparent 74%, rgba(124,77,255,.05) 75%, rgba(124,77,255,.05) 76%, transparent 77%, transparent);
+  background-size:50px 50px;
+}
+
+.card-back.deep{
+  background:linear-gradient(135deg, #0a1f2e 0%, #1a3a4a 50%, #0a2a3e 100%);
+  box-shadow:inset 0 0 15px rgba(0,229,255,.25);
+}
+
+.card-back.deep::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 5px,
+    rgba(0,229,255,.1) 5px,
+    rgba(0,229,255,.1) 10px
+  );
+  animation:waveShift 3s ease-in-out infinite;
+}
+
+@keyframes waveShift{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(2px);}
+}
+
+.card-back-pattern{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;opacity:.3;
+  z-index:1;
+}
+
+
+/* Screen slide in/out animations */
+.screen{
+  animation:slideOut .3s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+.screen.active{
+  animation:slideIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(20px);}
+  to{opacity:1;transform:translateX(0);}
+}
+
+@keyframes slideOut{
+  from{opacity:1;transform:translateX(0);}
+  to{opacity:0;transform:translateX(-20px);}
+}
+
+/* Number tick-up animation */
+@keyframes tickUp{
+  0%{transform:translateY(20px);opacity:0;}
+  100%{transform:translateY(0);opacity:1;}
+}
+
+.number-tick{
+  animation:tickUp .3s ease-out;
+}
 
 /* TOAST */
 #toast{
@@ -721,7 +926,7 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .pack-card-flip.flipped .pack-card-inner {
   transform: rotateY(180deg);
 }
-.pack-card-face, .pack-card-back {
+.pack-card-face, .card-back {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
@@ -730,13 +935,14 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
   align-items: center;
   justify-content: center;
 }
-.pack-card-back {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+.card-back {
   border: 2px solid var(--border2);
   font-size: 2.5rem;
+  z-index:1;
 }
 .pack-card-face {
   transform: rotateY(180deg);
+  z-index:2;
 }
 .pack-open-instructions {
   font-size: .8rem;
@@ -1529,8 +1735,11 @@ function renderCard(cardId, compact=false) {
   const inLoadout = myLoadout.includes(cardId);
   return `
     <div class="card ${card.rarity}" onclick="toggleLoadout('${card.id}')">
-      ${card.art ? `<img class="card-art" src="${card.art}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-      <div style="display:none;font-size:2.8rem;">${card.emoji}</div>` : `<div class="card-emoji">${card.emoji}</div>`}
+      <div class="card-portrait">
+        <div class="card-portrait-inner">
+          ${card.art ? `<img class="card-art" src="${card.art}" onerror="this.style.display='none';this.parentElement.innerHTML='${card.emoji}'" style="width:100%;height:100%;">` : card.emoji}
+        </div>
+      </div>
       <div class="card-name">${card.name}</div>
       <div class="card-pack">${card.pack}</div>
       <div class="card-buff">${card.buffDesc}</div>
@@ -1861,9 +2070,13 @@ function openPackAnimation(pulled) {
     // Create flip container — start face-down
     const flipEl = document.createElement('div');
     flipEl.className = 'pack-card-flip';
+    const cardData = cardLib[card.id] || {};
+    const packType = cardData.pack || 'cosmic';
     flipEl.innerHTML = `
       <div class="pack-card-inner">
-        <div class="pack-card-back">🌈</div>
+        <div class="card-back ${packType}">
+          <div class="card-back-pattern">${{cosmic:'🌌', mythic:'⚜️', arcane:'✨', deep:'🌊'}[packType] || '🌈'}</div>
+        </div>
         <div class="pack-card-face">${renderCard(card.id)}</div>
       </div>`;
 
