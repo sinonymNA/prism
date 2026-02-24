@@ -1355,6 +1355,11 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
   </div>
   <div class="landing-content">
     <div class="action-grid">
+      <div class="action-card" onclick="showScreen('solo-screen');initSoloMode()">
+        <div class="action-card-icon">⭐</div>
+        <div class="action-card-title">Solo Practice</div>
+        <div class="action-card-desc">Practice alone and earn shards</div>
+      </div>
       <div class="action-card" onclick="showScreen('join-screen')">
         <div class="action-card-icon">🎮</div>
         <div class="action-card-title">Join Game</div>
@@ -1384,6 +1389,65 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
   </div>
 </div>
 <!-- /SECTION:html-landing -->
+
+<!-- SECTION:html-solo -->
+<div id="solo-screen" class="screen">
+  <div class="screen-header">
+    <button class="screen-back" onclick="showScreen('landing');renderLanding()">← Back</button>
+    <div class="screen-title">Solo Practice</div>
+  </div>
+
+  <div id="solo-lobby" class="host-body">
+    <div class="host-panel">
+      <div class="host-panel-title">Select Difficulty</div>
+      <div class="mode-select-grid">
+        <div class="mode-option" onclick="startSoloGame('novice')">
+          <div class="mode-option-icon">🌱</div>
+          <div>
+            <div class="mode-option-title">Novice</div>
+            <div class="mode-option-desc">AP World History basics • 10 questions</div>
+          </div>
+        </div>
+        <div class="mode-option" onclick="startSoloGame('scholar')">
+          <div class="mode-option-icon">📚</div>
+          <div>
+            <div class="mode-option-title">Scholar</div>
+            <div class="mode-option-desc">Standard difficulty • 10 questions</div>
+          </div>
+        </div>
+        <div class="mode-option" onclick="startSoloGame('legend')">
+          <div class="mode-option-icon">🏆</div>
+          <div>
+            <div class="mode-option-title">Legend</div>
+            <div class="mode-option-desc">Expert difficulty • 10 questions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="host-panel">
+      <div class="host-panel-title">Daily Challenge</div>
+      <div id="daily-challenge-card" style="padding:1rem;background:var(--surface3);border-radius:var(--radius-sm);text-align:center;">
+        <div style="font-size:2rem;margin-bottom:.5rem;">🌟</div>
+        <div style="font-weight:600;margin-bottom:.25rem;">Today's Challenge</div>
+        <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.75rem;">5 questions • +50% bonus shards</div>
+        <button class="btn btn-accent btn-block" onclick="startSoloGame('daily')">Start Challenge</button>
+      </div>
+    </div>
+
+    <div class="host-panel">
+      <div class="host-panel-title">Personal Records</div>
+      <div id="solo-records">
+        <div style="color:var(--text-muted);font-size:.85rem;">No records yet. Complete a challenge!</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="solo-game" style="display:none;flex:1;overflow:hidden;">
+    <!-- Solo game content will be rendered here -->
+  </div>
+</div>
+<!-- /SECTION:html-solo -->
 
 <!-- SECTION:html-join -->
 <div id="join-screen" class="screen">
@@ -1827,6 +1891,55 @@ const SAMPLE_QUESTIONS = [
   { text:"What is the capital of Australia?", answers:["Sydney","Melbourne","Canberra","Brisbane"], correct:2 },
   { text:"Who wrote Romeo and Juliet?", answers:["Charles Dickens","William Shakespeare","Jane Austen","Homer"], correct:1 },
   { text:"Which planet is known as the Red Planet?", answers:["Venus","Jupiter","Saturn","Mars"], correct:3 },
+];
+
+// Solo mode question banks by difficulty
+const SOLO_QUESTIONS = {
+  novice: [
+    { text:"What is the capital of France?", answers:["London","Paris","Berlin","Madrid"], correct:1 },
+    { text:"How many continents are there?", answers:["5","6","7","8"], correct:2 },
+    { text:"What is 5 + 3?", answers:["7","8","9","10"], correct:1 },
+    { text:"Which is the largest ocean?", answers:["Atlantic","Indian","Arctic","Pacific"], correct:3 },
+    { text:"What is the smallest country?", answers:["Monaco","Vatican City","Luxembourg","Malta"], correct:1 },
+    { text:"How many sides does a triangle have?", answers:["2","3","4","5"], correct:1 },
+    { text:"What is the boiling point of water?", answers:["90°C","100°C","110°C","120°C"], correct:1 },
+    { text:"Which gas do plants absorb?", answers:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], correct:2 },
+    { text:"What is the fastest land animal?", answers:["Lion","Cheetah","Gazelle","Greyhound"], correct:1 },
+    { text:"How many letters in the alphabet?", answers:["24","25","26","27"], correct:2 },
+  ],
+  scholar: [
+    { text:"Who wrote 1984?", answers:["George Orwell","Aldous Huxley","Ray Bradbury","Philip K. Dick"], correct:0 },
+    { text:"What is the chemical symbol for gold?", answers:["Go","Gd","Au","Ag"], correct:2 },
+    { text:"In which year did the Titanic sink?", answers:["1912","1915","1920","1925"], correct:0 },
+    { text:"What is the derivative of x²?", answers:["x","2x","x³","2"], correct:1 },
+    { text:"Which country has the most population?", answers:["India","China","USA","Indonesia"], correct:0 },
+    { text:"What is the speed of light?", answers:["3×10⁸ m/s","3×10⁹ m/s","3×10⁷ m/s","3×10¹⁰ m/s"], correct:0 },
+    { text:"Who painted the Mona Lisa?", answers:["Michelangelo","Leonardo da Vinci","Raphael","Donatello"], correct:1 },
+    { text:"What is the pH of pure water?", answers:["5","6","7","8"], correct:2 },
+    { text:"How many bones are in the adult human body?", answers:["186","206","226","246"], correct:1 },
+    { text:"What is the atomic number of Carbon?", answers:["4","6","8","12"], correct:1 },
+  ],
+  legend: [
+    { text:"What is Planck's constant approximately?", answers:["6.626×10⁻³⁴ J·s","6.626×10⁻³³ J·s","6.626×10⁻³² J·s","6.626×10⁻³⁵ J·s"], correct:0 },
+    { text:"In thermodynamics, what does entropy measure?", answers:["Energy","Order","Disorder","Temperature"], correct:2 },
+    { text:"What is the Heisenberg uncertainty principle about?", answers:["Mass and energy","Position and momentum","Time and frequency","Charge and spin"], correct:1 },
+    { text:"Who formulated the theory of evolution by natural selection?", answers:["Jean Lamarck","Charles Darwin","Alfred Wallace","August Weismann"], correct:1 },
+    { text:"What is the Avogadro number?", answers:["6.02×10²²","6.02×10²³","6.02×10²⁴","6.02×10²⁵"], correct:1 },
+    { text:"In quantum mechanics, what is a wave function?", answers:["A physical wave","A probability amplitude","An energy level","A particle trajectory"], correct:1 },
+    { text:"What is the Schwarzschild radius related to?", answers:["Stars","Black holes","Neutron stars","White dwarfs"], correct:1 },
+    { text:"Which mathematician proved the Fundamental Theorem of Calculus?", answers:["Newton and Leibniz","Euler","Riemann","Cauchy"], correct:0 },
+    { text:"What is the main constituent of the Sun's core?", answers:["Helium","Hydrogen","Iron","Carbon"], correct:1 },
+    { text:"In number theory, what is a prime number?", answers:["Divisible by 2","Only divisible by 1 and itself","A perfect square","An even number"], correct:1 },
+  ]
+};
+
+// Daily challenge questions (seeded by date)
+const DAILY_CHALLENGE_QUESTIONS = [
+  { text:"What is quantum entanglement?", answers:["Particles far apart with correlated states","Particles bonded together","A type of wave","An optical illusion"], correct:0 },
+  { text:"How many elements are in the periodic table?", answers:["92","106","118","150"], correct:2 },
+  { text:"What is the Fibonacci sequence?", answers:["Powers of 2","Each number is sum of previous two","Prime numbers only","Alternating pattern"], correct:1 },
+  { text:"In relativity, what does E=mc² represent?", answers:["Speed of light","Energy-mass equivalence","Acceleration formula","Gravitational force"], correct:1 },
+  { text:"What is dark matter?", answers:["Black holes","Invisible matter comprising 85% of matter","Dust in space","Old stars"], correct:1 },
 ];
 </script>
 <!-- /SECTION:js-data -->
@@ -2476,6 +2589,193 @@ window.closePack = function() {
 };
 </script>
 <!-- /SECTION:js-collection -->
+
+<!-- SECTION:js-solo -->
+<script>
+// Solo mode state
+let soloState = {
+  difficulty: null,
+  questions: [],
+  currentQ: 0,
+  score: 0,
+  streak: 0,
+  multiplier: 1,
+  startTime: 0,
+  isDaily: false,
+  answered: []
+};
+
+function initSoloMode() {
+  // Load solo records from localStorage
+  const records = JSON.parse(localStorage.getItem('soloRecords') || '{}');
+  const recordsHtml = Object.entries(records).map(([diff, record]) => `
+    <div style="padding:.6rem;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:.4rem;">
+      <div style="display:flex;justify-content:space-between;font-weight:600;margin-bottom:.2rem;">
+        <span style="text-transform:capitalize;">${diff}</span>
+        <span style="color:var(--gold);">💎${record.shards}</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-dim);">Score: ${record.score}/100 • Speed: ${record.time}s</div>
+    </div>
+  `).join('');
+
+  document.getElementById('solo-records').innerHTML = recordsHtml || '<div style="color:var(--text-muted);font-size:.85rem;">No records yet. Complete a challenge!</div>';
+}
+
+function startSoloGame(difficulty) {
+  soloState.difficulty = difficulty;
+  soloState.currentQ = 0;
+  soloState.score = 0;
+  soloState.streak = 0;
+  soloState.multiplier = 1;
+  soloState.answered = [];
+  soloState.isDaily = difficulty === 'daily';
+
+  // Select questions
+  if (soloState.isDaily) {
+    // Get daily challenge (seeded by date)
+    const today = new Date().toDateString();
+    const seed = today.charCodeAt(0);
+    soloState.questions = DAILY_CHALLENGE_QUESTIONS;
+  } else {
+    soloState.questions = (SOLO_QUESTIONS[difficulty] || SOLO_QUESTIONS.scholar).slice(0, 10);
+  }
+
+  soloState.startTime = Date.now();
+
+  // Hide lobby, show game
+  document.getElementById('solo-lobby').style.display = 'none';
+  document.getElementById('solo-game').style.display = 'flex';
+
+  // Render first question
+  renderSoloQuestion();
+}
+
+function renderSoloQuestion() {
+  if (soloState.currentQ >= soloState.questions.length) {
+    finishSoloGame();
+    return;
+  }
+
+  const q = soloState.questions[soloState.currentQ];
+  const progress = soloState.currentQ + 1;
+  const total = soloState.questions.length;
+
+  document.getElementById('solo-game').innerHTML = `
+    <div style="padding:1rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+        <div style="font-size:.8rem;color:var(--text-dim);">Question ${progress}/${total}</div>
+        <div style="font-weight:700;">
+          <span style="color:var(--gold);">💎${Math.floor(soloState.score)}</span>
+          <span style="margin-left:.75rem;color:var(--accent3);">🔥${soloState.streak}</span>
+        </div>
+      </div>
+      <div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+        <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:${(progress/total)*100}%;border-radius:2px;"></div>
+      </div>
+    </div>
+
+    <div style="padding:1rem;flex:1;overflow-y:auto;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;">
+        <div style="font-size:1.1rem;font-weight:600;line-height:1.5;">${q.text}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+        ${q.answers.map((ans, i) => `
+          <button class="answer-btn" onclick="submitSoloAnswer(${i})" style="grid-column:${i%2===1?'2':'1'}${i>1?';grid-row:'+(Math.floor(i/2)+1):''};">
+            ${ans}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function submitSoloAnswer(answerIdx) {
+  const q = soloState.questions[soloState.currentQ];
+  const correct = answerIdx === q.correct;
+
+  soloState.answered.push({question: q.text, correct, selected: q.answers[answerIdx]});
+
+  if (correct) {
+    soloState.streak++;
+    // Update multiplier
+    if (soloState.streak === 5) soloState.multiplier = 1.5;
+    else if (soloState.streak === 8) soloState.multiplier = 2;
+
+    // Award shards: base 10, streak bonus, multiplier
+    const baseShards = 10;
+    const bonusShards = soloState.streak > 0 ? soloState.streak * 2 : 0;
+    const awardedShards = (baseShards + bonusShards) * soloState.multiplier;
+    soloState.score += awardedShards;
+  } else {
+    soloState.streak = 0;
+    soloState.multiplier = 1;
+  }
+
+  soloState.currentQ++;
+
+  // Brief pause then show next question
+  setTimeout(() => renderSoloQuestion(), 500);
+}
+
+function finishSoloGame() {
+  const elapsed = (Date.now() - soloState.startTime) / 1000;
+  const correctCount = soloState.answered.filter(a => a.correct).length;
+  const scorePercent = Math.round((correctCount / soloState.questions.length) * 100);
+  const finalShards = Math.floor(soloState.score);
+
+  // Apply daily challenge bonus
+  let shardReward = finalShards;
+  if (soloState.isDaily) {
+    shardReward = Math.floor(finalShards * 1.5);
+  }
+
+  // Add shards to player
+  myShards += shardReward;
+  dbSet('prism_users/' + myId + '/shards', myShards);
+
+  // Save record
+  const records = JSON.parse(localStorage.getItem('soloRecords') || '{}');
+  const diffKey = soloState.isDaily ? 'daily' : soloState.difficulty;
+  if (!records[diffKey] || records[diffKey].score < scorePercent) {
+    records[diffKey] = {score: scorePercent, shards: shardReward, time: Math.round(elapsed)};
+    localStorage.setItem('soloRecords', JSON.stringify(records));
+  }
+
+  // Show results
+  document.getElementById('solo-game').innerHTML = `
+    <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;">
+      <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;margin-bottom:1rem;">Challenge Complete!</div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:300px;text-align:center;margin-bottom:1.5rem;">
+        <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.5rem;text-transform:uppercase;">SCORE</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:2.5rem;font-weight:700;color:var(--gold);margin-bottom:1rem;">${scorePercent}%</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <div>
+            <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">Correct</div>
+            <div style="font-weight:700;color:var(--green);">${correctCount}/${soloState.questions.length}</div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">Time</div>
+            <div style="font-weight:700;">${Math.round(elapsed)}s</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(105,240,174,.1);border:1px solid rgba(105,240,174,.2);border-radius:var(--radius-sm);padding:.75rem;text-align:center;margin-bottom:1.5rem;">
+        <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">SHARDS EARNED</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;color:var(--green);">+${shardReward} 💎</div>
+      </div>
+
+      <button class="btn btn-accent btn-lg btn-block" onclick="showScreen('solo-screen');initSoloMode();">Play Again</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:.5rem;" onclick="showScreen('landing');renderLanding();">Back to Home</button>
+    </div>
+  `;
+}
+</script>
+<!-- /SECTION:js-solo -->
 
 <!-- SECTION:js-teacher -->
 <script>
