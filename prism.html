@@ -4429,15 +4429,15 @@ function showEndScreen(players) {
 document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   // Auth state change handles loading screen dismissal
-  // Fallback: dismiss after 4s if auth hasn't resolved
+  // Fallback: dismiss after 3s if auth hasn't resolved
   setTimeout(() => {
     const ls = document.getElementById('loading-screen');
-    if (!ls.classList.contains('gone')) {
+    if (ls && !ls.classList.contains('gone')) {
       ls.classList.add('fade-out');
       setTimeout(() => ls.classList.add('gone'), 700);
-      if (!isGuest && !auth.currentUser) showScreen('auth-screen');
+      showScreen('homepage-screen');
     }
-  }, 4000);
+  }, 3000);
 });
 </script>
 <!-- /SECTION:js-init -->
