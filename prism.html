@@ -48,6 +48,34 @@ body::before{
     radial-gradient(ellipse 50% 60% at 50% 50%,rgba(255,64,129,0.05) 0%,transparent 70%);
   pointer-events:none;z-index:0;
 }
+
+/* Parallax particle system — depth layers */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #7c4dff, rgba(124,77,255,0)),
+    radial-gradient(2px 2px at 60px 70px, #00e5ff, rgba(0,229,255,0)),
+    radial-gradient(1.5px 1.5px at 50px 50px, #ff4081, rgba(255,64,129,0)),
+    radial-gradient(1px 1px at 130px 80px, #7c4dff, rgba(124,77,255,0)),
+    radial-gradient(2px 2px at 90px 10px, #00e5ff, rgba(0,229,255,0));
+  background-repeat:repeat;
+  background-size:200px 200px, 150px 150px, 250px 250px, 300px 300px, 350px 350px;
+  background-position:0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;
+  pointer-events:none;z-index:0;
+  opacity:.6;
+  animation:parallax1 120s linear infinite, parallax2 100s linear infinite reverse;
+}
+
+@keyframes parallax1{
+  0%{background-position:0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;}
+  100%{background-position:-200px -200px, 40px 60px, 130px 270px, 70px 100px, 0 0;}
+}
+
+@keyframes parallax2{
+  0%{background-position:0 0, 40px 60px, 130px 270px, 70px 100px, 0 0;}
+  100%{background-position:200px 200px, 40px 60px, 130px 270px, 70px 100px, -350px -350px;}
+}
 #app{position:relative;z-index:1;}
 .screen{display:none;min-height:100vh;}
 .screen.active{display:flex;flex-direction:column;}
@@ -77,10 +105,10 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .btn{
   padding:.65rem 1.4rem;border:none;border-radius:var(--radius-sm);
   font-size:.95rem;font-weight:600;transition:all .15s;
-  letter-spacing:.03em;
+  letter-spacing:.03em;position:relative;overflow:hidden;
 }
-.btn:hover{transform:translateY(-1px);filter:brightness(1.1);}
-.btn:active{transform:translateY(0);}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.btn:active:not(:disabled){transform:translateY(0) scale(.97);box-shadow:0 2px 4px rgba(0,0,0,.2);}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 .btn-accent{background:var(--accent);color:#fff;}
 .btn-accent2{background:var(--accent2);color:#000;}
@@ -107,30 +135,336 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .card{
   width:140px;height:196px;border-radius:12px;
   border:2px solid var(--border2);background:var(--surface2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:.4rem;padding:.75rem;position:relative;cursor:pointer;
-  transition:all .2s;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:0;padding:0;position:relative;cursor:pointer;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);overflow:hidden;
+  perspective:1000px;
 }
-.card:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.card:hover{transform:translateY(-6px) scale(1.05) rotateX(2deg);box-shadow:0 12px 40px rgba(0,0,0,.6);}
+
+/* Holographic foil effect on hover */
+.card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:conic-gradient(from 0deg at 50% 50%,
+    rgba(255,0,0,.1) 0deg,
+    rgba(255,127,0,.1) 60deg,
+    rgba(0,255,0,.1) 120deg,
+    rgba(0,127,255,.1) 180deg,
+    rgba(127,0,255,.1) 240deg,
+    rgba(255,0,0,.1) 360deg);
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+  border-radius:12px;
+  z-index:5;
+}
+.card:hover::before{opacity:0.4;animation:holoBreathe 2s ease-in-out infinite;}
+
+@keyframes holoBreathe{
+  0%,100%{opacity:.4;}
+  50%{opacity:.7;}
+}
+
+/* Card portrait area — top portion with unique gradient */
+.card-portrait{
+  width:100%;height:100px;border-radius:0;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);
+  border-bottom:2px solid rgba(0,0,0,.3);
+}
+
+.card-portrait-overlay{
+  position:absolute;inset:0;width:100%;height:100%;
+}
+
+.card-portrait-inner{
+  font-size:2.5rem;line-height:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));
+  transition:transform .3s;
+  position:relative;z-index:2;
+}
+
+.card:hover .card-portrait-inner{
+  transform:scale(1.2);
+}
+
+/* Card info section */
+.card-info{
+  flex:1;width:100%;padding:.4rem;
+  display:flex;flex-direction:column;gap:.2rem;
+  background:var(--surface2);
+}
+
+/* Rarity-specific glows */
 .card.common{border-color:var(--common);}
-.card.rare{border-color:var(--rare);box-shadow:0 0 12px rgba(66,165,245,.2);}
-.card.epic{border-color:var(--epic);box-shadow:0 0 14px rgba(171,71,188,.25);}
-.card.legendary{border-color:var(--legendary);box-shadow:0 0 18px rgba(255,215,64,.3);animation:legendaryGlow 2s ease-in-out infinite;}
-@keyframes legendaryGlow{0%,100%{box-shadow:0 0 18px rgba(255,215,64,.3);}50%{box-shadow:0 0 28px rgba(255,215,64,.5);}}
-.card-art{width:80px;height:80px;border-radius:8px;object-fit:cover;}
-.card-emoji{font-size:2.8rem;line-height:1;}
-.card-name{font-size:.7rem;font-weight:700;text-align:center;color:var(--text);letter-spacing:.05em;}
-.card-pack{font-size:.6rem;color:var(--text-dim);}
+.card.common:hover{box-shadow:0 0 20px rgba(120,144,156,.4), 0 12px 40px rgba(0,0,0,.6);}
+
+.card.rare{border-color:var(--rare);}
+.card.rare:hover{box-shadow:0 0 20px rgba(66,165,245,.5), 0 12px 40px rgba(0,0,0,.6);}
+
+.card.epic{border-color:var(--epic);}
+.card.epic:hover{box-shadow:0 0 20px rgba(171,71,188,.6), 0 12px 40px rgba(0,0,0,.6);}
+
+.card.legendary{border-color:var(--legendary);}
+.card.legendary:hover{
+  box-shadow:0 0 25px rgba(255,215,64,.7), 0 0 40px rgba(255,215,64,.4), 0 12px 40px rgba(0,0,0,.6);
+  animation:legendaryPulse .8s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse{
+  0%,100%{box-shadow:0 0 25px rgba(255,215,64,.7), 0 0 40px rgba(255,215,64,.4), 0 12px 40px rgba(0,0,0,.6);}
+  50%{box-shadow:0 0 35px rgba(255,215,64,.9), 0 0 60px rgba(255,215,64,.6), 0 12px 40px rgba(0,0,0,.6);}
+}
+
+/* Legendary holographic shimmer effect */
+.card.legendary::after{
+  content:'';
+  position:absolute;inset:0;
+  background:conic-gradient(from var(--holo-angle, 0deg) at var(--holo-x, 50%) var(--holo-y, 50%),
+    rgba(255,0,0,.15) 0deg,
+    rgba(255,127,0,.15) 60deg,
+    rgba(0,255,0,.15) 120deg,
+    rgba(0,127,255,.15) 180deg,
+    rgba(127,0,255,.15) 240deg,
+    rgba(255,0,0,.15) 360deg);
+  border-radius:12px;
+  pointer-events:none;
+  z-index:4;
+  opacity:0;
+  transition:opacity .2s;
+}
+
+.card.legendary:hover::after{
+  opacity:0.6;
+  animation:holoShimmer 3s ease-in-out infinite;
+}
+
+@keyframes holoShimmer{
+  0%{--holo-angle:0deg;}
+  100%{--holo-angle:360deg;}
+}
+
+/* Card name section */
+.card-name{
+  font-size:.65rem;font-weight:700;text-align:center;
+  color:var(--text);letter-spacing:.03em;line-height:1.2;
+}
+
+/* Rarity gem row */
+.card-rarity-bar{
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;letter-spacing:.05em;
+}
+
+.rarity-gem{
+  color:var(--accent);
+}
+
+.card.rare .rarity-gem{color:var(--rare);}
+.card.epic .rarity-gem{color:var(--epic);}
+.card.legendary .rarity-gem{color:var(--legendary);}
+.card.common .rarity-gem{color:var(--common);}
+
+/* Buff icon and value row */
+.card-buff-row{
+  display:flex;align-items:center;justify-content:center;gap:.15rem;
+  font-size:.65rem;font-weight:600;color:var(--green);
+}
+
+.buff-icon{font-size:.7rem;}
+.buff-val{color:var(--accent2);}
+
+/* Buff description */
+.card-buff-desc{
+  font-size:.55rem;color:var(--text-muted);
+  text-align:center;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+
 .card-rarity-badge{
-  position:absolute;top:6px;right:6px;
+  position:absolute;top:4px;right:4px;
   font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-  padding:2px 5px;border-radius:3px;
+  padding:2px 4px;border-radius:3px;z-index:10;font-weight:800;
 }
 .card-rarity-badge.common{background:var(--common);color:#fff;}
 .card-rarity-badge.rare{background:var(--rare);color:#fff;}
 .card-rarity-badge.epic{background:var(--epic);color:#fff;}
-.card-rarity-badge.legendary{background:var(--legendary);color:#000;}
-.card-buff{font-size:.58rem;color:var(--green);text-align:center;margin-top:.2rem;}
+.card-rarity-badge.legendary{background:var(--legendary);color:#000;box-shadow:0 0 8px rgba(255,215,64,.5);}
+
+.card-art{width:100%;height:100%;border-radius:0;object-fit:cover;}
+
+/* CARD BACKS */
+.card-back{
+  width:140px;height:196px;border-radius:12px;
+  border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  cursor:pointer;
+}
+
+/* Pack-specific card backs */
+.card-back.cosmic{
+  background:linear-gradient(135deg, #0a0e27 0%, #1a0f3d 50%, #0d1a4a 100%);
+  box-shadow:inset 0 0 20px rgba(0,229,255,.2);
+}
+
+.card-back.cosmic::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0,229,255,.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(124,77,255,.1) 0%, transparent 50%);
+  animation:cosmicShift 8s ease-in-out infinite;
+}
+
+@keyframes cosmicShift{
+  0%,100%{background-position:0 0;}
+  50%{background-position:10px 10px;}
+}
+
+.card-back.mythic{
+  background:linear-gradient(45deg, #2d1810 0%, #5d3a1a 50%, #3d2515 100%);
+  box-shadow:inset 0 0 15px rgba(255,215,64,.15);
+  border-color:#ffd740;
+}
+
+.card-back.mythic::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255,215,64,.05) 10px,
+    rgba(255,215,64,.05) 20px
+  );
+}
+
+.card-back.arcane{
+  background:linear-gradient(135deg, #0d1220 0%, #1a2b4a 50%, #0f1a3a 100%);
+  box-shadow:inset 0 0 15px rgba(124,77,255,.2);
+}
+
+.card-back.arcane::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(124,77,255,.05) 25%, rgba(124,77,255,.05) 26%, transparent 27%, transparent 74%, rgba(124,77,255,.05) 75%, rgba(124,77,255,.05) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(124,77,255,.05) 25%, rgba(124,77,255,.05) 26%, transparent 27%, transparent 74%, rgba(124,77,255,.05) 75%, rgba(124,77,255,.05) 76%, transparent 77%, transparent);
+  background-size:50px 50px;
+}
+
+.card-back.deep{
+  background:linear-gradient(135deg, #0a1f2e 0%, #1a3a4a 50%, #0a2a3e 100%);
+  box-shadow:inset 0 0 15px rgba(0,229,255,.25);
+}
+
+.card-back.deep::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 5px,
+    rgba(0,229,255,.1) 5px,
+    rgba(0,229,255,.1) 10px
+  );
+  animation:waveShift 3s ease-in-out infinite;
+}
+
+@keyframes waveShift{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(2px);}
+}
+
+.card-back-pattern{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;opacity:.3;
+  z-index:1;
+}
+
+
+/* Screen slide in/out animations */
+.screen{
+  animation:slideOut .3s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+.screen.active{
+  animation:slideIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(20px);}
+  to{opacity:1;transform:translateX(0);}
+}
+
+@keyframes slideOut{
+  from{opacity:1;transform:translateX(0);}
+  to{opacity:0;transform:translateX(-20px);}
+}
+
+/* Number tick-up animation */
+@keyframes tickUp{
+  0%{transform:translateY(20px);opacity:0;}
+  100%{transform:translateY(0);opacity:1;}
+}
+
+.number-tick{
+  animation:tickUp .3s ease-out;
+}
+
+/* Answer feedback screen effects */
+@keyframes screenPulseGreen{
+  0%{background:rgba(105,240,174,0);}
+  50%{background:rgba(105,240,174,.3);}
+  100%{background:rgba(105,240,174,0);}
+}
+
+@keyframes screenPulseRed{
+  0%{background:rgba(255,64,129,0);}
+  50%{background:rgba(255,64,129,.25);}
+  100%{background:rgba(255,64,129,0);}
+}
+
+@keyframes screenShake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-3px);}
+  75%{transform:translateX(3px);}
+}
+
+.answer-feedback-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:5500;
+}
+
+.answer-feedback-overlay.correct{
+  animation:screenPulseGreen .6s ease-out;
+}
+
+.answer-feedback-overlay.wrong{
+  animation:screenPulseRed .6s ease-out, screenShake .3s ease-out;
+}
+
+/* Floating shard animation */
+@keyframes floatShard{
+  0%{
+    transform:translate(0, 0) scale(1);
+    opacity:1;
+  }
+  100%{
+    transform:translate(var(--shard-tx), var(--shard-ty)) scale(.5);
+    opacity:0;
+  }
+}
+
+.floating-shard{
+  position:fixed;
+  font-size:1.5rem;
+  pointer-events:none;
+  z-index:6000;
+  animation:floatShard 1s cubic-bezier(.34,1.56,.64,1) forwards;
+  font-weight:700;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
 
 /* TOAST */
 #toast{
@@ -181,6 +515,31 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+
+/* ACCESSIBILITY */
+button:focus,input:focus,textarea:focus,select:focus{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+.btn:focus-visible,.answer-btn:focus-visible{
+  box-shadow:0 0 0 3px rgba(124,77,255,.3);
+}
+
+/* Empty states */
+.empty-state{
+  text-align:center;padding:2rem 1rem;color:var(--text-muted);
+}
+.empty-state-icon{font-size:3rem;margin-bottom:.75rem;}
+.empty-state-title{font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:.25rem;}
+.empty-state-desc{font-size:.85rem;line-height:1.5;}
+.empty-state-action{margin-top:1rem;}
+
+/* Mobile optimizations */
+@media(max-width:600px){
+  .answer-btn{padding:1rem .75rem;font-size:1rem;}
+  .action-grid{grid-template-columns:1fr;}
+  .game-right{display:none;}
+}
 
 /* SECTION MARKERS ARE AT HTML LEVEL (below) */
 </style>
@@ -543,13 +902,26 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 }
 .war-question-banner.captured-apollo{
   background:rgba(255,152,0,.15);border-color:#ff9800;color:#ff9800;
-  animation:capturePop .4s cubic-bezier(.34,1.56,.64,1);
+  animation:capturePopApollo .6s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 0 20px rgba(255,152,0,.5);
 }
 .war-question-banner.captured-athena{
   background:rgba(0,229,255,.15);border-color:var(--accent2);color:var(--accent2);
-  animation:capturePop .4s cubic-bezier(.34,1.56,.64,1);
+  animation:capturePopAthena .6s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 0 20px rgba(0,229,255,.5);
 }
-@keyframes capturePop{from{transform:scale(.9);}to{transform:scale(1);}}
+
+@keyframes capturePopApollo{
+  0%{transform:scale(.7);opacity:0;}
+  50%{transform:scale(1.15);}
+  100%{transform:scale(1);opacity:1;}
+}
+
+@keyframes capturePopAthena{
+  0%{transform:scale(.7);opacity:0;}
+  50%{transform:scale(1.15);}
+  100%{transform:scale(1);opacity:1;}
+}
 .war-capture-needed{
   display:flex;gap:.3rem;align-items:center;justify-content:center;
   font-size:.75rem;color:var(--text-dim);
@@ -710,6 +1082,7 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
   width: 140px;
   height: 196px;
   cursor: pointer;
+  animation:cardRevealShake .3s ease-out forwards;
 }
 .pack-card-inner {
   position: relative;
@@ -721,7 +1094,24 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .pack-card-flip.flipped .pack-card-inner {
   transform: rotateY(180deg);
 }
-.pack-card-face, .pack-card-back {
+
+/* Card reveal dramatic effects */
+@keyframes cardRevealShake{
+  0%{transform:scale(0.8) rotate(-5deg);}
+  50%{transform:scale(0.95) rotate(2deg);}
+  100%{transform:scale(1) rotate(0deg);}
+}
+
+.pack-card-flip.flipped {
+  animation:cardFlipGlow .4s ease-out forwards;
+}
+
+@keyframes cardFlipGlow{
+  0%{filter:drop-shadow(0 0 8px rgba(255,215,64,.3));}
+  50%{filter:drop-shadow(0 0 20px rgba(255,215,64,.8));}
+  100%{filter:drop-shadow(0 0 12px rgba(255,215,64,.4));}
+}
+.pack-card-face, .card-back {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
@@ -730,13 +1120,14 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
   align-items: center;
   justify-content: center;
 }
-.pack-card-back {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+.card-back {
   border: 2px solid var(--border2);
   font-size: 2.5rem;
+  z-index:1;
 }
 .pack-card-face {
   transform: rotateY(180deg);
+  z-index:2;
 }
 .pack-open-instructions {
   font-size: .8rem;
@@ -785,11 +1176,53 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 .shard-ticking { animation: shardTick .25s ease; }
 
 /* Streak fire pulse on leaderboard */
-.lb-streak-fire {
-  animation: fireWobble .6s ease-in-out infinite alternate;
-  display: inline-block;
+.lb-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
 }
-@keyframes fireWobble { from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.15) rotate(3deg);} }
+
+.lb-streak-fire {
+  display: inline-block;
+  animation: fireWobble .6s ease-in-out infinite alternate;
+}
+
+@keyframes fireWobble {
+  from{transform:scale(1) rotate(-3deg);}
+  to{transform:scale(1.15) rotate(3deg);}
+}
+
+/* Streak milestone animations */
+.lb-streak.streak-3 .lb-streak-fire {
+  font-size: 1rem;
+  animation: fireGrow .8s ease-in-out infinite;
+}
+
+.lb-streak.streak-5 .lb-streak-fire {
+  font-size: 1.2rem;
+  animation: fireFlare .6s ease-in-out infinite;
+}
+
+.lb-streak.streak-10 .lb-streak-fire {
+  font-size: 1.4rem;
+  animation: fireRage .5s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(255,64,129,.8);
+}
+
+@keyframes fireGrow {
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.2);}
+}
+
+@keyframes fireFlare {
+  0%,100%{transform:scale(1);filter:brightness(1);}
+  50%{transform:scale(1.3);filter:brightness(1.3);}
+}
+
+@keyframes fireRage {
+  0%,100%{transform:scale(1) rotate(-5deg);filter:brightness(1) drop-shadow(0 0 0 rgba(255,64,129,0));}
+  50%{transform:scale(1.4) rotate(5deg);filter:brightness(1.5) drop-shadow(0 0 10px rgba(255,64,129,.8));}
+}
 
 /* Correct/wrong answer screen flash */
 .answer-flash {
@@ -893,6 +1326,11 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- OFFLINE DETECTION BANNER -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(255,64,129,.9);color:#fff;padding:.6rem;text-align:center;font-weight:600;font-size:.9rem;z-index:9999;border-bottom:2px solid var(--accent3);">
+  ⚠️ You are offline. Some features may be limited. Your progress will sync when you're back online.
+</div>
+
 <!-- SECTION:html-auth -->
 <div id="auth-screen" class="screen">
   <div class="auth-box">
@@ -947,6 +1385,11 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
   </div>
   <div class="landing-content">
     <div class="action-grid">
+      <div class="action-card" onclick="showScreen('solo-screen');initSoloMode()">
+        <div class="action-card-icon">⭐</div>
+        <div class="action-card-title">Solo Practice</div>
+        <div class="action-card-desc">Practice alone and earn shards</div>
+      </div>
       <div class="action-card" onclick="showScreen('join-screen')">
         <div class="action-card-icon">🎮</div>
         <div class="action-card-title">Join Game</div>
@@ -972,10 +1415,72 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
     <div style="display:flex;gap:.75rem;" id="landing-loadout">
       <div style="color:var(--text-muted);font-size:.85rem;">No cards equipped. Visit your collection!</div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="doSignOut()" style="margin-top:.5rem;width:fit-content;">Sign Out</button>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('settings-modal');updateSettingsModal()">⚙️ Settings</button>
+      <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign Out</button>
+    </div>
   </div>
 </div>
 <!-- /SECTION:html-landing -->
+
+<!-- SECTION:html-solo -->
+<div id="solo-screen" class="screen">
+  <div class="screen-header">
+    <button class="screen-back" onclick="showScreen('landing');renderLanding()">← Back</button>
+    <div class="screen-title">Solo Practice</div>
+  </div>
+
+  <div id="solo-lobby" class="host-body">
+    <div class="host-panel">
+      <div class="host-panel-title">Select Difficulty</div>
+      <div class="mode-select-grid">
+        <div class="mode-option" onclick="startSoloGame('novice')">
+          <div class="mode-option-icon">🌱</div>
+          <div>
+            <div class="mode-option-title">Novice</div>
+            <div class="mode-option-desc">AP World History basics • 10 questions</div>
+          </div>
+        </div>
+        <div class="mode-option" onclick="startSoloGame('scholar')">
+          <div class="mode-option-icon">📚</div>
+          <div>
+            <div class="mode-option-title">Scholar</div>
+            <div class="mode-option-desc">Standard difficulty • 10 questions</div>
+          </div>
+        </div>
+        <div class="mode-option" onclick="startSoloGame('legend')">
+          <div class="mode-option-icon">🏆</div>
+          <div>
+            <div class="mode-option-title">Legend</div>
+            <div class="mode-option-desc">Expert difficulty • 10 questions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="host-panel">
+      <div class="host-panel-title">Daily Challenge</div>
+      <div id="daily-challenge-card" style="padding:1rem;background:var(--surface3);border-radius:var(--radius-sm);text-align:center;">
+        <div style="font-size:2rem;margin-bottom:.5rem;">🌟</div>
+        <div style="font-weight:600;margin-bottom:.25rem;">Today's Challenge</div>
+        <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.75rem;">5 questions • +50% bonus shards</div>
+        <button class="btn btn-accent btn-block" onclick="startSoloGame('daily')">Start Challenge</button>
+      </div>
+    </div>
+
+    <div class="host-panel">
+      <div class="host-panel-title">Personal Records</div>
+      <div id="solo-records">
+        <div style="color:var(--text-muted);font-size:.85rem;">No records yet. Complete a challenge!</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="solo-game" style="display:none;flex:1;overflow:hidden;">
+    <!-- Solo game content will be rendered here -->
+  </div>
+</div>
+<!-- /SECTION:html-solo -->
 
 <!-- SECTION:html-join -->
 <div id="join-screen" class="screen">
@@ -1308,6 +1813,37 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
     </div>
   </div>
 </div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">⚙️ Settings</div>
+
+    <div style="margin-bottom:1.5rem;">
+      <label class="label">Your Name</label>
+      <input class="input" id="settings-name-input" placeholder="Enter your name" />
+      <button class="btn btn-accent btn-sm" onclick="saveName()" style="margin-top:.5rem;width:100%;">Update Name</button>
+    </div>
+
+    <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--surface2);border-radius:var(--radius-sm);">
+      <div class="label" style="margin-bottom:.5rem;">Personal Records</div>
+      <div id="settings-records" style="font-size:.85rem;">
+        <div style="color:var(--text-muted);">No solo records yet.</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1.5rem;padding:.75rem;background:var(--surface3);border-radius:var(--radius-sm);">
+      <div style="font-size:.9rem;font-weight:600;margin-bottom:.5rem;">Data Management</div>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="clearLocalData()" style="margin-bottom:.3rem;">🗑 Clear Local Data</button>
+      <div style="font-size:.7rem;color:var(--text-muted);">This will clear your cached collection and records.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('settings-modal')" style="flex:1;">Close</button>
+      <button class="btn btn-danger" onclick="doSignOut();closeModal('settings-modal')">Sign Out</button>
+    </div>
+  </div>
+</div>
 <!-- /SECTION:html-modals -->
 
 </div><!-- #app -->
@@ -1330,15 +1866,86 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
-// Compat helpers
+// Input sanitization
+function sanitizeInput(str, maxLen = 50) {
+  if (!str) return '';
+  return str.trim().slice(0, maxLen).replace(/[<>\"']/g, c => ({
+    '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;'
+  }[c] || c));
+}
+
+// Error handling wrapper
+function showError(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = '⚠️ ' + message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+  console.error(message);
+}
+
+// Offline detection
+let isOffline = false;
+window.addEventListener('online', () => {
+  isOffline = false;
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.style.display = 'none';
+  showError('Connection restored ✓');
+});
+window.addEventListener('offline', () => {
+  isOffline = true;
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.style.display = 'flex';
+});
+
+// Compat helpers with error handling
 function dbRef(path) { return db.ref(path); }
-function dbSet(path, val) { return db.ref(path).set(val); }
-function dbGet(path) { return db.ref(path).once('value'); }
-function dbUpdate(updates) { return db.ref('/').update(updates); }
-function dbOn(path, cb) { const r = db.ref(path); r.on('value', cb); return r; }
-function dbOff(ref) { try { ref.off(); } catch(e){} }
-function dbRemove(path) { return db.ref(path).remove(); }
-function dbPush(path, val) { return db.ref(path).push(val); }
+
+function dbSet(path, val) {
+  return db.ref(path).set(val).catch(e => {
+    showError('Failed to save: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbGet(path) {
+  return db.ref(path).once('value').catch(e => {
+    showError('Failed to load: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbUpdate(updates) {
+  return db.ref('/').update(updates).catch(e => {
+    showError('Failed to update: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbOn(path, cb) {
+  const r = db.ref(path);
+  r.on('value', cb, (e) => {
+    showError('Connection error: ' + (e.message || 'Unknown error'));
+  });
+  return r;
+}
+
+function dbOff(ref) {
+  try { ref.off(); } catch(e) { console.error(e); }
+}
+
+function dbRemove(path) {
+  return db.ref(path).remove().catch(e => {
+    showError('Failed to remove: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
+
+function dbPush(path, val) {
+  return db.ref(path).push(val).catch(e => {
+    showError('Failed to push: ' + (e.message || 'Unknown error'));
+    throw e;
+  });
+}
 </script>
 <!-- /SECTION:js-firebase -->
 
@@ -1419,6 +2026,55 @@ const SAMPLE_QUESTIONS = [
   { text:"What is the capital of Australia?", answers:["Sydney","Melbourne","Canberra","Brisbane"], correct:2 },
   { text:"Who wrote Romeo and Juliet?", answers:["Charles Dickens","William Shakespeare","Jane Austen","Homer"], correct:1 },
   { text:"Which planet is known as the Red Planet?", answers:["Venus","Jupiter","Saturn","Mars"], correct:3 },
+];
+
+// Solo mode question banks by difficulty
+const SOLO_QUESTIONS = {
+  novice: [
+    { text:"What is the capital of France?", answers:["London","Paris","Berlin","Madrid"], correct:1 },
+    { text:"How many continents are there?", answers:["5","6","7","8"], correct:2 },
+    { text:"What is 5 + 3?", answers:["7","8","9","10"], correct:1 },
+    { text:"Which is the largest ocean?", answers:["Atlantic","Indian","Arctic","Pacific"], correct:3 },
+    { text:"What is the smallest country?", answers:["Monaco","Vatican City","Luxembourg","Malta"], correct:1 },
+    { text:"How many sides does a triangle have?", answers:["2","3","4","5"], correct:1 },
+    { text:"What is the boiling point of water?", answers:["90°C","100°C","110°C","120°C"], correct:1 },
+    { text:"Which gas do plants absorb?", answers:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], correct:2 },
+    { text:"What is the fastest land animal?", answers:["Lion","Cheetah","Gazelle","Greyhound"], correct:1 },
+    { text:"How many letters in the alphabet?", answers:["24","25","26","27"], correct:2 },
+  ],
+  scholar: [
+    { text:"Who wrote 1984?", answers:["George Orwell","Aldous Huxley","Ray Bradbury","Philip K. Dick"], correct:0 },
+    { text:"What is the chemical symbol for gold?", answers:["Go","Gd","Au","Ag"], correct:2 },
+    { text:"In which year did the Titanic sink?", answers:["1912","1915","1920","1925"], correct:0 },
+    { text:"What is the derivative of x²?", answers:["x","2x","x³","2"], correct:1 },
+    { text:"Which country has the most population?", answers:["India","China","USA","Indonesia"], correct:0 },
+    { text:"What is the speed of light?", answers:["3×10⁸ m/s","3×10⁹ m/s","3×10⁷ m/s","3×10¹⁰ m/s"], correct:0 },
+    { text:"Who painted the Mona Lisa?", answers:["Michelangelo","Leonardo da Vinci","Raphael","Donatello"], correct:1 },
+    { text:"What is the pH of pure water?", answers:["5","6","7","8"], correct:2 },
+    { text:"How many bones are in the adult human body?", answers:["186","206","226","246"], correct:1 },
+    { text:"What is the atomic number of Carbon?", answers:["4","6","8","12"], correct:1 },
+  ],
+  legend: [
+    { text:"What is Planck's constant approximately?", answers:["6.626×10⁻³⁴ J·s","6.626×10⁻³³ J·s","6.626×10⁻³² J·s","6.626×10⁻³⁵ J·s"], correct:0 },
+    { text:"In thermodynamics, what does entropy measure?", answers:["Energy","Order","Disorder","Temperature"], correct:2 },
+    { text:"What is the Heisenberg uncertainty principle about?", answers:["Mass and energy","Position and momentum","Time and frequency","Charge and spin"], correct:1 },
+    { text:"Who formulated the theory of evolution by natural selection?", answers:["Jean Lamarck","Charles Darwin","Alfred Wallace","August Weismann"], correct:1 },
+    { text:"What is the Avogadro number?", answers:["6.02×10²²","6.02×10²³","6.02×10²⁴","6.02×10²⁵"], correct:1 },
+    { text:"In quantum mechanics, what is a wave function?", answers:["A physical wave","A probability amplitude","An energy level","A particle trajectory"], correct:1 },
+    { text:"What is the Schwarzschild radius related to?", answers:["Stars","Black holes","Neutron stars","White dwarfs"], correct:1 },
+    { text:"Which mathematician proved the Fundamental Theorem of Calculus?", answers:["Newton and Leibniz","Euler","Riemann","Cauchy"], correct:0 },
+    { text:"What is the main constituent of the Sun's core?", answers:["Helium","Hydrogen","Iron","Carbon"], correct:1 },
+    { text:"In number theory, what is a prime number?", answers:["Divisible by 2","Only divisible by 1 and itself","A perfect square","An even number"], correct:1 },
+  ]
+};
+
+// Daily challenge questions (seeded by date)
+const DAILY_CHALLENGE_QUESTIONS = [
+  { text:"What is quantum entanglement?", answers:["Particles far apart with correlated states","Particles bonded together","A type of wave","An optical illusion"], correct:0 },
+  { text:"How many elements are in the periodic table?", answers:["92","106","118","150"], correct:2 },
+  { text:"What is the Fibonacci sequence?", answers:["Powers of 2","Each number is sum of previous two","Prime numbers only","Alternating pattern"], correct:1 },
+  { text:"In relativity, what does E=mc² represent?", answers:["Speed of light","Energy-mass equivalence","Acceleration formula","Gravitational force"], correct:1 },
+  { text:"What is dark matter?", answers:["Black holes","Invisible matter comprising 85% of matter","Dust in space","Old stars"], correct:1 },
 ];
 </script>
 <!-- /SECTION:js-data -->
@@ -1507,8 +2163,60 @@ function showToast(msg, dur=2500) {
   toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function showModal(id) { document.getElementById(id).classList.add('open'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showModal(id) { document.getElementById(id).classList.add('open'); }
+
+// Settings modal functions
+function updateSettingsModal() {
+  document.getElementById('settings-name-input').value = myName;
+
+  // Load records
+  const records = JSON.parse(localStorage.getItem('soloRecords') || '{}');
+  const recordsHtml = Object.entries(records).length > 0
+    ? Object.entries(records).map(([diff, record]) => `
+        <div style="padding:.4rem;background:var(--surface3);border-radius:4px;margin-bottom:.3rem;">
+          <div style="text-transform:capitalize;font-weight:600;font-size:.85rem;">${diff}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">Score: ${record.score}% | Shards: ${record.shards}</div>
+        </div>
+      `).join('')
+    : '<div style="color:var(--text-muted);font-size:.85rem;">No solo records yet.</div>';
+
+  document.getElementById('settings-records').innerHTML = recordsHtml;
+}
+
+window.saveName = function() {
+  const newName = document.getElementById('settings-name-input').value.trim();
+  if (!newName) { showError('Name cannot be empty'); return; }
+
+  myName = sanitizeInput(newName, 30);
+  localStorage.setItem('prism_name', myName);
+  dbSet('prism_users/' + myId + '/name', myName);
+
+  renderLanding();
+  showError('Name updated! ✓');
+  closeModal('settings-modal');
+};
+
+window.clearLocalData = function() {
+  if (!confirm('Clear all local data? This cannot be undone.')) return;
+  localStorage.removeItem('soloRecords');
+  sessionStorage.clear();
+  showError('Local data cleared. ✓');
+};
+
+// Keyboard navigation for game
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('game-screen')?.classList.contains('active')) return;
+
+  const key = parseInt(e.key);
+  if (key >= 1 && key <= 4) {
+    const buttons = document.querySelectorAll('.answer-btn');
+    if (buttons[key - 1] && !buttons[key - 1].disabled) {
+      buttons[key - 1].click();
+    }
+  }
+});
 
 function showResultPopup(correct, shardsEarned, chargesEarned) {
   const popup = document.getElementById('result-popup');
@@ -1518,7 +2226,95 @@ function showResultPopup(correct, shardsEarned, chargesEarned) {
   document.getElementById('result-shards').textContent = correct ? '+' + shardsEarned + ' 💎' : '';
   document.getElementById('result-charges').textContent = correct && chargesEarned ? '+' + chargesEarned + ' ⚡' : '';
   popup.classList.add('show');
+
+  // Screen pulse effect
+  const overlay = document.createElement('div');
+  overlay.className = `answer-feedback-overlay ${correct ? 'correct' : 'wrong'}`;
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 600);
+
+  // Floating shard animation (correct answers only)
+  if (correct && shardsEarned > 0) {
+    // Get button position for reference
+    const buttons = document.querySelectorAll('.answer-btn');
+    const firstButton = buttons[0];
+    if (firstButton) {
+      const buttonRect = firstButton.getBoundingClientRect();
+      const shardContainer = document.getElementById('game-shards');
+      const containerRect = shardContainer ? shardContainer.getBoundingClientRect() : {right: window.innerWidth - 20, top: 20};
+
+      const startX = buttonRect.left + buttonRect.width / 2;
+      const startY = buttonRect.top + buttonRect.height / 2;
+      const endX = containerRect.right;
+      const endY = containerRect.top;
+
+      // Create floating shards
+      for (let i = 0; i < Math.min(shardsEarned, 5); i++) {
+        setTimeout(() => {
+          const shard = document.createElement('div');
+          shard.className = 'floating-shard';
+          shard.textContent = '💎';
+          shard.style.left = startX + 'px';
+          shard.style.top = startY + 'px';
+
+          // Random offset for variety
+          const offsetX = (Math.random() - 0.5) * 100;
+          const offsetY = (Math.random() - 0.5) * 100;
+          shard.style.setProperty('--shard-tx', (endX - startX + offsetX) + 'px');
+          shard.style.setProperty('--shard-ty', (endY - startY + offsetY) + 'px');
+
+          document.body.appendChild(shard);
+          setTimeout(() => shard.remove(), 1000);
+        }, i * 60);
+      }
+    }
+  }
+
   setTimeout(() => popup.classList.remove('show'), 1800);
+}
+
+// Generate unique card art gradient based on card ID
+function getCardArtGradient(cardId) {
+  // Hash card ID to get deterministic colors
+  let hash = 0;
+  for (let i = 0; i < cardId.length; i++) {
+    hash = ((hash << 5) - hash) + cardId.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  // Map hash to hue values (0-360)
+  const h1 = Math.abs(hash % 360);
+  const h2 = (h1 + Math.abs(Math.floor(hash / 360) % 120)) % 360;
+  const h3 = (h1 + Math.abs(Math.floor(hash / 720) % 240)) % 360;
+
+  return {
+    colors: [`hsl(${h1}, 70%, 50%)`, `hsl(${h2}, 65%, 45%)`, `hsl(${h3}, 60%, 55%)`],
+    gradient: `linear-gradient(135deg, hsl(${h1}, 70%, 50%) 0%, hsl(${h2}, 65%, 45%) 50%, hsl(${h3}, 60%, 55%) 100%)`
+  };
+}
+
+// Generate SVG overlay pattern for card portrait
+function getCardArtSVG(cardId) {
+  const art = getCardArtGradient(cardId);
+  const colors = art.colors;
+
+  // Create a unique SVG pattern based on card ID
+  const seed = cardId.charCodeAt(0) + cardId.charCodeAt(cardId.length - 1);
+  const shapes = [
+    `<circle cx="20" cy="30" r="8" fill="${colors[0]}" opacity="0.3"/>`,
+    `<rect x="60" y="10" width="20" height="15" fill="${colors[1]}" opacity="0.25" transform="rotate(${seed % 45} 70 17)"/>`,
+    `<polygon points="40,80 50,60 60,80" fill="${colors[2]}" opacity="0.2"/>`,
+    `<path d="M 30 50 Q 40 30 50 50 T 70 50" stroke="${colors[0]}" fill="none" opacity="0.3" stroke-width="1.5"/>`,
+  ];
+
+  const svg = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:.15;pointer-events:none;">
+    <defs>
+      <filter id="blur${cardId}"><feGaussianBlur in="SourceGraphic" stdDeviation="0.5" /></filter>
+    </defs>
+    ${shapes.map((s, i) => `<g filter="url(#blur${cardId})">${s}</g>`).join('')}
+  </svg>`;
+
+  return svg;
 }
 
 // Render a single card element
@@ -1527,17 +2323,60 @@ function renderCard(cardId, compact=false) {
   if (!card) return '';
   const count = myCollection.filter(id => id === cardId).length;
   const inLoadout = myLoadout.includes(cardId);
+  const artGradient = getCardArtGradient(cardId);
+  const artSVG = getCardArtSVG(cardId);
+
+  // Buff icons map
+  const buffIcons = {
+    flat: '⚡', streak: '🔥', steal: '🎯', charges: '✨',
+    speed: '⚡', shards: '💎', shield: '🛡️'
+  };
+  const buffIcon = buffIcons[card.buff] || '⭐';
+
   return `
     <div class="card ${card.rarity}" onclick="toggleLoadout('${card.id}')">
-      ${card.art ? `<img class="card-art" src="${card.art}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-      <div style="display:none;font-size:2.8rem;">${card.emoji}</div>` : `<div class="card-emoji">${card.emoji}</div>`}
-      <div class="card-name">${card.name}</div>
-      <div class="card-pack">${card.pack}</div>
-      <div class="card-buff">${card.buffDesc}</div>
-      <div class="card-rarity-badge ${card.rarity}">${card.rarity}</div>
+      <div class="card-portrait" style="background: ${artGradient.gradient};">
+        <div class="card-portrait-overlay">${artSVG}</div>
+        <div class="card-portrait-inner">
+          ${card.art ? `<img class="card-art" src="${card.art}" onerror="this.parentElement.style.display='none'" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:2.5rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));">${card.emoji}</span>`}
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${card.name}</div>
+        <div class="card-rarity-bar">
+          <span class="rarity-gem">${{common:'◆', rare:'◆◆', epic:'◆◆◆', legendary:'◆◆◆◆'}[card.rarity] || '◆'}</span>
+        </div>
+        <div class="card-buff-row">
+          <span class="buff-icon">${buffIcon}</span>
+          <span class="buff-val">+${card.buffVal}</span>
+        </div>
+        <div class="card-buff-desc">${card.buffDesc}</div>
+      </div>
+      <div class="card-rarity-badge ${card.rarity}">${card.rarity[0].toUpperCase()}</div>
       ${count > 1 ? `<div style="position:absolute;bottom:6px;left:6px;font-size:.55rem;background:var(--surface3);padding:1px 5px;border-radius:3px;">×${count}</div>` : ''}
       ${inLoadout ? `<div style="position:absolute;top:6px;left:6px;font-size:.7rem;">✓</div>` : ''}
     </div>`;
+}
+
+// Attach legendary holographic cursor tracking
+function attachLegendaryEffects() {
+  document.querySelectorAll('.card.legendary').forEach(cardEl => {
+    cardEl.addEventListener('mousemove', (e) => {
+      const rect = cardEl.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      const angle = Math.atan2(e.clientY - (rect.top + rect.height / 2), e.clientX - (rect.left + rect.width / 2)) * 180 / Math.PI;
+
+      cardEl.style.setProperty('--holo-x', x + '%');
+      cardEl.style.setProperty('--holo-y', y + '%');
+      cardEl.style.setProperty('--holo-angle', angle + 'deg');
+    });
+
+    cardEl.addEventListener('mouseleave', () => {
+      cardEl.style.setProperty('--holo-x', '50%');
+      cardEl.style.setProperty('--holo-y', '50%');
+    });
+  });
 }
 
 function toggleLoadout(cardId) {
@@ -1781,9 +2620,18 @@ function renderCollection() {
   const owned = [...new Set(myCollection)];
   const grid = document.getElementById('cards-grid');
   if (owned.length === 0) {
-    grid.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;padding:1rem 0;">No cards yet! Open packs in the store.</div>';
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-state-icon">🃏</div>
+      <div class="empty-state-title">No cards yet!</div>
+      <div class="empty-state-desc">Open packs in the store to start your collection.</div>
+      <div class="empty-state-action">
+        <button class="btn btn-accent btn-sm" onclick="showScreen('store-screen');renderStore()">Open Store →</button>
+      </div>
+    </div>`;
   } else {
     grid.innerHTML = owned.map(id => renderCard(id)).join('');
+    // Attach cursor tracking to legendary cards
+    setTimeout(() => attachLegendaryEffects(), 10);
   }
   document.getElementById('coll-total').textContent = myCollection.length;
   document.getElementById('coll-unique').textContent = owned.length;
@@ -1860,10 +2708,14 @@ function openPackAnimation(pulled) {
   pulled.forEach((card, i) => {
     // Create flip container — start face-down
     const flipEl = document.createElement('div');
-    flipEl.className = 'pack-card-flip';
+    flipEl.className = `pack-card-flip pack-rarity-${card.rarity}`;
+    const cardData = cardLib[card.id] || {};
+    const packType = cardData.pack || 'cosmic';
     flipEl.innerHTML = `
       <div class="pack-card-inner">
-        <div class="pack-card-back">🌈</div>
+        <div class="card-back ${packType}">
+          <div class="card-back-pattern">${{cosmic:'🌌', mythic:'⚜️', arcane:'✨', deep:'🌊'}[packType] || '🌈'}</div>
+        </div>
         <div class="pack-card-face">${renderCard(card.id)}</div>
       </div>`;
 
@@ -1877,18 +2729,27 @@ function openPackAnimation(pulled) {
       const pct = (revealedCount / pulled.length) * 100;
       document.getElementById('pack-suspense-fill').style.width = pct + '%';
 
-      // Play sound
+      // Play sound and add rarity-specific effects
       if (card.rarity === 'legendary') {
         setTimeout(() => {
           const flash = document.createElement('div');
           flash.className = 'legendary-flash';
           document.body.appendChild(flash);
+          // Add golden glow burst to card
+          flipEl.style.boxShadow = '0 0 30px rgba(255,215,64,.8), 0 0 60px rgba(255,215,64,.5)';
           playLegendarySound();
           launchConfetti();
           setTimeout(() => flash.remove(), 1200);
+          setTimeout(() => flipEl.style.boxShadow = '', 1200);
         }, 300);
       } else if (card.rarity === 'epic') {
+        flipEl.style.boxShadow = '0 0 20px rgba(171,71,188,.6)';
         playEpicRevealSound();
+        setTimeout(() => flipEl.style.boxShadow = '', 600);
+      } else if (card.rarity === 'rare') {
+        flipEl.style.boxShadow = '0 0 15px rgba(66,165,245,.5)';
+        playCardFlipSound();
+        setTimeout(() => flipEl.style.boxShadow = '', 400);
       } else {
         playCardFlipSound();
       }
@@ -1922,6 +2783,193 @@ window.closePack = function() {
 };
 </script>
 <!-- /SECTION:js-collection -->
+
+<!-- SECTION:js-solo -->
+<script>
+// Solo mode state
+let soloState = {
+  difficulty: null,
+  questions: [],
+  currentQ: 0,
+  score: 0,
+  streak: 0,
+  multiplier: 1,
+  startTime: 0,
+  isDaily: false,
+  answered: []
+};
+
+function initSoloMode() {
+  // Load solo records from localStorage
+  const records = JSON.parse(localStorage.getItem('soloRecords') || '{}');
+  const recordsHtml = Object.entries(records).map(([diff, record]) => `
+    <div style="padding:.6rem;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:.4rem;">
+      <div style="display:flex;justify-content:space-between;font-weight:600;margin-bottom:.2rem;">
+        <span style="text-transform:capitalize;">${diff}</span>
+        <span style="color:var(--gold);">💎${record.shards}</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-dim);">Score: ${record.score}/100 • Speed: ${record.time}s</div>
+    </div>
+  `).join('');
+
+  document.getElementById('solo-records').innerHTML = recordsHtml || '<div style="color:var(--text-muted);font-size:.85rem;">No records yet. Complete a challenge!</div>';
+}
+
+function startSoloGame(difficulty) {
+  soloState.difficulty = difficulty;
+  soloState.currentQ = 0;
+  soloState.score = 0;
+  soloState.streak = 0;
+  soloState.multiplier = 1;
+  soloState.answered = [];
+  soloState.isDaily = difficulty === 'daily';
+
+  // Select questions
+  if (soloState.isDaily) {
+    // Get daily challenge (seeded by date)
+    const today = new Date().toDateString();
+    const seed = today.charCodeAt(0);
+    soloState.questions = DAILY_CHALLENGE_QUESTIONS;
+  } else {
+    soloState.questions = (SOLO_QUESTIONS[difficulty] || SOLO_QUESTIONS.scholar).slice(0, 10);
+  }
+
+  soloState.startTime = Date.now();
+
+  // Hide lobby, show game
+  document.getElementById('solo-lobby').style.display = 'none';
+  document.getElementById('solo-game').style.display = 'flex';
+
+  // Render first question
+  renderSoloQuestion();
+}
+
+function renderSoloQuestion() {
+  if (soloState.currentQ >= soloState.questions.length) {
+    finishSoloGame();
+    return;
+  }
+
+  const q = soloState.questions[soloState.currentQ];
+  const progress = soloState.currentQ + 1;
+  const total = soloState.questions.length;
+
+  document.getElementById('solo-game').innerHTML = `
+    <div style="padding:1rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+        <div style="font-size:.8rem;color:var(--text-dim);">Question ${progress}/${total}</div>
+        <div style="font-weight:700;">
+          <span style="color:var(--gold);">💎${Math.floor(soloState.score)}</span>
+          <span style="margin-left:.75rem;color:var(--accent3);">🔥${soloState.streak}</span>
+        </div>
+      </div>
+      <div style="height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+        <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:${(progress/total)*100}%;border-radius:2px;"></div>
+      </div>
+    </div>
+
+    <div style="padding:1rem;flex:1;overflow-y:auto;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;">
+        <div style="font-size:1.1rem;font-weight:600;line-height:1.5;">${q.text}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+        ${q.answers.map((ans, i) => `
+          <button class="answer-btn" onclick="submitSoloAnswer(${i})" style="grid-column:${i%2===1?'2':'1'}${i>1?';grid-row:'+(Math.floor(i/2)+1):''};">
+            ${ans}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function submitSoloAnswer(answerIdx) {
+  const q = soloState.questions[soloState.currentQ];
+  const correct = answerIdx === q.correct;
+
+  soloState.answered.push({question: q.text, correct, selected: q.answers[answerIdx]});
+
+  if (correct) {
+    soloState.streak++;
+    // Update multiplier
+    if (soloState.streak === 5) soloState.multiplier = 1.5;
+    else if (soloState.streak === 8) soloState.multiplier = 2;
+
+    // Award shards: base 10, streak bonus, multiplier
+    const baseShards = 10;
+    const bonusShards = soloState.streak > 0 ? soloState.streak * 2 : 0;
+    const awardedShards = (baseShards + bonusShards) * soloState.multiplier;
+    soloState.score += awardedShards;
+  } else {
+    soloState.streak = 0;
+    soloState.multiplier = 1;
+  }
+
+  soloState.currentQ++;
+
+  // Brief pause then show next question
+  setTimeout(() => renderSoloQuestion(), 500);
+}
+
+function finishSoloGame() {
+  const elapsed = (Date.now() - soloState.startTime) / 1000;
+  const correctCount = soloState.answered.filter(a => a.correct).length;
+  const scorePercent = Math.round((correctCount / soloState.questions.length) * 100);
+  const finalShards = Math.floor(soloState.score);
+
+  // Apply daily challenge bonus
+  let shardReward = finalShards;
+  if (soloState.isDaily) {
+    shardReward = Math.floor(finalShards * 1.5);
+  }
+
+  // Add shards to player
+  myShards += shardReward;
+  dbSet('prism_users/' + myId + '/shards', myShards);
+
+  // Save record
+  const records = JSON.parse(localStorage.getItem('soloRecords') || '{}');
+  const diffKey = soloState.isDaily ? 'daily' : soloState.difficulty;
+  if (!records[diffKey] || records[diffKey].score < scorePercent) {
+    records[diffKey] = {score: scorePercent, shards: shardReward, time: Math.round(elapsed)};
+    localStorage.setItem('soloRecords', JSON.stringify(records));
+  }
+
+  // Show results
+  document.getElementById('solo-game').innerHTML = `
+    <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;">
+      <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;margin-bottom:1rem;">Challenge Complete!</div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:300px;text-align:center;margin-bottom:1.5rem;">
+        <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.5rem;text-transform:uppercase;">SCORE</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:2.5rem;font-weight:700;color:var(--gold);margin-bottom:1rem;">${scorePercent}%</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <div>
+            <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">Correct</div>
+            <div style="font-weight:700;color:var(--green);">${correctCount}/${soloState.questions.length}</div>
+          </div>
+          <div>
+            <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">Time</div>
+            <div style="font-weight:700;">${Math.round(elapsed)}s</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(105,240,174,.1);border:1px solid rgba(105,240,174,.2);border-radius:var(--radius-sm);padding:.75rem;text-align:center;margin-bottom:1.5rem;">
+        <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">SHARDS EARNED</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;color:var(--green);">+${shardReward} 💎</div>
+      </div>
+
+      <button class="btn btn-accent btn-lg btn-block" onclick="showScreen('solo-screen');initSoloMode();">Play Again</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:.5rem;" onclick="showScreen('landing');renderLanding();">Back to Home</button>
+    </div>
+  `;
+}
+</script>
+<!-- /SECTION:js-solo -->
 
 <!-- SECTION:js-teacher -->
 <script>
@@ -1996,7 +3044,7 @@ window.deleteSet = async function(id) {
 window.saveSet = async function() {
   const uid = auth.currentUser?.uid;
   if (!uid) { showToast('Sign in to save sets.'); return; }
-  const name = document.getElementById('set-name-input').value.trim() || 'Untitled Set';
+  const name = sanitizeInput(document.getElementById('set-name-input').value.trim() || 'Untitled Set', 60);
   if (!currentSetQuestions.length) { showToast('Add at least one question!'); return; }
   const setData = { name, questions: currentSetQuestions, updated: Date.now() };
   if (editingSetId) {
@@ -2066,7 +3114,7 @@ window.hostGame = async function() {
   if (!setId) { showToast('Select a question set!'); return; }
   const set = teacherSets[setId];
   if (!set) return;
-  myName = name;
+  myName = sanitizeInput(name, 30);
   questions = set.questions || [];
   isHost = true;
   gameCode = Math.floor(1000 + Math.random()*9000).toString();
@@ -2294,7 +3342,7 @@ function updateHostLeaderboard(players) {
           <div class="lb-rank ${rc}">${i+1}</div>
           <div style="font-size:.85rem;">${teamIcon}${p.isHost?'👑':(getEquippedEmoji(p.loadout)||'😀')}</div>
           <div class="lb-name">${p.name}</div>
-          ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+          ${(p.streak||0)>=2?`<div class="lb-streak ${(p.streak||0)>=10?'streak-10':(p.streak||0)>=5?'streak-5':'streak-3'}"><span class="lb-streak-fire">🔥</span>${p.streak}</div>`:''}
           <div class="lb-shards">💎${p.shards||0}</div>
         </div>`;
       }).join('');
@@ -2305,7 +3353,7 @@ function updateHostLeaderboard(players) {
         <div class="lb-rank ${rc}">${i+1}</div>
         <div style="font-size:1rem;">${p.isHost?'👑':(getEquippedEmoji(p.loadout)||'😀')}</div>
         <div class="lb-name">${p.name}</div>
-        ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+        ${(p.streak||0)>=2?`<div class="lb-streak ${(p.streak||0)>=10?'streak-10':(p.streak||0)>=5?'streak-5':'streak-3'}"><span class="lb-streak-fire">🔥</span>${p.streak}</div>`:''}
         <div class="lb-shards">💎${p.shards||0}</div>
       </div>`;
     }).join('');
@@ -2455,7 +3503,7 @@ window.joinGame = async function() {
   gameListeners.forEach(r => dbOff(r));
   gameListeners = [];
 
-  myName = name;
+  myName = sanitizeInput(name, 30);
   saveLocal();
 
   let game;
@@ -2604,7 +3652,15 @@ function handleGameUpdate(game) {
 
   if (state === 'question' && game.questions) {
     const q = game.questions[game.currentQ];
-    if (q) renderQuestion(q, game.currentQ, game.questions.length, game.timeLimit || 30);
+    if (q) {
+      renderQuestion(q, game.currentQ, game.questions.length, game.timeLimit || 30);
+    } else {
+      document.getElementById('game-main').innerHTML = `
+        <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+          <div style="font-size:2rem;margin-bottom:.5rem;">📋</div>
+          Loading question…
+        </div>`;
+    }
     answered = false;
   } else if (state === 'waiting') {
     document.getElementById('game-main').innerHTML = `
@@ -2612,14 +3668,34 @@ function handleGameUpdate(game) {
         <div style="font-size:2rem;margin-bottom:.5rem;">⏳</div>
         Waiting for the next question…
       </div>`;
+  } else if (!state || state === 'waiting') {
+    // Game hasn't started yet or is preparing
+    document.getElementById('game-main').innerHTML = `
+      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+        <div style="font-size:2rem;margin-bottom:.5rem;">🎮</div>
+        Waiting for the host to start the game…
+      </div>`;
+  } else {
+    // Unknown state - show loading
+    document.getElementById('game-main').innerHTML = `
+      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
+        <div style="font-size:2rem;margin-bottom:.5rem;">⏸</div>
+        ${state || 'Loading…'}
+      </div>`;
   }
 }
 
 function renderQuestion(q, qIdx, total, timeLimit=30) {
-  const main = document.getElementById('game-main');
-  const isFrozen = Date.now() < myFrozenUntil;
-  const timeLimitLabel = timeLimit === 0 ? '∞' : timeLimit + 's';
-  main.innerHTML = `
+  try {
+    const main = document.getElementById('game-main');
+    if (!main) {
+      console.error('game-main element not found');
+      showError('Error rendering question');
+      return;
+    }
+    const isFrozen = Date.now() < myFrozenUntil;
+    const timeLimitLabel = timeLimit === 0 ? '∞' : timeLimit + 's';
+    main.innerHTML = `
     <div class="question-area">
       <div class="question-card">
         <div class="question-meta" style="display:flex;justify-content:space-between;align-items:center;">
@@ -2665,6 +3741,12 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
   }
 
   if (gameMode === 'gamble') renderGambleUI();
+  } catch(e) {
+    console.error('Error in renderQuestion:', e);
+    showError('Failed to render question');
+    const main = document.getElementById('game-main');
+    if (main) main.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--accent3);">Error loading question. Please wait…</div>`;
+  }
 }
 
 function submitAnswer(selected, correct, qIdx) {
@@ -2769,7 +3851,7 @@ function updateLeaderboard(players) {
           <div class="lb-rank">${i+1}</div>
           <div style="font-size:.85rem;">${getEquippedEmoji(p.loadout)||'😀'}</div>
           <div class="lb-name">${p.name}${p.shielded?'🛡️':''}</div>
-          ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+          ${(p.streak||0)>=2?`<div class="lb-streak ${(p.streak||0)>=10?'streak-10':(p.streak||0)>=5?'streak-5':'streak-3'}"><span class="lb-streak-fire">🔥</span>${p.streak}</div>`:''}
           <div class="lb-shards">💎${p.shards||0}</div>
         </div>`).join('');
   } else {
@@ -2779,7 +3861,7 @@ function updateLeaderboard(players) {
         <div class="lb-rank ${rc}">${i+1}</div>
         <div style="font-size:.9rem;">${p.isHost?'👑':(getEquippedEmoji(p.loadout)||'😀')}</div>
         <div class="lb-name">${p.name}${p.shielded?'🛡️':''}</div>
-        ${(p.streak||0)>=2?`<div class="lb-streak">🔥${p.streak}</div>`:''}
+        ${(p.streak||0)>=2?`<div class="lb-streak ${(p.streak||0)>=10?'streak-10':(p.streak||0)>=5?'streak-5':'streak-3'}"><span class="lb-streak-fire">🔥</span>${p.streak}</div>`:''}
         <div class="lb-shards">💎${p.shards||0}</div>
       </div>`;
     }).join('');
