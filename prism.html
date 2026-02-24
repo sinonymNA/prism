@@ -386,21 +386,19 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 
 /* Screen slide in/out animations */
 .screen{
-  animation:slideOut .3s cubic-bezier(.34,1.56,.64,1) forwards;
+  opacity:0;
+  pointer-events:none;
 }
 
 .screen.active{
-  animation:slideIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+  opacity:1;
+  pointer-events:auto;
+  animation:slideIn .3s cubic-bezier(.34,1.56,.64,1);
 }
 
 @keyframes slideIn{
   from{opacity:0;transform:translateX(20px);}
   to{opacity:1;transform:translateX(0);}
-}
-
-@keyframes slideOut{
-  from{opacity:1;transform:translateX(0);}
-  to{opacity:0;transform:translateX(-20px);}
 }
 
 /* Number tick-up animation */
@@ -663,7 +661,7 @@ button:focus,input:focus,textarea:focus,select:focus{
 .host-lb-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.5rem;}
 
 /* STUDENT GAME SCREEN */
-#game-screen{padding:0;}
+#game-screen{padding:0;position:relative;z-index:10;}
 .game-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:.75rem 1rem;background:var(--surface);border-bottom:1px solid var(--border);
