@@ -77,8 +77,8 @@ body::after{
   100%{background-position:200px 200px, 40px 60px, 130px 270px, 70px 100px, -350px -350px;}
 }
 #app{position:relative;z-index:1;}
-.screen{display:none;min-height:100vh;}
-.screen.active{display:flex;flex-direction:column;}
+.screen{display:none;min-height:100vh;opacity:0;pointer-events:none;}
+.screen.active{display:flex !important;flex-direction:column;opacity:1 !important;pointer-events:auto !important;}
 button{cursor:pointer;font-family:'Exo 2',sans-serif;}
 input,textarea,select{font-family:'Exo 2',sans-serif;}
 
@@ -385,14 +385,7 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 
 
 /* Screen slide in/out animations */
-.screen{
-  opacity:0;
-  pointer-events:none;
-}
-
 .screen.active{
-  opacity:1;
-  pointer-events:auto;
   animation:slideIn .3s cubic-bezier(.34,1.56,.64,1);
 }
 
