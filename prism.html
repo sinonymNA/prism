@@ -1990,6 +1990,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
+console.log('✅ Firebase initialized:', {hasDB: !!db, hasAuth: !!auth});
 
 // Input sanitization
 function sanitizeInput(str, maxLen = 50) {
@@ -2694,6 +2695,7 @@ window.doSignOut = async function() {
 
 // Firebase auth state listener — resolves loading screen
 auth.onAuthStateChanged(async user => {
+  console.log('🔐 Auth state changed:', {hasUser: !!user, uid: user?.uid});
   const ls = document.getElementById('loading-screen');
   ls.classList.add('fade-out');
   setTimeout(() => ls.classList.add('gone'), 700);
