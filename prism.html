@@ -1990,7 +1990,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
-console.log('✅ Firebase initialized:', {hasDB: !!db, hasAuth: !!auth});
 
 // Input sanitization
 function sanitizeInput(str, maxLen = 50) {
@@ -2625,6 +2624,8 @@ function updateLanding() {
     }).join('');
   }
 }
+
+function renderLanding() { updateLanding(); }
 </script>
 <!-- /SECTION:js-ui-helpers -->
 
@@ -2695,7 +2696,6 @@ window.doSignOut = async function() {
 
 // Firebase auth state listener — resolves loading screen
 auth.onAuthStateChanged(async user => {
-  console.log('🔐 Auth state changed:', {hasUser: !!user, uid: user?.uid});
   const ls = document.getElementById('loading-screen');
   if (ls && !ls.classList.contains('gone')) {
     ls.classList.add('fade-out');
@@ -2721,8 +2721,7 @@ auth.onAuthStateChanged(async user => {
     showScreen('landing');
     updateLanding();
   } else {
-    // No user — show homepage unless on landing already from guest skip
-    if (!isGuest) showScreen('homepage-screen');
+    showScreen('homepage-screen');
   }
 });
 
@@ -4439,6 +4438,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ls && !ls.classList.contains('gone')) {
       ls.classList.add('fade-out');
       setTimeout(() => ls.classList.add('gone'), 700);
+    }
+    // Ensure at least one screen is visible
+    if (!document.querySelector('.screen.active')) {
       showScreen('homepage-screen');
     }
   }, 3000);
