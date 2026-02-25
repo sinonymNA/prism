@@ -1007,6 +1007,10 @@ button:focus,input:focus,textarea:focus,select:focus{
 .host-live-grid{display:grid;grid-template-columns:1fr 280px;height:100%;gap:0;}
 .host-main-panel{padding:1.25rem 1.5rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem;}
 .host-side-panel{border-left:1px solid var(--border);padding:1rem;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;}
+@media(max-width:600px){
+  .host-live-grid{grid-template-columns:1fr;grid-template-rows:1fr auto;}
+  .host-side-panel{border-left:none;border-top:1px solid var(--border);max-height:220px;}
+}
 .host-q-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1.25rem;}
 .host-q-meta{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;}
 .host-q-text{font-size:1.15rem;font-weight:600;line-height:1.5;}
@@ -2593,6 +2597,12 @@ let editingSetId = null;
 let pendingSabotage = null;
 let loadoutPickerSlot = null;
 let endScreenShown = false;
+
+// Question timing (for speed bonus and interval cleanup)
+let questionRenderTime = 0;
+let currentQuestionTimeLimit = 30;
+let activeTimerInterval = null;
+let activeFrozenInterval = null;
 
 // War mode state
 let myTeam = null; // 'apollo' or 'athena'
@@ -4291,6 +4301,14 @@ function handleGameUpdate(game) {
 
 function renderQuestion(q, qIdx, total, timeLimit=30) {
   try {
+    // Clear any existing timer/frozen intervals from previous question
+    if (activeTimerInterval) { clearInterval(activeTimerInterval); activeTimerInterval = null; }
+    if (activeFrozenInterval) { clearInterval(activeFrozenInterval); activeFrozenInterval = null; }
+
+    // Track when this question started rendering (for accurate speed bonus)
+    questionRenderTime = Date.now();
+    currentQuestionTimeLimit = timeLimit;
+
     const main = document.getElementById('game-main');
     if (!main) {
       console.error('game-main element not found');
@@ -4320,12 +4338,13 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
 
   // Update frozen countdown every second
   if (isFrozen) {
-    const frozenCountdownInterval = setInterval(() => {
+    activeFrozenInterval = setInterval(() => {
       const el = document.querySelector('.frozen-countdown');
-      if (!el) { clearInterval(frozenCountdownInterval); return; }
+      if (!el) { clearInterval(activeFrozenInterval); activeFrozenInterval = null; return; }
       const secsRemaining = Math.ceil((myFrozenUntil - Date.now()) / 1000);
       if (secsRemaining <= 0) {
-        clearInterval(frozenCountdownInterval);
+        clearInterval(activeFrozenInterval);
+        activeFrozenInterval = null;
         el.textContent = 'Thawing…';
         return;
       }
@@ -4346,10 +4365,11 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
     // Countdown label
     let remaining = timeLimit;
     const labelEl = document.getElementById('timer-label');
-    const timerInterval = setInterval(() => {
+    activeTimerInterval = setInterval(() => {
       remaining--;
       if (remaining <= 0) {
-        clearInterval(timerInterval);
+        clearInterval(activeTimerInterval);
+        activeTimerInterval = null;
         if (labelEl) labelEl.textContent = '0s';
         return;
       }
@@ -4392,9 +4412,10 @@ function submitAnswer(selected, correct, qIdx) {
     playCorrectSound();
     const buffs = getLoadoutBuffs();
 
-    // Speed bonus: how much of the 25s timer is left
-    const fill = document.getElementById('timer-fill');
-    const pct = fill ? parseFloat(fill.style.width) / 100 : 0;
+    // Speed bonus: fraction of timer remaining when answer is submitted
+    // Uses elapsed time since question rendered (fill.style.width is always 0% once CSS transition fires)
+    const elapsed = (Date.now() - questionRenderTime) / 1000;
+    const pct = currentQuestionTimeLimit > 0 ? Math.max(0, 1 - elapsed / currentQuestionTimeLimit) : 0;
     const baseShards = 100;
     const flatBonus = buffs.flat || 0;
     const speedBonus = Math.round(pct * 50 * (1 + (buffs.speed || 0) / 100));
@@ -4461,6 +4482,13 @@ function checkStreakBonus(streak) {
 function updateLeaderboard(players) {
   const sorted = Object.entries(players).sort((a,b) => (b[1].shards||0)-(a[1].shards||0));
   const lb = document.getElementById('leaderboard');
+  if (!lb) return;
+
+  const activePlayers = sorted.filter(([, p]) => !p.isHost);
+  if (!activePlayers.length) {
+    lb.innerHTML = '<div style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:.5rem;">Waiting for players…</div>';
+    return;
+  }
 
   if (gameMode === 'war' && myTeam) {
     // Show only teammates
@@ -4772,12 +4800,21 @@ window.takeGamble = async function(amount, risk) {
   document.querySelectorAll('.gamble-offer').forEach(el => el.remove());
 };
 
+function updateGameHUD() {
+  // Update local HUD elements after shard/charge changes (Firebase listener will sync full state shortly)
+  const chargesEl = document.getElementById('my-charges-display');
+  if (chargesEl) chargesEl.textContent = myCharges;
+}
+
 function renderGambleUI() {} // called on question render but gamble UI appears after answering
 
 // ===== LEAVE GAME =====
 window.leaveGame = function() {
   gameListeners.forEach(r => dbOff(r));
   gameListeners = [];
+  // Clear any running intervals
+  if (activeTimerInterval) { clearInterval(activeTimerInterval); activeTimerInterval = null; }
+  if (activeFrozenInterval) { clearInterval(activeFrozenInterval); activeFrozenInterval = null; }
   if (gameCode && !isHost) {
     dbRemove('prism_games/' + gameCode + '/players/' + myId).catch(()=>{});
   }
@@ -4795,9 +4832,11 @@ window.leaveGame = function() {
 };
 
 function showEndScreen(players) {
-  // Stop all listeners
+  // Stop all listeners and intervals
   gameListeners.forEach(r => dbOff(r));
   gameListeners = [];
+  if (activeTimerInterval) { clearInterval(activeTimerInterval); activeTimerInterval = null; }
+  if (activeFrozenInterval) { clearInterval(activeFrozenInterval); activeFrozenInterval = null; }
 
   const allPlayers = Object.entries(players).filter(([,p]) => !p.isHost);
   const sorted = [...allPlayers].sort((a,b) => (b[1].shards||0) - (a[1].shards||0));
