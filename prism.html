@@ -161,28 +161,71 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
     inset 0 0 20px rgba(255,255,255,.05);
 }
 
-/* Holographic foil effect on hover */
+/* Holographic foil effect — rarity-specific */
 .card::before{
   content:'';
   position:absolute;inset:0;
-  background:conic-gradient(from 0deg at 50% 50%,
-    rgba(255,0,0,.1) 0deg,
-    rgba(255,127,0,.1) 60deg,
-    rgba(0,255,0,.1) 120deg,
-    rgba(0,127,255,.1) 180deg,
-    rgba(127,0,255,.1) 240deg,
-    rgba(255,0,0,.1) 360deg);
-  opacity:0;
+  opacity:0.08;
   transition:opacity .3s;
   pointer-events:none;
   border-radius:12px;
   z-index:5;
+  mix-blend-mode:screen;
 }
-.card:hover::before{opacity:0.4;animation:holoBreathe 2s ease-in-out infinite;}
+
+/* Common: Silver/steel grey foil */
+.card.common::before{
+  background:conic-gradient(from var(--holo-angle,0deg) at var(--holo-x,50%) var(--holo-y,50%),
+    rgba(200,220,230,.25) 0deg,
+    rgba(160,192,210,.25) 60deg,
+    rgba(220,230,240,.25) 120deg,
+    rgba(160,192,210,.25) 180deg,
+    rgba(200,220,230,.25) 240deg,
+    rgba(160,192,210,.25) 300deg,
+    rgba(200,220,230,.25) 360deg);
+}
+
+/* Rare: Cyan/blue foil */
+.card.rare::before{
+  background:conic-gradient(from var(--holo-angle,0deg) at var(--holo-x,50%) var(--holo-y,50%),
+    rgba(100,220,255,.25) 0deg,
+    rgba(66,165,245,.25) 60deg,
+    rgba(33,150,243,.25) 120deg,
+    rgba(100,200,255,.25) 180deg,
+    rgba(66,165,245,.25) 240deg,
+    rgba(100,220,255,.25) 300deg,
+    rgba(33,150,243,.25) 360deg);
+}
+
+/* Epic: Purple/magenta foil */
+.card.epic::before{
+  background:conic-gradient(from var(--holo-angle,0deg) at var(--holo-x,50%) var(--holo-y,50%),
+    rgba(224,64,251,.25) 0deg,
+    rgba(171,71,188,.25) 60deg,
+    rgba(123,31,162,.25) 120deg,
+    rgba(200,100,255,.25) 180deg,
+    rgba(171,71,188,.25) 240deg,
+    rgba(224,64,251,.25) 300deg,
+    rgba(123,31,162,.25) 360deg);
+}
+
+/* Legendary: Gold/amber foil */
+.card.legendary::before{
+  background:conic-gradient(from var(--holo-angle,0deg) at var(--holo-x,50%) var(--holo-y,50%),
+    rgba(255,200,100,.3) 0deg,
+    rgba(255,215,64,.3) 60deg,
+    rgba(255,235,120,.3) 120deg,
+    rgba(255,215,64,.3) 180deg,
+    rgba(255,200,100,.3) 240deg,
+    rgba(255,235,120,.3) 300deg,
+    rgba(255,215,64,.3) 360deg);
+}
+
+.card:hover::before{opacity:0.55;animation:holoBreathe 2s ease-in-out infinite;}
 
 @keyframes holoBreathe{
-  0%,100%{opacity:.4;}
-  50%{opacity:.7;}
+  0%,100%{opacity:0.55;}
+  50%{opacity:0.8;}
 }
 
 /* Shimmer/Foil sweep animation */
@@ -316,6 +359,29 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 @keyframes holoShimmer{
   0%{--holo-angle:0deg;}
   100%{--holo-angle:360deg;}
+}
+
+/* Diagonal foil sweep for non-legendary cards */
+.card:not(.legendary)::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    125deg,
+    transparent 30%,
+    rgba(255,255,255,0.22) 50%,
+    transparent 70%
+  );
+  transform:translateX(-150%);
+  transition:transform 0s;
+  pointer-events:none;
+  z-index:6;
+  border-radius:12px;
+  mix-blend-mode:screen;
+}
+.card:not(.legendary):hover::after{
+  transform:translateX(200%);
+  transition:transform 0.55s ease;
 }
 
 /* Card name section */
@@ -880,6 +946,15 @@ button:focus,input:focus,textarea:focus,select:focus{
 .action-card-desc{font-size:.78rem;color:var(--text-dim);line-height:1.4;}
 .section-title{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-top:.5rem;}
 
+/* Recent Updates / Patch Notes */
+.updates-section{margin-top:1.5rem;padding:1rem 1.25rem;background:var(--surface2);border-radius:12px;border:1px solid var(--border);}
+.updates-title{font-size:.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;}
+.updates-list{display:flex;flex-direction:column;gap:.5rem;}
+.update-item{font-size:.8rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:.5rem;line-height:1.4;}
+.update-tag{font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:1px;letter-spacing:.04em;}
+.update-tag.new{background:rgba(124,77,255,.25);color:#b39dff;border:1px solid rgba(124,77,255,.3);}
+.update-tag.fix{background:rgba(0,229,255,.15);color:#80deea;border:1px solid rgba(0,229,255,.25);}
+
 /* HOST SCREEN */
 #host-screen{padding:0;}
 .screen-header{
@@ -1372,6 +1447,7 @@ button:focus,input:focus,textarea:focus,select:focus{
   height: 196px;
   cursor: pointer;
   animation:cardRevealShake .3s ease-out forwards;
+  touch-action: manipulation;
 }
 .pack-card-inner {
   position: relative;
@@ -1408,6 +1484,12 @@ button:focus,input:focus,textarea:focus,select:focus{
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.pack-card-face {
+  pointer-events: none;
+}
+.pack-card-flip.flipped .pack-card-face {
+  pointer-events: auto;
 }
 .card-back {
   border: 2px solid var(--border2);
@@ -1799,6 +1881,16 @@ button:focus,input:focus,textarea:focus,select:focus{
     <div style="display:flex;gap:.5rem;margin-top:.5rem;">
       <button class="btn btn-ghost btn-sm" onclick="openModal('settings-modal');updateSettingsModal()">⚙️ Settings</button>
       <button class="btn btn-ghost btn-sm" onclick="doSignOut()">Sign Out</button>
+    </div>
+    <div class="updates-section">
+      <div class="updates-title">📋 Recent Updates</div>
+      <div class="updates-list">
+        <div class="update-item"><span class="update-tag new">NEW</span> Holographic Cards — All card rarities now have rarity-specific foil shimmer effects</div>
+        <div class="update-item"><span class="update-tag fix">FIX</span> Card Pack Reveal — Tapping cards in packs now works correctly on all devices</div>
+        <div class="update-item"><span class="update-tag fix">FIX</span> Teacher Signup — Creating a Teacher account now correctly assigns the Teacher role</div>
+        <div class="update-item"><span class="update-tag new">NEW</span> Frozen Countdown — Frozen timer now counts down live instead of showing a static number</div>
+        <div class="update-item"><span class="update-tag fix">FIX</span> CSV Import — Better validation with row-specific error messages and duplicate detection</div>
+      </div>
     </div>
   </div>
 </div>
@@ -2772,9 +2864,9 @@ function renderCard(cardId, compact=false) {
     </div>`;
 }
 
-// Attach legendary holographic cursor tracking
-function attachLegendaryEffects() {
-  document.querySelectorAll('.card.legendary').forEach(cardEl => {
+// Attach holographic cursor tracking to all card rarities
+function attachHoloEffects() {
+  document.querySelectorAll('.card').forEach(cardEl => {
     cardEl.addEventListener('mousemove', (e) => {
       const rect = cardEl.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -2998,7 +3090,14 @@ auth.onAuthStateChanged(async user => {
     // Load role from db
     try {
       const snap = await dbGet('users/' + user.uid + '/role');
-      if (snap.val()) { myRole = snap.val(); localStorage.setItem('prism_role', myRole); }
+      if (snap.val()) {
+        myRole = snap.val();
+        localStorage.setItem('prism_role', myRole);
+      } else {
+        // New signup — DB write hasn't completed yet, use role selected in signup form
+        myRole = authRole;  // 'teacher' or 'student' per button selection (default: 'student')
+        localStorage.setItem('prism_role', myRole);
+      }
       // Load shards from db (merge with local, take higher)
       const shardSnap = await dbGet('users/' + user.uid + '/shards');
       if (shardSnap.val() !== null) myShards = Math.max(myShards, shardSnap.val());
@@ -3048,7 +3147,7 @@ function renderCollection() {
   } else {
     grid.innerHTML = owned.map(id => renderCard(id)).join('');
     // Attach cursor tracking to legendary cards
-    setTimeout(() => attachLegendaryEffects(), 10);
+    setTimeout(() => attachHoloEffects(), 10);
   }
   document.getElementById('coll-total').textContent = myCollection.length;
   document.getElementById('coll-unique').textContent = owned.length;
@@ -3136,8 +3235,9 @@ function openPackAnimation(pulled) {
         <div class="pack-card-face">${renderCard(card.id)}</div>
       </div>`;
 
-    // Tap to flip
-    flipEl.addEventListener('click', () => {
+    // Tap to flip (use pointerdown for instant cross-device response)
+    flipEl.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
       if (flipEl.classList.contains('flipped')) return;
       flipEl.classList.add('flipped');
       revealedCount++;
@@ -4213,10 +4313,25 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
     </div>
     <div class="answers-grid" id="answers-grid">
       ${isFrozen
-        ? `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent2);display:flex;flex-direction:column;align-items:center;gap:.5rem;"><div style="font-size:1.5rem;">🧊</div><div>You are frozen!</div><div style="font-size:.9rem;color:var(--text-muted);">Thawing in ${frozenSecondsRemaining}s…</div></div>`
+        ? `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent2);display:flex;flex-direction:column;align-items:center;gap:.5rem;"><div style="font-size:1.5rem;">🧊</div><div>You are frozen!</div><div class="frozen-countdown" style="font-size:.9rem;color:var(--text-muted);">Thawing in ${frozenSecondsRemaining}s…</div></div>`
         : q.answers.map((a,i) => `<button class="answer-btn" id="ans-${i}" onclick="submitAnswer(${i},${q.correct},${qIdx})">${a}</button>`).join('')
       }
     </div>`;
+
+  // Update frozen countdown every second
+  if (isFrozen) {
+    const frozenCountdownInterval = setInterval(() => {
+      const el = document.querySelector('.frozen-countdown');
+      if (!el) { clearInterval(frozenCountdownInterval); return; }
+      const secsRemaining = Math.ceil((myFrozenUntil - Date.now()) / 1000);
+      if (secsRemaining <= 0) {
+        clearInterval(frozenCountdownInterval);
+        el.textContent = 'Thawing…';
+        return;
+      }
+      el.textContent = `Thawing in ${secsRemaining}s…`;
+    }, 1000);
+  }
 
   if (timeLimit > 0) {
     // Animate timer bar and countdown label
