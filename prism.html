@@ -3627,14 +3627,36 @@ window.handleCSV = function(e) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const qs = parseCSV(ev.target.result);
-    if (!qs.length) { showToast('No valid questions found in CSV. Check the format.'); return; }
+    const result = parseCSV(ev.target.result);
+    const { questions: qs, errors } = result;
+
+    if (!qs.length) {
+      const msg = errors.length > 0
+        ? `CSV validation failed:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`
+        : 'No valid questions found in CSV. Check the format.';
+      showError(msg);
+      return;
+    }
+
     currentSetQuestions = qs;
     // Auto-fill set name from filename
     const autoName = file.name.replace(/\.csv$/i, '').replace(/[-_]/g, ' ');
     document.getElementById('set-name-input').value = autoName;
     document.getElementById('set-editor-title').textContent = 'New Set from CSV';
-    document.getElementById('import-result').textContent = `✅ ${qs.length} questions ready — click Save Set to finish.`;
+
+    // Show results with any warnings
+    let resultMsg = `✅ ${qs.length} questions loaded`;
+    if (errors.length > 0) {
+      resultMsg += ` (${errors.length} rows skipped - see below for details)`;
+    }
+    resultMsg += ' — click Save Set to finish.';
+    document.getElementById('import-result').textContent = resultMsg;
+
+    if (errors.length > 0) {
+      const errorDisplay = errors.slice(0, 10).map(e => `  • ${e}`).join('\n');
+      showToast(`Import warnings:\n${errorDisplay}${errors.length > 10 ? '\n...' : ''}`);
+    }
+
     renderQuestionsList();
     showModal('set-editor-modal');
     // Reset file input so same file can be re-uploaded
@@ -3645,14 +3667,60 @@ window.handleCSV = function(e) {
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-  const qs = [];
+  const questions = [];
+  const errors = [];
+  const seen = new Set();
+
   for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    if (cols.length < 6) continue;
-    const [qtext, a, b, c, d, correct] = cols;
-    qs.push({ text: qtext, answers: [a, b, c, d], correct: parseInt(correct) || 0 });
+    const line = lines[i].trim();
+    if (!line) continue; // Skip empty lines
+
+    const cols = parseCSVLine(line);
+
+    // Validate column count
+    if (cols.length < 6) {
+      errors.push(`Row ${i+1}: Incomplete (expected 6 columns, got ${cols.length})`);
+      continue;
+    }
+
+    // Extract and trim fields
+    const [qtext, a, b, c, d, correct] = cols.map(f => f.trim());
+
+    // Validate non-empty fields
+    if (!qtext) {
+      errors.push(`Row ${i+1}: Empty question text`);
+      continue;
+    }
+    if (!a || !b || !c || !d) {
+      errors.push(`Row ${i+1}: Empty answer (need all 4 answers)`);
+      continue;
+    }
+
+    // Validate correct index
+    const correctIdx = parseInt(correct);
+    if (isNaN(correctIdx) || correctIdx < 0 || correctIdx > 3) {
+      errors.push(`Row ${i+1}: Invalid correct index "${correct}" (must be 0-3)`);
+      continue;
+    }
+
+    // Check for duplicates
+    if (seen.has(qtext)) {
+      errors.push(`Row ${i+1}: Duplicate question (already imported)`);
+      continue;
+    }
+    seen.add(qtext);
+
+    // Add to questions
+    questions.push({ text: qtext, answers: [a, b, c, d], correct: correctIdx });
+
+    // Enforce max questions limit
+    if (questions.length >= 500) {
+      errors.push(`Max 500 questions reached (stopped at row ${i+1})`);
+      break;
+    }
   }
-  return qs;
+
+  return { questions, errors };
 }
 
 function parseCSVLine(line) {
