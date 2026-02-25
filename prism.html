@@ -1892,7 +1892,10 @@ button:focus,input:focus,textarea:focus,select:focus{
     <div class="host-lobby-grid">
       <div class="host-code-box">
         <div class="host-code-label">Game Code</div>
-        <div class="host-code-val" id="host-code-display">----</div>
+        <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;">
+          <div class="host-code-val" id="host-code-display">----</div>
+          <button class="btn btn-sm btn-accent" onclick="copyGameCode()" title="Copy code to clipboard" style="padding:.5rem .75rem;">📋</button>
+        </div>
         <div class="host-code-sub">Students enter this at prism-11024.web.app</div>
       </div>
       <div class="host-panel">
@@ -3531,7 +3534,8 @@ window.hostGame = async function() {
   myName = sanitizeInput(name, 30);
   questions = set.questions || [];
   isHost = true;
-  gameCode = Math.floor(1000 + Math.random()*9000).toString();
+  // Generate game code: 4-5 random digits for uniqueness in classroom setting
+  gameCode = (10000 + Math.random()*89999).toString().slice(0, 5);
   await dbSet('prism_games/' + gameCode, {
     host: myId,
     hostName: myName,
@@ -3721,6 +3725,23 @@ function renderHostLobbyPlayers(players) {
     </div>
   `).join('');
 }
+
+window.copyGameCode = function() {
+  if (!gameCode) return;
+  navigator.clipboard.writeText(gameCode).then(() => {
+    showToast('✓ Code copied to clipboard!');
+  }).catch(e => {
+    console.error('Copy failed:', e);
+    // Fallback for browsers that don't support clipboard API
+    const input = document.createElement('input');
+    input.value = gameCode;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    showToast('✓ Code copied!');
+  });
+};
 
 window.kickPlayer = async function(pid, pname) {
   if (!confirm('Remove ' + pname + '?')) return;
