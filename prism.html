@@ -3463,37 +3463,53 @@ function finishSoloGame() {
     localStorage.setItem('soloRecords', JSON.stringify(records));
   }
 
+  // Star rating + grade
+  const stars = scorePercent >= 90 ? 3 : scorePercent >= 70 ? 2 : scorePercent >= 50 ? 1 : 0;
+  const grade = scorePercent >= 90 ? 'A' : scorePercent >= 80 ? 'B' : scorePercent >= 70 ? 'C' : scorePercent >= 60 ? 'D' : 'F';
+  const gradeColor = scorePercent >= 80 ? 'var(--green)' : scorePercent >= 60 ? 'var(--gold)' : 'var(--accent3)';
+  const headline = scorePercent === 100 ? '🏆 Perfect Score!' : scorePercent >= 90 ? '⭐ Outstanding!' : scorePercent >= 70 ? '🎉 Great Work!' : scorePercent >= 50 ? '👍 Good Effort!' : '📚 Keep Studying!';
+  const starsHTML = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+
   // Show results
   document.getElementById('solo-game').innerHTML = `
-    <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;">
-      <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:2rem;font-weight:700;margin-bottom:1rem;">Challenge Complete!</div>
+    <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;animation:slideUp .4s ease;">
+      <div style="font-size:2.5rem;letter-spacing:.1em;color:var(--gold);margin-bottom:.25rem;">${starsHTML}</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;margin-bottom:1.25rem;">${headline}</div>
 
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:300px;text-align:center;margin-bottom:1.5rem;">
-        <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.5rem;text-transform:uppercase;">SCORE</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:2.5rem;font-weight:700;color:var(--gold);margin-bottom:1rem;">${scorePercent}%</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:300px;text-align:center;margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem;">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:3rem;font-weight:700;color:var(--gold);">${scorePercent}%</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:2.5rem;font-weight:700;color:${gradeColor};">${grade}</div>
+        </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;padding-top:1rem;border-top:1px solid var(--border);">
           <div>
-            <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">Correct</div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-bottom:.2rem;text-transform:uppercase;">Correct</div>
             <div style="font-weight:700;color:var(--green);">${correctCount}/${soloState.questions.length}</div>
           </div>
           <div>
-            <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">Time</div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-bottom:.2rem;text-transform:uppercase;">Time</div>
             <div style="font-weight:700;">${Math.round(elapsed)}s</div>
+          </div>
+          <div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-bottom:.2rem;text-transform:uppercase;">Avg</div>
+            <div style="font-weight:700;">${Math.round(elapsed/soloState.questions.length)}s/q</div>
           </div>
         </div>
       </div>
 
-      <div style="background:rgba(105,240,174,.1);border:1px solid rgba(105,240,174,.2);border-radius:var(--radius-sm);padding:.75rem;text-align:center;margin-bottom:1.5rem;">
-        <div style="font-size:.75rem;color:var(--text-dim);margin-bottom:.25rem;">SHARDS EARNED</div>
+      <div style="background:rgba(105,240,174,.1);border:1px solid rgba(105,240,174,.2);border-radius:var(--radius-sm);padding:.75rem;text-align:center;margin-bottom:1.5rem;width:100%;max-width:300px;">
+        <div style="font-size:.7rem;color:var(--text-dim);margin-bottom:.25rem;text-transform:uppercase;">Shards Earned${soloState.isDaily?' · Daily Bonus 1.5×':''}</div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:1.8rem;font-weight:700;color:var(--green);">+${shardReward} 💎</div>
       </div>
 
-      <button class="btn btn-accent btn-lg btn-block" onclick="showScreen('solo-screen');initSoloMode();">Play Again</button>
-      <button class="btn btn-ghost btn-block" style="margin-top:.5rem;" onclick="showScreen('landing');renderLanding();">Back to Home</button>
+      <button class="btn btn-accent btn-lg btn-block" style="max-width:300px;" onclick="showScreen('solo-screen');initSoloMode();">Play Again</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:.5rem;max-width:300px;" onclick="showScreen('landing');updateLanding();">Back to Home</button>
     </div>
   `;
+
+  // Confetti for good performance
+  if (scorePercent >= 80) setTimeout(launchConfetti, 300);
 }
 </script>
 <!-- /SECTION:js-solo -->
@@ -3534,9 +3550,15 @@ function renderSets() {
   }
   list.innerHTML = entries.map(([id, set]) => `
     <div class="set-item" onclick="editSet('${id}')">
-      <div class="set-item-name">${set.name || 'Untitled'}</div>
-      <div class="set-item-count">${(set.questions||[]).length} questions</div>
-      <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteSet('${id}')">Delete</button>
+      <div style="flex:1;min-width:0;">
+        <div class="set-item-name">${set.name || 'Untitled'}</div>
+        <div class="set-item-count">${(set.questions||[]).length} questions</div>
+      </div>
+      <div style="display:flex;gap:.35rem;flex-shrink:0;" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" title="Download as CSV" onclick="exportSetCSV('${id}')">📥</button>
+        <button class="btn btn-ghost btn-sm" title="Duplicate set" onclick="duplicateSet('${id}')">📋</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSet('${id}')">✕</button>
+      </div>
     </div>
   `).join('');
 }
@@ -3566,6 +3588,36 @@ window.deleteSet = async function(id) {
   await dbRemove('teacher_sets/' + uid + '/' + id);
   delete teacherSets[id];
   renderSets();
+};
+
+window.exportSetCSV = function(id) {
+  const set = teacherSets[id];
+  if (!set || !set.questions?.length) { showToast('No questions to export.'); return; }
+  const rows = ['question,a,b,c,d,correct'];
+  set.questions.forEach(q => {
+    const esc = s => '"' + String(s || '').replace(/"/g, '""') + '"';
+    rows.push([esc(q.text), esc(q.answers[0]), esc(q.answers[1]), esc(q.answers[2]), esc(q.answers[3]), q.correct].join(','));
+  });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (set.name || 'questions').replace(/[^a-z0-9 _-]/gi, '_') + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📥 Exported "' + set.name + '" as CSV!');
+};
+
+window.duplicateSet = async function(id) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  const set = teacherSets[id];
+  if (!set) return;
+  const copyName = set.name + ' (Copy)';
+  const copyData = { name: copyName, questions: [...(set.questions || [])], updated: Date.now() };
+  const ref = await dbPush('teacher_sets/' + uid, copyData);
+  teacherSets[ref.key] = copyData;
+  renderSets();
+  showToast('📋 Duplicated as "' + copyName + '"!');
 };
 
 window.saveSet = async function() {
