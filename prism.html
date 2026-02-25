@@ -83,8 +83,13 @@ body::after{
 }
 #app{position:relative;z-index:1;}
 .screen{display:none;min-height:100vh;opacity:0;pointer-events:none;}
-.screen.active{display:flex !important;flex-direction:column;opacity:1 !important;pointer-events:auto !important;}
+.screen.active{display:flex !important;flex-direction:column;opacity:1 !important;pointer-events:auto !important;animation:screenFadeIn .3s ease-out;}
+@keyframes screenFadeIn{
+  from{opacity:0;transform:translateY(8px);}
+  to{opacity:1;transform:translateY(0);}
+}
 button{cursor:pointer;font-family:'Exo 2',sans-serif;}
+button:disabled{opacity:.5;cursor:not-allowed;pointer-events:none;}
 input,textarea,select{font-family:'Exo 2',sans-serif;}
 
 /* LOADING */
@@ -687,15 +692,65 @@ button:focus,input:focus,textarea:focus,select:focus{
   text-align:center;padding:2rem 1rem;color:var(--text-muted);
 }
 .empty-state-icon{font-size:3rem;margin-bottom:.75rem;}
+
+/* Game state messages - standardized styling */
+.game-state-message{
+  padding:3rem 2rem;
+  text-align:center;
+  color:var(--text-muted);
+  font-size:.95rem;
+  animation:screenFadeIn .3s ease-out;
+}
+
+.game-state-message.loading{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1rem;
+}
+
+.game-state-spinner{
+  width:32px;
+  height:32px;
+  border:3px solid var(--border);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+
+.game-state-spinner.accent2{border-top-color:var(--accent2);}
+
+/* Inline loading indicator */
+.inline-spinner{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  border:2px solid rgba(255,255,255,.2);
+  border-top-color:currentColor;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin-left:.5rem;
+  vertical-align:middle;
+}
 .empty-state-title{font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:.25rem;}
 .empty-state-desc{font-size:.85rem;line-height:1.5;}
 .empty-state-action{margin-top:1rem;}
 
 /* Mobile optimizations */
+/* Mobile: max-width 600px */
 @media(max-width:600px){
-  .answer-btn{padding:1rem .75rem;font-size:1rem;}
+  .answer-btn{padding:1.2rem .75rem;font-size:1rem;min-height:48px;display:flex;align-items:center;justify-content:center;}
   .action-grid{grid-template-columns:1fr;}
   .game-right{display:none;}
+  .btn{padding:.8rem 1.2rem;min-height:44px;}
+}
+
+/* Tablet: 600px to 999px */
+@media(min-width:601px) and (max-width:999px){
+  .game-right{max-width:250px;}
+  .answer-btn{padding:1rem .8rem;}
+  .action-grid{grid-template-columns:repeat(2,1fr);}
 }
 
 /* SECTION MARKERS ARE AT HTML LEVEL (below) */
@@ -2292,13 +2347,11 @@ const CARDS = [
   { id:'m1', name:'Zeus the Electrician', emoji:'⚡', pack:'mythic', rarity:'legendary', buff:'shards', buffVal:25, buffDesc:'+25% shards — the power is yours', art:'/images/zeus-electrician.png' },
   { id:'m2', name:'Poseidon Car Wash',    emoji:'🔱', pack:'mythic', rarity:'epic',      buff:'shield', buffVal:1,  buffDesc:'Start each game with 1 free shield', art:'/images/poseidon-carwash.png' },
   { id:'m3', name:'Athena DMV',           emoji:'🏛️', pack:'mythic', rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer', art:'/images/athena-dmv.png' },
-  { id:'m9', name:'Anubis the Waiter',    emoji:'🐺', pack:'mythic', rarity:'rare',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards', art:'/images/anubis-diner.png' },
-  { id:'m3', name:'Phoenix',       emoji:'🦅', pack:'mythic', rarity:'rare',      buff:'streak', buffVal:1,  buffDesc:'Streak bonuses trigger 1 step earlier' },
-  { id:'m4', name:'Goblin Scout',  emoji:'👺', pack:'mythic', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
-  { id:'m5', name:'Stone Troll',   emoji:'🗿', pack:'mythic', rarity:'common',    buff:'armor',  buffVal:1,  buffDesc:'Freeze sabotages last 5s shorter on you' },
-  { id:'m6', name:'Moon Witch',    emoji:'🌙', pack:'mythic', rarity:'rare',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards' },
-  { id:'m7', name:'Cerberus',      emoji:'🐺', pack:'mythic', rarity:'epic',      buff:'charges',buffVal:1,  buffDesc:'+1 extra charge per correct answer' },
-  { id:'m8', name:'The Fates',     emoji:'🌀', pack:'mythic', rarity:'legendary', buff:'shards', buffVal:20, buffDesc:'+20% shards — fate favors you' },
+  { id:'m4', name:'Phoenix',              emoji:'🦅', pack:'mythic', rarity:'rare',      buff:'streak', buffVal:1,  buffDesc:'Streak bonuses trigger 1 step earlier' },
+  { id:'m5', name:'Anubis the Waiter',    emoji:'🐺', pack:'mythic', rarity:'rare',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards', art:'/images/anubis-diner.png' },
+  { id:'m6', name:'Goblin Scout',  emoji:'👺', pack:'mythic', rarity:'common',    buff:'flat',   buffVal:5,  buffDesc:'+5 shards per correct answer' },
+  { id:'m7', name:'Stone Troll',   emoji:'🗿', pack:'mythic', rarity:'common',    buff:'armor',  buffVal:1,  buffDesc:'Freeze sabotages last 5s shorter on you' },
+  { id:'m8', name:'Moon Witch',    emoji:'🌙', pack:'mythic', rarity:'rare',      buff:'steal',  buffVal:10, buffDesc:'Steal +10 bonus when stealing shards' },
   // Arcane Pack
   { id:'a1', name:'Void Sorcerer', emoji:'🔮', pack:'arcane', rarity:'legendary', buff:'shards', buffVal:20, buffDesc:'+20% shards on correct answers' },
   { id:'a2', name:'Hex Witch',     emoji:'🧙', pack:'arcane', rarity:'epic',      buff:'steal',  buffVal:15, buffDesc:'Steal +15 bonus when stealing shards' },
@@ -3769,6 +3822,7 @@ function updateAnsweredPips(answered) {
 
 window.startGame = function() {
   if (!questions.length) { showToast('Load a question set first!'); return; }
+  if (Object.keys(playersOnline || {}).length === 0) { showToast('Wait for at least one player to join!'); return; }
   document.getElementById('host-lobby').style.display = 'none';
   document.getElementById('host-live').style.display = 'block';
   document.getElementById('host-status-badge').textContent = 'LIVE';
@@ -4016,24 +4070,25 @@ function handleGameUpdate(game) {
       renderQuestion(q, game.currentQ, game.questions.length, game.timeLimit || 30);
     } else {
       document.getElementById('game-main').innerHTML = `
-        <div style="padding:2rem;text-align:center;color:var(--text-dim);">
-          <div style="font-size:2rem;margin-bottom:.5rem;">📋</div>
-          Loading question…
+        <div class="game-state-message loading">
+          <div style="font-size:2rem;">📋</div>
+          <div>Loading question…</div>
+          <div class="game-state-spinner"></div>
         </div>`;
     }
     answered = false;
   } else if (state === 'waiting') {
     document.getElementById('game-main').innerHTML = `
-      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
-        <div style="font-size:2rem;margin-bottom:.5rem;">⏳</div>
-        Waiting for the next question…
+      <div class="game-state-message loading">
+        <div style="font-size:2rem;">⏳</div>
+        <div>Waiting for the next question…</div>
       </div>`;
   } else if (!state || state === 'waiting') {
     // Game hasn't started yet or is preparing
     document.getElementById('game-main').innerHTML = `
-      <div style="padding:2rem;text-align:center;color:var(--text-dim);">
-        <div style="font-size:2rem;margin-bottom:.5rem;">🎮</div>
-        Waiting for the host to start the game…
+      <div class="game-state-message loading">
+        <div style="font-size:2rem;">🎮</div>
+        <div>Waiting for the host to start the game…</div>
       </div>`;
   } else {
     // Unknown state - show loading
@@ -4054,6 +4109,7 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
       return;
     }
     const isFrozen = Date.now() < myFrozenUntil;
+    const frozenSecondsRemaining = isFrozen ? Math.ceil((myFrozenUntil - Date.now()) / 1000) : 0;
     const timeLimitLabel = timeLimit === 0 ? '∞' : timeLimit + 's';
     main.innerHTML = `
     <div class="question-area">
@@ -4068,7 +4124,7 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
     </div>
     <div class="answers-grid" id="answers-grid">
       ${isFrozen
-        ? '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent2);">🧊 You are frozen! Thawing soon…</div>'
+        ? `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent2);display:flex;flex-direction:column;align-items:center;gap:.5rem;"><div style="font-size:1.5rem;">🧊</div><div>You are frozen!</div><div style="font-size:.9rem;color:var(--text-muted);">Thawing in ${frozenSecondsRemaining}s…</div></div>`
         : q.answers.map((a,i) => `<button class="answer-btn" id="ans-${i}" onclick="submitAnswer(${i},${q.correct},${qIdx})">${a}</button>`).join('')
       }
     </div>`;
