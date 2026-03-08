@@ -2392,6 +2392,7 @@ function sanitizeInput(str, maxLen = 50) {
 // Error handling wrapper
 function showError(message) {
   const toast = document.getElementById('toast');
+  if (!toast) { console.error(message); return; }
   toast.textContent = '⚠️ ' + message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3000);
@@ -2603,8 +2604,19 @@ if (!myId) {
 let myName = localStorage.getItem('prism_name') || 'Player';
 let myRole = localStorage.getItem('prism_role') || 'student';
 let myShards = parseInt(localStorage.getItem('prism_shards') || '300');
-let myCollection = JSON.parse(localStorage.getItem('prism_collection') || '[]');
-let myLoadout = JSON.parse(localStorage.getItem('prism_loadout') || '[]'); // array of 3 card ids (or null)
+// Safe JSON parsing with validation
+let myCollection = (() => {
+  try {
+    const data = JSON.parse(localStorage.getItem('prism_collection') || '[]');
+    return Array.isArray(data) ? data : [];
+  } catch(e) { console.error('Corrupted collection data:', e); return []; }
+})();
+let myLoadout = (() => {
+  try {
+    const data = JSON.parse(localStorage.getItem('prism_loadout') || '[]');
+    return Array.isArray(data) ? data : [];
+  } catch(e) { console.error('Corrupted loadout data:', e); return []; }
+})(); // array of 3 card ids (or null)
 let isGuest = !localStorage.getItem('prism_uid');
 
 function saveLocal() {
@@ -2641,6 +2653,7 @@ let questionRenderTime = 0;
 let currentQuestionTimeLimit = 30;
 let activeTimerInterval = null;
 let activeFrozenInterval = null;
+let pendingAnimations = [];  // Track timeouts for cleanup on game exit
 
 // War mode state
 let myTeam = null; // 'apollo' or 'athena'
@@ -2679,15 +2692,16 @@ function showScreen(id) {
 let toastTimer;
 function showToast(msg, dur=2500) {
   const t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function showModal(id) { document.getElementById(id).classList.add('open'); }
+function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
+function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
+function showModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
 
 // Settings modal functions
 window.toggleSound = function() {
@@ -2805,7 +2819,7 @@ function showResultPopup(correct, shardsEarned, chargesEarned) {
 
       // Create floating shards
       for (let i = 0; i < Math.min(shardsEarned, 5); i++) {
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           const shard = document.createElement('div');
           shard.className = 'floating-shard';
           shard.textContent = '💎';
@@ -2819,8 +2833,10 @@ function showResultPopup(correct, shardsEarned, chargesEarned) {
           shard.style.setProperty('--shard-ty', (endY - startY + offsetY) + 'px');
 
           document.body.appendChild(shard);
-          setTimeout(() => shard.remove(), 1000);
+          const removeId = setTimeout(() => shard.remove(), 1000);
+          pendingAnimations = pendingAnimations.filter(id => id !== removeId);
         }, i * 60);
+        pendingAnimations.push(timeoutId);
       }
     }
   }
@@ -2946,6 +2962,13 @@ function renderCard(cardId, compact=false) {
 }
 
 // Attach holographic cursor tracking to all card rarities
+function removeHoloEffects() {
+  document.querySelectorAll('.card').forEach(cardEl => {
+    const clone = cardEl.cloneNode(true);
+    cardEl.parentNode.replaceChild(clone, cardEl);
+  });
+}
+
 function attachHoloEffects() {
   document.querySelectorAll('.card').forEach(cardEl => {
     cardEl.addEventListener('mousemove', (e) => {
@@ -2998,7 +3021,7 @@ function playCorrectSound() {
     gain.gain.setValueAtTime(.2, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .3);
     osc.start(); osc.stop(ctx.currentTime + .3);
-  } catch(e) {}
+  } catch(e) { console.error('playCorrectSound failed:', e); }
 }
 
 function playLegendarySound() {
@@ -3015,7 +3038,7 @@ function playLegendarySound() {
       gain.gain.exponentialRampToValueAtTime(.001, t + .5);
       osc.start(t); osc.stop(t + .6);
     });
-  } catch(e) {}
+  } catch(e) { console.error('playLegendarySound failed:', e); }
 }
 
 function playCardFlipSound() {
@@ -3030,7 +3053,7 @@ function playCardFlipSound() {
     gain.gain.setValueAtTime(.15, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .15);
     osc.start(); osc.stop(ctx.currentTime + .15);
-  } catch(e) {}
+  } catch(e) { console.error('playCardFlipSound failed:', e); }
 }
 
 function playEpicRevealSound() {
@@ -3047,7 +3070,7 @@ function playEpicRevealSound() {
       gain.gain.exponentialRampToValueAtTime(.001, t + .4);
       osc.start(t); osc.stop(t + .45);
     });
-  } catch(e) {}
+  } catch(e) { console.error('playEpicRevealSound failed:', e); }
 }
 
 function launchConfetti() {
@@ -3184,7 +3207,7 @@ window.skipAuth = function() {
 };
 
 window.doSignOut = async function() {
-  try { await auth.signOut(); } catch(e) {}
+  try { await auth.signOut(); } catch(e) { console.error('Sign out failed:', e); }
   localStorage.removeItem('prism_uid');
   isGuest = true;
   showScreen('homepage-screen');
@@ -3219,7 +3242,7 @@ auth.onAuthStateChanged(async user => {
       // Load collection from db
       const collSnap = await dbGet('users/' + user.uid + '/collection');
       if (collSnap.val()) myCollection = collSnap.val();
-    } catch(e) {}
+    } catch(e) { console.error('Failed to load user data:', e); }
     saveLocal();
     showScreen('landing');
     updateLanding();
@@ -3261,7 +3284,8 @@ function renderCollection() {
     </div>`;
   } else {
     grid.innerHTML = owned.map(id => renderCard(id)).join('');
-    // Attach cursor tracking to legendary cards
+    // Clean up old listeners before attaching new ones (prevent memory leak)
+    removeHoloEffects();
     setTimeout(() => attachHoloEffects(), 10);
   }
   document.getElementById('coll-total').textContent = myCollection.length;
@@ -3840,8 +3864,8 @@ window.hostGame = async function() {
   myName = sanitizeInput(name, 30);
   questions = set.questions || [];
   isHost = true;
-  // Generate game code: 4-5 random digits for uniqueness in classroom setting
-  gameCode = (10000 + Math.random()*89999).toString().slice(0, 5);
+  // Generate game code: 6-char alphanumeric (36^6 = 2.2 billion codes, virtually no collision risk)
+  gameCode = Math.random().toString(36).substr(2, 6).toUpperCase();
   await dbSet('prism_games/' + gameCode, {
     host: myId,
     hostName: myName,
@@ -4717,7 +4741,7 @@ function showStreakMilestone(streak) {
       gain.gain.exponentialRampToValueAtTime(.001, t + .45);
       osc.start(t); osc.stop(t + .5);
     });
-  } catch(e) {}
+  } catch(e) { console.error('Streak milestone sound failed:', e); }
 
   setTimeout(() => { if (popup.parentNode) popup.remove(); }, 2500);
 }
@@ -4844,54 +4868,57 @@ function renderSabotagePanel() {
 }
 
 window.useSabotage = async function(sabId) {
-  const sab = SABOTAGES.find(s => s.id === sabId);
-  if (!sab) return;
-  if (myCharges < sab.cost) { showToast('Not enough charges!'); return; }
+  try {
+    const sab = SABOTAGES.find(s => s.id === sabId);
+    if (!sab) return;
+    if (myCharges < sab.cost) { showToast('Not enough charges!'); return; }
 
-  if (!sab.needsTarget) {
-    // Apply immediately
-    applySabotageOnSelf(sab);
-    return;
-  }
+    if (!sab.needsTarget) {
+      // Apply immediately
+      applySabotageOnSelf(sab);
+      return;
+    }
 
-  // Show target picker
-  const snap = await dbGet('prism_games/' + gameCode + '/players');
-  const players = snap.val() || {};
-  const others = Object.entries(players).filter(([pid, p]) => pid !== myId && !p.isHost);
-  if (!others.length) { showToast('No targets available!'); return; }
+    // Show target picker
+    const snap = await dbGet('prism_games/' + gameCode + '/players');
+    const players = snap.val() || {};
+    const others = Object.entries(players).filter(([pid, p]) => pid !== myId && !p.isHost);
+    if (!others.length) { showToast('No targets available!'); return; }
 
-  pendingSabotage = sab;
-  document.getElementById('target-title').textContent = sab.icon + ' ' + sab.name + ' — Pick a target';
-  document.getElementById('target-grid').innerHTML = others.map(([pid, p]) => `
-    <button class="target-btn" onclick="confirmTarget('${pid}','${p.name.replace(/'/g,"\\'")}')">
-      ${getEquippedEmoji(p.loadout) || '😀'} ${p.name}
-      ${p.shielded ? ' 🛡️' : ''}
-      <span style="color:var(--gold);font-size:.75rem;">💎${p.shards||0}</span>
-    </button>
-  `).join('');
-  document.getElementById('target-overlay').classList.add('open');
+    pendingSabotage = sab;
+    document.getElementById('target-title').textContent = sab.icon + ' ' + sab.name + ' — Pick a target';
+    document.getElementById('target-grid').innerHTML = others.map(([pid, p]) => `
+      <button class="target-btn" onclick="confirmTarget('${pid}','${p.name.replace(/'/g,"\\'")}')">
+        ${getEquippedEmoji(p.loadout) || '😀'} ${p.name}
+        ${p.shielded ? ' 🛡️' : ''}
+        <span style="color:var(--gold);font-size:.75rem;">💎${p.shards||0}</span>
+      </button>
+    `).join('');
+    document.getElementById('target-overlay').classList.add('open');
+  } catch(e) { console.error('useSabotage failed:', e); }
 };
 
 window.confirmTarget = async function(targetId, targetName) {
-  closeTargetPicker();
-  if (!pendingSabotage) return;
-  const sab = pendingSabotage;
-  pendingSabotage = null;
+  try {
+    closeTargetPicker();
+    if (!pendingSabotage) return;
+    const sab = pendingSabotage;
+    pendingSabotage = null;
 
-  // Check if target is shielded
-  const tSnap = await dbGet('prism_games/' + gameCode + '/players/' + targetId);
-  const target = tSnap.val() || {};
-  if (target.shielded) {
-    showToast(targetName + ' is shielded! 🛡️ Sabotage blocked!');
-    // Remove their shield
-    dbSet('prism_games/' + gameCode + '/players/' + targetId + '/shielded', false);
-    return;
-  }
+    // Check if target is shielded
+    const tSnap = await dbGet('prism_games/' + gameCode + '/players/' + targetId);
+    const target = tSnap.val() || {};
+    if (target.shielded) {
+      showToast(targetName + ' is shielded! 🛡️ Sabotage blocked!');
+      // Remove their shield
+      await dbSet('prism_games/' + gameCode + '/players/' + targetId + '/shielded', false);
+      return;
+    }
 
-  // Deduct charges
-  myCharges -= sab.cost;
-  dbSet('prism_games/' + gameCode + '/players/' + myId + '/charges', myCharges);
-  document.getElementById('my-charges-display').textContent = myCharges;
+    // Deduct charges
+    myCharges -= sab.cost;
+    await dbSet('prism_games/' + gameCode + '/players/' + myId + '/charges', myCharges);
+    document.getElementById('my-charges-display').textContent = myCharges;
   renderSabotagePanel();
 
   // Apply sabotage
@@ -4931,6 +4958,7 @@ window.confirmTarget = async function(targetId, targetName) {
     showToast('🔄 Swapped scores with ' + targetName + '!');
     updateGameHUD();
   }
+  } catch(e) { console.error('confirmTarget failed:', e); }
 };
 
 async function applySabotageOnSelf(sab) {
@@ -5055,11 +5083,16 @@ function renderGambleUI() {} // called on question render but gamble UI appears 
 
 // ===== LEAVE GAME =====
 window.leaveGame = function() {
-  gameListeners.forEach(r => dbOff(r));
+  // Safely remove all listeners with error handling
+  gameListeners.forEach(r => {
+    try { dbOff(r); } catch(e) { console.error('Failed to detach listener:', e); }
+  });
   gameListeners = [];
-  // Clear any running intervals
+  // Clear any running intervals and animations
   if (activeTimerInterval) { clearInterval(activeTimerInterval); activeTimerInterval = null; }
   if (activeFrozenInterval) { clearInterval(activeFrozenInterval); activeFrozenInterval = null; }
+  pendingAnimations.forEach(id => clearTimeout(id));
+  pendingAnimations = [];
   if (gameCode && !isHost) {
     dbRemove('prism_games/' + gameCode + '/players/' + myId).catch(()=>{});
   }
