@@ -1062,7 +1062,15 @@ button:focus,input:focus,textarea:focus,select:focus{
 .game-shards{display:flex;align-items:center;gap:.4rem;font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;color:var(--gold);}
 .game-charges{display:flex;align-items:center;gap:.4rem;font-size:.85rem;font-weight:700;color:var(--accent2);}
 .game-streak{font-size:.85rem;color:var(--accent3);font-weight:700;}
-.game-mode-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:.2rem .5rem;border-radius:4px;}
+.game-mode-badge{
+  font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  padding:.25rem .6rem;border-radius:6px;
+  border:1.5px solid;transition:all .2s;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+  background:rgba(124,77,255,.15) !important;
+  border-color:rgba(124,77,255,.4) !important;
+  color:var(--accent) !important;
+}
 .game-body{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 
 /* QUESTION AREA */
@@ -1079,12 +1087,22 @@ button:focus,input:focus,textarea:focus,select:focus{
 .answer-btn{
   padding:.85rem .75rem;border:2px solid var(--border2);border-radius:var(--radius-sm);
   background:var(--surface2);color:var(--text);font-size:.9rem;font-weight:600;
-  transition:all .15s;text-align:left;line-height:1.3;
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);text-align:left;line-height:1.3;
+  cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.1);
 }
-.answer-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,77,255,.15);}
-.answer-btn.correct{border-color:var(--green)!important;background:rgba(105,240,174,.15)!important;color:var(--green);}
-.answer-btn.wrong{border-color:var(--accent3)!important;background:rgba(255,64,129,.12)!important;color:var(--accent3);}
-.answer-btn:disabled{opacity:.7;cursor:default;}
+.answer-btn:hover:not(:disabled){
+  border-color:var(--accent);background:rgba(124,77,255,.15);
+  transform:translateY(-2px);box-shadow:0 4px 12px rgba(124,77,255,.2);
+}
+.answer-btn.correct{
+  border-color:var(--green)!important;background:rgba(105,240,174,.15)!important;
+  color:var(--green);box-shadow:0 0 16px rgba(105,240,174,.3) !important;
+}
+.answer-btn.wrong{
+  border-color:var(--accent3)!important;background:rgba(255,64,129,.12)!important;
+  color:var(--accent3);box-shadow:0 0 16px rgba(255,64,129,.2) !important;
+}
+.answer-btn:disabled{opacity:.6;cursor:default;}
 
 /* GAME SPLIT: question left, leaderboard right on wide screens */
 .game-content{display:flex;flex:1;overflow:hidden;}
@@ -1274,11 +1292,15 @@ button:focus,input:focus,textarea:focus,select:focus{
   display:flex;gap:.5rem;padding:.5rem 1rem;flex-shrink:0;
 }
 .war-team-bar{
-  flex:1;border-radius:var(--radius-sm);padding:.5rem .75rem;
-  display:flex;flex-direction:column;gap:.1rem;border:2px solid transparent;
-  transition:border-color .3s;
+  flex:1;border-radius:var(--radius-sm);padding:.6rem .85rem;
+  display:flex;flex-direction:column;gap:.15rem;
+  border:2px solid transparent;background:var(--surface2);
+  transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
-.war-team-bar.my-team{border-color:var(--accent2);}
+.war-team-bar.my-team{
+  border-color:var(--accent);background:rgba(124,77,255,.08);
+  box-shadow:0 0 15px rgba(124,77,255,.2);
+}
 .war-team-name{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
 .war-team-score{font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;}
 .war-team-score.apollo{color:#ff9800;}
@@ -2856,12 +2878,16 @@ function getCardArtGradient(cardId) {
   // Map hash to vibrant hue values (0-360) with high saturation
   const h1 = Math.abs(hash % 360);
   const h2 = (h1 + Math.abs(Math.floor(hash / 360) % 120)) % 360;
-  const h3 = (h1 + Math.abs(Math.floor(hash / 720) % 240)) % 360;
+  const h3 = (h1 + Math.abs(Math.floor(hash / 360) % 240)) % 360;
 
   // Enhanced saturation and luminosity for more vibrant appearance
   return {
-    colors: [`hsl(${h1}, 85%, 55%)`, `hsl(${h2}, 80%, 48%)`, `hsl(${h3}, 90%, 60%)`],
-    gradient: `linear-gradient(135deg, hsl(${h1}, 85%, 55%) 0%, hsl(${h2}, 80%, 48%) 50%, hsl(${h3}, 90%, 60%) 100%)`
+    colors: [
+      `hsl(${h1},85%,55%)`,
+      `hsl(${h2},80%,60%)`,
+      `hsl(${h3},75%,50%)`
+    ],
+    gradient: `linear-gradient(135deg, hsl(${h1},85%,55%) 0%, hsl(${h2},80%,60%) 50%, hsl(${h3},75%,50%) 100%)`
   };
 }
 
@@ -2908,13 +2934,19 @@ function getCardArtSVG(cardId) {
     }
   }
 
-  const svg = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:.2;pointer-events:none;">
+  const svg = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:.25;pointer-events:none;">
     <defs>
-      <filter id="blur${cardId}"><feGaussianBlur in="SourceGraphic" stdDeviation="0.3" /></filter>
+      <filter id="blur${cardId}"><feGaussianBlur in="SourceGraphic" stdDeviation="0.4" /></filter>
+      <linearGradient id="shimmer${cardId}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:white;stop-opacity:0" />
+        <stop offset="50%" style="stop-color:white;stop-opacity:0.15" />
+        <stop offset="100%" style="stop-color:white;stop-opacity:0" />
+      </linearGradient>
     </defs>
     <g filter="url(#blur${cardId})">
       ${shapes.join('')}
     </g>
+    <rect width="100" height="100" fill="url(#shimmer${cardId})" />
   </svg>`;
 
   return svg;
