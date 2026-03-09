@@ -744,14 +744,30 @@ input,textarea,select{font-family:'Exo 2',sans-serif;}
 /* LEADERBOARD */
 .lb-row{
   display:flex;align-items:center;gap:.6rem;
-  padding:.55rem .75rem;border-radius:var(--radius-sm);background:var(--surface2);margin-bottom:.3rem;
-  border:1px solid transparent;transition:all .2s;
+  padding:.6rem .8rem;border-radius:var(--radius-sm);background:var(--surface2);margin-bottom:.4rem;
+  border:1px solid var(--border);transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.08);
 }
-.lb-row.me{border-color:var(--accent);background:rgba(124,77,255,.12);}
-.lb-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;background:var(--surface3);flex-shrink:0;}
-.lb-rank.top1{background:var(--gold);color:#000;}
-.lb-rank.top2{background:#90a4ae;color:#000;}
-.lb-rank.top3{background:#a1704a;color:#fff;}
+.lb-row.me{
+  border-color:var(--accent);background:rgba(124,77,255,.15);
+  box-shadow:0 0 12px rgba(124,77,255,.25);transform:scaleX(1.01);
+}
+.lb-rank{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:700;background:var(--surface3);flex-shrink:0;
+  box-shadow:0 2px 4px rgba(0,0,0,.2);
+}
+.lb-rank.top1{
+  background:linear-gradient(135deg, var(--gold), #ffb300);color:#000;
+  box-shadow:0 0 12px rgba(255,215,0,.4);
+}
+.lb-rank.top2{
+  background:linear-gradient(135deg, #90a4ae, #78909c);color:#fff;
+  box-shadow:0 0 10px rgba(144,164,174,.3);
+}
+.lb-rank.top3{
+  background:linear-gradient(135deg, #a1704a, #8d5e3f);color:#fff;
+  box-shadow:0 0 10px rgba(161,112,74,.3);
+}
 .lb-name{flex:1;font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .lb-shards{font-size:.85rem;font-weight:700;color:var(--gold);}
 .lb-streak{font-size:.8rem;color:var(--accent3);}
@@ -1599,6 +1615,10 @@ button:focus,input:focus,textarea:focus,select:focus{
   display: inline-flex;
   align-items: center;
   gap: .2rem;
+  padding: .2rem .4rem;
+  border-radius: 4px;
+  background: rgba(255, 64, 129, .08);
+  transition: all .2s;
 }
 
 .lb-streak-fire {
@@ -1688,14 +1708,14 @@ button:focus,input:focus,textarea:focus,select:focus{
   top: 28%;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--surface);
+  background: linear-gradient(135deg, var(--surface), rgba(124,77,255,.05));
   border: 2px solid var(--accent3);
   border-radius: var(--radius);
-  padding: 1rem 2rem;
+  padding: 1.2rem 2.2rem;
   text-align: center;
   z-index: 6500;
   pointer-events: none;
-  box-shadow: 0 0 32px rgba(255,171,64,.35), 0 4px 24px rgba(0,0,0,.5);
+  box-shadow: 0 0 40px rgba(255,171,64,.4), 0 8px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1);
   animation: streakPop .4s cubic-bezier(.34,1.56,.64,1) forwards, streakFade .35s ease 2.15s forwards;
 }
 @keyframes streakPop { from{transform:translateX(-50%) scale(.5);opacity:0;} to{transform:translateX(-50%) scale(1);opacity:1;} }
