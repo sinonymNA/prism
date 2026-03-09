@@ -1137,8 +1137,38 @@ button:focus,input:focus,textarea:focus,select:focus{
   padding:1.25rem;
 }
 .question-meta{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;}
-.timer-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-bottom:.75rem;}
-.timer-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .5s linear;}
+.timer-bar{
+  height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;
+  margin-bottom:.75rem;box-shadow:0 0 8px rgba(0,0,0,.2);
+}
+.timer-fill{
+  height:100%;background:linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius:3px;transition:width .5s linear;
+  box-shadow:0 0 10px rgba(124,77,255,.4);position:relative;
+}
+.timer-fill::after{
+  content:'';position:absolute;top:0;right:0;height:100%;width:8px;
+  background:linear-gradient(90deg, rgba(255,255,255,.4), transparent);
+  border-radius:3px;
+}
+
+/* Frozen state indicator */
+.frozen-countdown{
+  font-size:.9rem;color:var(--text-muted);
+  padding:.5rem 1rem;border-radius:6px;
+  background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);
+  font-weight:600;animation:frozenPulse 1s ease-in-out infinite;
+}
+@keyframes frozenPulse {
+  0%, 100% { opacity:.7; }
+  50% { opacity:1; }
+}
+
+@keyframes iceSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.05); }
+  100% { transform: rotate(360deg) scale(1); }
+}
 .question-text{font-size:1.1rem;font-weight:600;line-height:1.5;}
 .answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:0 1rem 1rem;}
 .answer-btn{
@@ -4652,7 +4682,7 @@ function renderQuestion(q, qIdx, total, timeLimit=30) {
     </div>
     <div class="answers-grid" id="answers-grid">
       ${isFrozen
-        ? `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--accent2);display:flex;flex-direction:column;align-items:center;gap:.5rem;"><div style="font-size:1.5rem;">🧊</div><div>You are frozen!</div><div class="frozen-countdown" style="font-size:.9rem;color:var(--text-muted);">Thawing in ${frozenSecondsRemaining}s…</div></div>`
+        ? `<div style="grid-column:1/-1;text-align:center;padding:2.5rem 1.5rem;color:var(--accent2);display:flex;flex-direction:column;align-items:center;gap:1rem;background:rgba(0,229,255,.03);border-radius:var(--radius-sm);border:1px solid rgba(0,229,255,.15);"><div style="font-size:2rem;animation:iceSpin 3s linear infinite;">🧊</div><div style="font-size:1.1rem;font-weight:700;">Frozen!</div><div class="frozen-countdown">Thawing in ${frozenSecondsRemaining}s…</div></div>`
         : q.answers.map((a,i) => `<button class="answer-btn" id="ans-${i}" onclick="submitAnswer(${i},${q.correct},${qIdx})">${a}</button>`).join('')
       }
     </div>`;
