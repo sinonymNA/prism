@@ -2820,6 +2820,22 @@ function showToast(msg, dur=2500) {
   toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
+let loadingSpinner = null;
+function showLoading(show=true) {
+  if (!loadingSpinner) {
+    loadingSpinner = document.createElement('div');
+    loadingSpinner.id = 'loading-spinner';
+    loadingSpinner.style.cssText = `
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      width:50px;height:50px;border:4px solid rgba(124,77,255,.2);
+      border-top-color:var(--accent);border-radius:50%;
+      animation:spin .8s linear infinite;z-index:9999;
+    `;
+    document.body.appendChild(loadingSpinner);
+  }
+  loadingSpinner.style.display = show ? 'block' : 'none';
+}
+
 function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
 function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
 function showModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
@@ -2889,19 +2905,25 @@ document.addEventListener('keydown', (e) => {
   // Ignore keyboard shortcuts when user is typing in an input/textarea
   if (e.target.matches('input,textarea,select')) return;
 
-  // 1-4 to select answers in game or solo mode
+  // 1-4 to select answers in game or solo mode (arrow keys also supported)
+  let answerIndex = -1;
   const key = parseInt(e.key);
+  if (key >= 1 && key <= 4) answerIndex = key - 1;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') answerIndex = 0;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') answerIndex = 1;
+
   const onGame = document.getElementById('game-screen')?.classList.contains('active');
   const onSolo = document.getElementById('solo-screen')?.classList.contains('active');
-  if ((onGame || onSolo) && key >= 1 && key <= 4) {
+  if ((onGame || onSolo) && answerIndex >= 0) {
     const buttons = document.querySelectorAll('.answer-btn');
-    if (buttons[key - 1] && !buttons[key - 1].disabled) {
-      buttons[key - 1].click();
+    if (buttons[answerIndex] && !buttons[answerIndex].disabled) {
+      buttons[answerIndex].click();
+      e.preventDefault();
     }
     return;
   }
 
-  // Escape to close open modals
+  // Escape to close open modals or leave game
   if (e.key === 'Escape') {
     const openModal = document.querySelector('.modal-overlay.open');
     if (openModal) { closeModal(openModal.id); return; }
@@ -3087,7 +3109,7 @@ function renderCard(cardId, compact=false) {
         <div class="card-buff-desc">${card.buffDesc}</div>
       </div>
       <div class="card-rarity-badge ${card.rarity}">${card.rarity[0].toUpperCase()}</div>
-      ${count > 1 ? `<div style="position:absolute;bottom:6px;left:6px;font-size:.55rem;background:var(--surface3);padding:2px 6px;border-radius:3px;font-weight:700;border:1px solid var(--border);">×${count}</div>` : ''}
+      ${count > 1 ? `<div style="position:absolute;bottom:6px;left:6px;font-size:.6rem;background:linear-gradient(135deg, var(--accent), var(--accent2));color:white;padding:3px 7px;border-radius:4px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.2);">×${count}</div>` : ''}
       ${inLoadout ? `<div style="position:absolute;top:6px;left:6px;font-size:.8rem;font-weight:700;">✓</div>` : ''}
     </div>`;
 }
@@ -4460,9 +4482,9 @@ function getEquippedEmoji(loadout) {
 <script>
 window.joinGame = async function() {
   const name = document.getElementById('join-name').value.trim();
-  const code = document.getElementById('join-code').value.trim().replace(/\D/g,'');
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
   if (!name) { showToast('Enter your name!'); return; }
-  if (code.length !== 4) { showToast('Enter the 4-digit game code!'); return; }
+  if (code.length !== 6 || !/^[A-Z0-9]{6}$/.test(code)) { showToast('Enter the 6-character game code!'); return; }
 
   // Clean up any previous game listeners
   gameListeners.forEach(r => dbOff(r));
@@ -4471,11 +4493,17 @@ window.joinGame = async function() {
   myName = sanitizeInput(name, 30);
   saveLocal();
 
+  showLoading(true);
   let game;
   try {
     const snap = await dbGet('prism_games/' + code);
     game = snap.val();
-  } catch(e) { showToast('Network error — check your connection.'); return; }
+  } catch(e) {
+    showLoading(false);
+    showToast('Network error — check your connection.');
+    return;
+  }
+  showLoading(false);
 
   if (!game) { showToast('Game not found. Check the code!'); return; }
   if (game.status === 'ended') { showToast('That game has already ended.'); return; }
