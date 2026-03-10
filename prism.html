@@ -1016,10 +1016,15 @@ button:focus,input:focus,textarea:focus,select:focus{
 .landing-content{padding:1rem 1.5rem 2rem;width:100%;max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:.75rem;}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
 .action-card{
-  background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);
-  padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:.4rem;
+  background:linear-gradient(135deg, var(--surface), rgba(124,77,255,.03));
+  border:1px solid var(--border2);border-radius:var(--radius);
+  padding:1.25rem;cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  display:flex;flex-direction:column;gap:.4rem;box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
-.action-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.action-card:hover{
+  border-color:var(--accent);transform:translateY(-4px);
+  box-shadow:0 8px 24px rgba(124,77,255,.15);
+}
 .action-card-icon{font-size:1.8rem;}
 .action-card-title{font-weight:700;font-size:1rem;}
 .action-card-desc{font-size:.78rem;color:var(--text-dim);line-height:1.4;}
