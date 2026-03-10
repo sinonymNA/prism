@@ -3703,13 +3703,11 @@ function openPackAnimation(pulled) {
 
     // Stagger appearance of face-down cards
     flipEl.style.opacity = '0';
-    flipEl.style.transform = 'scale(0.8)';
     container.appendChild(flipEl);
     console.log('Appended flipEl for card', i, 'Container now has', container.children.length, 'children');
     setTimeout(() => {
-      flipEl.style.transition = 'opacity .3s ease, transform .3s cubic-bezier(.34,1.56,.64,1)';
+      flipEl.style.transition = 'opacity .3s ease';
       flipEl.style.opacity = '1';
-      flipEl.style.transform = 'scale(1)';
     }, i * 120 + 50);
   });
 }
