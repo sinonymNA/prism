@@ -3137,12 +3137,16 @@ function getCardArtSVG(cardId) {
 
 // Render a single card element
 function renderCard(cardId, compact=false) {
-  const card = CARDS.find(c => c.id === cardId);
-  if (!card) return '';
-  const count = myCollection.filter(id => id === cardId).length;
-  const inLoadout = myLoadout.includes(cardId);
-  const artGradient = getCardArtGradient(cardId);
-  const artSVG = getCardArtSVG(cardId);
+  try {
+    const card = CARDS.find(c => c.id === cardId);
+    if (!card) {
+      console.warn('Card not found:', cardId);
+      return '';
+    }
+    const count = myCollection.filter(id => id === cardId).length;
+    const inLoadout = myLoadout.includes(cardId);
+    const artGradient = getCardArtGradient(cardId);
+    const artSVG = getCardArtSVG(cardId);
 
   // Buff icons map
   const buffIcons = {
@@ -3174,6 +3178,10 @@ function renderCard(cardId, compact=false) {
       ${count > 1 ? `<div style="position:absolute;bottom:6px;left:6px;font-size:.6rem;background:linear-gradient(135deg, var(--accent), var(--accent2));color:white;padding:3px 7px;border-radius:4px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.2);">×${count}</div>` : ''}
       ${inLoadout ? `<div style="position:absolute;top:6px;left:6px;font-size:.8rem;font-weight:700;">✓</div>` : ''}
     </div>`;
+  } catch(e) {
+    console.error('renderCard error for', cardId, ':', e);
+    return `<div class="card" style="display:flex;align-items:center;justify-content:center;"><p style="text-align:center;">Error loading card</p></div>`;
+  }
 }
 
 // Attach holographic cursor tracking to all card rarities
