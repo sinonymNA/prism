@@ -2677,6 +2677,10 @@ const PACKS = [
   { id:'prism',   name:'Prism Pack',  emoji:'🌈', desc:'Any card, boosted legendary odds',  cost:300 },
 ];
 
+// Card lookup object for quick access
+const cardLib = {};
+CARDS.forEach(card => { cardLib[card.id] = card; });
+
 const RARITY_WEIGHTS = { common:55, rare:28, epic:13, legendary:4 };
 
 // SABOTAGE MOVES — cost charges, need a target
@@ -3583,19 +3587,23 @@ function renderStore() {
 
 window.buyPack = function(packId) {
   const pack = PACKS.find(p => p.id === packId);
-  if (!pack) return;
+  if (!pack) return console.error('Pack not found:', packId);
   if (myShards < pack.cost) { showToast('Not enough shards! Earn more by playing games.'); return; }
   myShards -= pack.cost;
   document.getElementById('store-shards').textContent = myShards.toLocaleString();
 
   // Pull 5 cards
   const pool = packId === 'prism' ? CARDS : CARDS.filter(c => c.pack === packId);
+  console.log('Pack:', packId, 'Pool size:', pool.length, 'Cards:', pool.map(c => c.id));
   const pulled = [];
   for (let i = 0; i < 5; i++) {
-    pulled.push(pullCard(pool));
+    const card = pullCard(pool);
+    console.log('Pulled card:', card.id);
+    pulled.push(card);
   }
   pulled.forEach(c => myCollection.push(c.id));
   saveProgress();
+  console.log('Calling openPackAnimation with', pulled.length, 'cards');
   openPackAnimation(pulled);
 };
 
@@ -3621,6 +3629,7 @@ function openPackAnimation(pulled) {
   document.getElementById('pack-opening').classList.add('active');
 
   let revealedCount = 0;
+  console.log('Opening pack with', pulled.length, 'cards:', pulled);
 
   pulled.forEach((card, i) => {
     // Create flip container — start face-down
@@ -3628,12 +3637,14 @@ function openPackAnimation(pulled) {
     flipEl.className = `pack-card-flip pack-rarity-${card.rarity}`;
     const cardData = cardLib[card.id] || {};
     const packType = cardData.pack || 'cosmic';
+    const renderedCard = renderCard(card.id);
+    console.log('Card', card.id, 'rendered as:', renderedCard ? 'OK' : 'EMPTY');
     flipEl.innerHTML = `
       <div class="pack-card-inner">
         <div class="card-back ${packType}">
           <div class="card-back-pattern">${{cosmic:'🌌', mythic:'⚜️', arcane:'✨', deep:'🌊'}[packType] || '🌈'}</div>
         </div>
-        <div class="pack-card-face">${renderCard(card.id)}</div>
+        <div class="pack-card-face">${renderedCard}</div>
       </div>`;
 
     // Tap to flip (use pointerdown for instant cross-device response)
@@ -3686,6 +3697,7 @@ function openPackAnimation(pulled) {
     flipEl.style.opacity = '0';
     flipEl.style.transform = 'scale(0.8)';
     container.appendChild(flipEl);
+    console.log('Appended flipEl for card', i, 'Container now has', container.children.length, 'children');
     setTimeout(() => {
       flipEl.style.transition = 'opacity .3s ease, transform .3s cubic-bezier(.34,1.56,.64,1)';
       flipEl.style.opacity = '1';
