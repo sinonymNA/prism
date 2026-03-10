@@ -1289,10 +1289,26 @@ button:focus,input:focus,textarea:focus,select:focus{
 /* COLLECTION SCREEN */
 #collection-screen{padding:0;}
 .collection-body{padding:1.25rem 1.5rem;overflow-y:auto;flex:1;}
-.collection-stats{display:flex;gap:.75rem;margin-bottom:1.25rem;}
-.stat-chip{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.5rem .9rem;text-align:center;flex:1;}
-.stat-chip-val{font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;}
-.stat-chip-label{font-size:.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+.collection-stats{
+  display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;
+}
+.stat-chip{
+  background:linear-gradient(135deg, var(--surface2), rgba(124,77,255,.05));
+  border:1px solid var(--border2);border-radius:var(--radius-sm);
+  padding:.65rem 1.1rem;text-align:center;flex:1;min-width:100px;
+  transition:all .3s;box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+.stat-chip:hover{
+  border-color:var(--accent);box-shadow:0 0 12px rgba(124,77,255,.15);
+  transform:translateY(-2px);
+}
+.stat-chip-val{
+  font-family:'Rajdhani',sans-serif;font-size:1.4rem;font-weight:700;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stat-chip-label{font-size:.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:.2rem;}
 .cards-grid{display:flex;flex-wrap:wrap;gap:.75rem;}
 .loadout-picker{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem;}
 .loadout-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.75rem;}
@@ -1995,6 +2011,20 @@ button:focus,input:focus,textarea:focus,select:focus{
       <div class="profile-shards-label">💎 Shards</div>
     </div>
   </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;padding:0 1rem;margin-bottom:1rem;">
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.6rem;text-align:center;font-size:.8rem;">
+      <div id="stats-games" style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;">0</div>
+      <div style="color:var(--text-dim);font-size:.65rem;margin-top:.2rem;">Games</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.6rem;text-align:center;font-size:.8rem;">
+      <div id="stats-accuracy" style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;color:var(--green);">0%</div>
+      <div style="color:var(--text-dim);font-size:.65rem;margin-top:.2rem;">Accuracy</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.6rem;text-align:center;font-size:.8rem;">
+      <div id="stats-streak" style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent3);">0🔥</div>
+      <div style="color:var(--text-dim);font-size:.65rem;margin-top:.2rem;">Streak</div>
+    </div>
+  </div>
   <div class="landing-content">
     <div class="action-grid">
       <div class="action-card" onclick="showScreen('solo-screen');initSoloMode()">
@@ -2285,6 +2315,9 @@ button:focus,input:focus,textarea:focus,select:focus{
       <div class="stat-chip"><div class="stat-chip-val" id="coll-total">0</div><div class="stat-chip-label">Cards</div></div>
       <div class="stat-chip"><div class="stat-chip-val" id="coll-unique">0</div><div class="stat-chip-label">Unique</div></div>
       <div class="stat-chip"><div class="stat-chip-val" id="coll-legendary">0</div><div class="stat-chip-label">Legendary</div></div>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <input type="text" id="collection-search" class="input" placeholder="Search cards by name…" style="width:100%;" onkeyup="filterCollection(this.value)">
     </div>
     <div class="cards-grid" id="cards-grid"></div>
   </div>
@@ -2740,12 +2773,29 @@ let myLoadout = (() => {
 })(); // array of 3 card ids (or null)
 let isGuest = !localStorage.getItem('prism_uid');
 
+// Player statistics
+let playerStats = (() => {
+  try {
+    const data = JSON.parse(localStorage.getItem('prism_stats') || '{}');
+    return {
+      gamesPlayed: data.gamesPlayed || 0,
+      gamesWon: data.gamesWon || 0,
+      correctAnswers: data.correctAnswers || 0,
+      totalAnswers: data.totalAnswers || 0,
+      shardsCumulative: data.shardsCumulative || 0,
+      longestStreak: data.longestStreak || 0,
+      ...data
+    };
+  } catch(e) { return {gamesPlayed: 0, gamesWon: 0, correctAnswers: 0, totalAnswers: 0, shardsCumulative: 0, longestStreak: 0}; }
+})();
+
 function saveLocal() {
   localStorage.setItem('prism_name', myName);
   localStorage.setItem('prism_role', myRole);
   localStorage.setItem('prism_shards', myShards);
   localStorage.setItem('prism_collection', JSON.stringify(myCollection));
   localStorage.setItem('prism_loadout', JSON.stringify(myLoadout));
+  localStorage.setItem('prism_stats', JSON.stringify(playerStats));
 }
 
 // ===== GAME STATE =====
@@ -3277,6 +3327,14 @@ function updateLanding() {
   document.getElementById('profile-role').textContent = myRole === 'teacher' ? '🏫 Teacher' : '🎒 Student';
   document.getElementById('profile-shards-val').textContent = myShards.toLocaleString();
 
+  // Update statistics
+  document.getElementById('stats-games').textContent = playerStats.gamesPlayed;
+  const accuracy = playerStats.totalAnswers > 0
+    ? Math.round((playerStats.correctAnswers / playerStats.totalAnswers) * 100)
+    : 0;
+  document.getElementById('stats-accuracy').textContent = accuracy + '%';
+  document.getElementById('stats-streak').textContent = playerStats.longestStreak + '🔥';
+
   const tCard = document.getElementById('teacher-card');
   if (tCard) tCard.style.display = myRole === 'teacher' ? 'flex' : 'none';
 
@@ -3457,6 +3515,34 @@ function renderCollection() {
       <div style="font-size:.58rem;">${card ? card.name : 'Empty'}</div>
     </div>`;
   }).join('');
+  document.getElementById('collection-search').value = '';
+}
+
+function filterCollection(searchQuery) {
+  const owned = [...new Set(myCollection)];
+  const query = searchQuery.toLowerCase().trim();
+  const grid = document.getElementById('cards-grid');
+
+  if (!query) {
+    grid.innerHTML = owned.map(id => renderCard(id)).join('');
+  } else {
+    const filtered = owned.filter(id => {
+      const card = CARDS.find(c => c.id === id);
+      return card && (card.name.toLowerCase().includes(query) || card.buff.includes(query));
+    });
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-title">No cards found</div>
+        <div class="empty-state-desc">Try searching for a different card name or buff</div>
+      </div>`;
+    } else {
+      grid.innerHTML = filtered.map(id => renderCard(id)).join('');
+    }
+  }
+  removeHoloEffects();
+  setTimeout(() => attachHoloEffects(), 10);
 }
 
 function renderStore() {
@@ -4774,6 +4860,10 @@ function submitAnswer(selected, correct, qIdx) {
   answered = true;
 
   const isCorrect = selected === correct;
+
+  // Track answer statistics
+  playerStats.totalAnswers++;
+  if (isCorrect) playerStats.correctAnswers++;
   const btns = document.querySelectorAll('.answer-btn');
   btns.forEach(b => b.disabled = true);
   if (btns[correct]) btns[correct].classList.add('correct');
@@ -4839,6 +4929,12 @@ function submitAnswer(selected, correct, qIdx) {
 function checkStreakBonus(streak) {
   const buffs = getLoadoutBuffs();
   const reduction = buffs.streak || 0;
+
+  // Track longest streak
+  if (streak > playerStats.longestStreak) {
+    playerStats.longestStreak = streak;
+    saveLocal();
+  }
 
   let bonusShards = 0;
   let msg = '';
@@ -5282,6 +5378,12 @@ function showEndScreen(players) {
 
   // Award shards permanently
   myShards += shardsEarned;
+
+  // Track game statistics
+  playerStats.gamesPlayed++;
+  playerStats.shardsCumulative += shardsEarned;
+  if (myResult && myResult.shards > 0) playerStats.gamesWon++;
+
   saveProgress();
 
   // Schedule game cleanup
